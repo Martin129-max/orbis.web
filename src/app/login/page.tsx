@@ -1,10 +1,10 @@
-import { AuthForm } from "@/components/organisms/auth-form";
-import { CenteredTemplate } from "@/components/templates/centered-template";
+import * as Organism from "@organism";
+import * as Template from "@template";
 
 export default function LoginPage() {
   return (
-    <CenteredTemplate>
-      <AuthForm mode="login" />
-    </CenteredTemplate>
+    <Template.CenteredTemplate>
+      <Organism.AuthForm mode="login" />
+    </Template.CenteredTemplate>
   );
 }

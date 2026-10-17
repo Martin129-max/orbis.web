@@ -1,11 +1,11 @@
-import { TextLink } from "@/components/atoms/text-link";
+import * as Atom from "@atom";
 
 export function MainNav() {
   return (
     <nav className="flex gap-4">
-      <TextLink href="/login">Log in</TextLink>
-      <TextLink href="/signup">Sign up</TextLink>
-      <TextLink href="/profile">Profile</TextLink>
+      <Atom.TextLink href="/login">Log in</Atom.TextLink>
+      <Atom.TextLink href="/signup">Sign up</Atom.TextLink>
+      <Atom.TextLink href="/profile">Profile</Atom.TextLink>
     </nav>
   );
 }

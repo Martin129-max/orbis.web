@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
-import { ProfileCard } from "@/components/organisms/profile-card";
-import { CenteredTemplate } from "@/components/templates/centered-template";
+import * as Organism from "@organism";
+import * as Template from "@template";
 import { useAuthStore } from "@/stores/auth-store";
 
 export default function ProfilePage() {
@@ -24,12 +24,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <CenteredTemplate>
+    <Template.CenteredTemplate>
       {profile ? (
-        <ProfileCard profile={profile} onLogout={handleLogout} />
+        <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
       ) : (
         <p>Loading...</p>
       )}
-    </CenteredTemplate>
+    </Template.CenteredTemplate>
   );
 }

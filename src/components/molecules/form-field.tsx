@@ -1,13 +1,13 @@
 import type { ComponentProps } from "react";
-import { Input } from "@/components/atoms/input";
+import * as Atom from "@atom";
 
-type FormFieldProps = ComponentProps<typeof Input> & { label: string };
+type FormFieldProps = ComponentProps<typeof Atom.Input> & { label: string };
 
 export function FormField({ label, ...inputProps }: FormFieldProps) {
   return (
     <label className="flex flex-col gap-1 text-sm">
       {label}
-      <Input {...inputProps} />
+      <Atom.Input {...inputProps} />
     </label>
   );
 }

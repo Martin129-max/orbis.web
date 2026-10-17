@@ -1,17 +1,16 @@
 import { Suspense } from "react";
-import { Heading } from "@/components/atoms/heading";
-import { MainNav } from "@/components/organisms/main-nav";
-import { ServerStatus } from "@/components/organisms/server-status";
-import { CenteredTemplate } from "@/components/templates/centered-template";
+import * as Atom from "@atom";
+import * as Organism from "@organism";
+import * as Template from "@template";
 
 export default function Home() {
   return (
-    <CenteredTemplate>
-      <Heading>Orbis</Heading>
+    <Template.CenteredTemplate>
+      <Atom.Heading>Orbis</Atom.Heading>
       <Suspense fallback={<p>Connecting to server...</p>}>
-        <ServerStatus />
+        <Organism.ServerStatus />
       </Suspense>
-      <MainNav />
-    </CenteredTemplate>
+      <Organism.MainNav />
+    </Template.CenteredTemplate>
   );
 }
