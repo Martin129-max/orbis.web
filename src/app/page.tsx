@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Suspense } from "react";
 import { api } from "@/lib/api";
 
@@ -15,6 +16,11 @@ export default function Home() {
       <Suspense fallback={<p>Connecting to server...</p>}>
         <ServerStatus />
       </Suspense>
+      <nav className="flex gap-4 underline">
+        <Link href="/login">Log in</Link>
+        <Link href="/signup">Sign up</Link>
+        <Link href="/profile">Profile</Link>
+      </nav>
     </main>
   );
 }
