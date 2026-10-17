@@ -1,6 +1,8 @@
+import { connection } from "next/server";
 import { api } from "@/lib/api";
 
 export async function ServerStatus() {
+  await connection();
   const status = await api("/")
     .then((res) => res.text())
     .catch(() => "Server unreachable");

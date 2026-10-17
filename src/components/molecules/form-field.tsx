@@ -1,13 +1,24 @@
-import type { ComponentProps } from "react";
+"use client";
+
+import { Form } from "antd";
+import { useId, type ComponentProps } from "react";
 import * as Atom from "@atom";
 
 type FormFieldProps = ComponentProps<typeof Atom.Input> & { label: string };
 
-export function FormField({ label, ...inputProps }: FormFieldProps) {
+export function FormField({ label, id, ...inputProps }: FormFieldProps) {
+  const generatedId = useId();
+  const inputId = id ?? generatedId;
+
   return (
-    <label className="flex flex-col gap-1 text-sm">
-      {label}
-      <Atom.Input {...inputProps} />
-    </label>
+    <Form.Item
+      label={label}
+      htmlFor={inputId}
+      layout="vertical"
+      required={inputProps.required}
+      className="m-0"
+    >
+      <Atom.Input id={inputId} {...inputProps} />
+    </Form.Item>
   );
 }

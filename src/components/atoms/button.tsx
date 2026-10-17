@@ -1,19 +1,15 @@
-import type { ComponentProps } from "react";
+import { Button as AntButton, type ButtonProps as AntButtonProps } from "antd";
 
 const variants = {
-  primary: "bg-foreground text-background",
-  secondary: "border border-black/15 dark:border-white/20",
-};
+  primary: "primary",
+  secondary: "default",
+} as const;
 
-type ButtonProps = ComponentProps<"button"> & {
+type ButtonProps = Omit<AntButtonProps, "type" | "htmlType" | "variant"> & {
+  type?: AntButtonProps["htmlType"];
   variant?: keyof typeof variants;
 };
 
-export function Button({ variant = "primary", ...props }: ButtonProps) {
-  return (
-    <button
-      className={`rounded px-3 py-2 disabled:opacity-50 ${variants[variant]}`}
-      {...props}
-    />
-  );
+export function Button({ variant = "primary", type, ...props }: ButtonProps) {
+  return <AntButton type={variants[variant]} htmlType={type} {...props} />;
 }
