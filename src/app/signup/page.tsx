@@ -1,5 +1,10 @@
-import { AuthForm } from "@/components/auth-form";
+import { AuthForm } from "@/components/organisms/auth-form";
+import { CenteredTemplate } from "@/components/templates/centered-template";
 
 export default function SignupPage() {
-  return <AuthForm mode="signup" />;
+  return (
+    <CenteredTemplate>
+      <AuthForm mode="signup" />
+    </CenteredTemplate>
+  );
 }

@@ -1,19 +1,22 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getProfile, logout, type Profile } from "@/lib/api";
+import { useEffect } from "react";
+import { ProfileCard } from "@/components/organisms/profile-card";
+import { CenteredTemplate } from "@/components/templates/centered-template";
+import { useAuthStore } from "@/stores/auth-store";
 
 export default function ProfilePage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<Profile | null>(null);
+  const profile = useAuthStore((state) => state.profile);
+  const fetchProfile = useAuthStore((state) => state.fetchProfile);
+  const logout = useAuthStore((state) => state.logout);
 
   useEffect(() => {
-    getProfile().then((result) => {
-      if (result) setProfile(result);
-      else router.replace("/login");
+    fetchProfile().then((result) => {
+      if (!result) router.replace("/login");
     });
-  }, [router]);
+  }, [fetchProfile, router]);
 
   function handleLogout() {
     logout();
@@ -21,21 +24,12 @@ export default function ProfilePage() {
   }
 
   return (
-    <main className="flex flex-1 flex-col items-center justify-center gap-4 font-sans">
+    <CenteredTemplate>
       {profile ? (
-        <>
-          <h1 className="text-2xl font-semibold">{profile.email}</h1>
-          <p className="text-sm text-zinc-500">User #{profile.userId}</p>
-          <button
-            onClick={handleLogout}
-            className="rounded border border-black/15 px-3 py-2 dark:border-white/20"
-          >
-            Log out
-          </button>
-        </>
+        <ProfileCard profile={profile} onLogout={handleLogout} />
       ) : (
         <p>Loading...</p>
       )}
-    </main>
+    </CenteredTemplate>
   );
 }
