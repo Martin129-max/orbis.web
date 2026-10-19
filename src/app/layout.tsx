@@ -32,9 +32,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <AntdProvider>
-          <header className="flex justify-end p-4">
+          <div className="fixed top-4 right-4 z-10">
             <Organism.ThemeToggle />
-          </header>
+          </div>
           {children}
         </AntdProvider>
       </body>

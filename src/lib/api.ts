@@ -4,6 +4,13 @@ export type Credentials = { email: string; password: string };
 
 export type Profile = { userId: number; email: string };
 
+export type Community = {
+  id: number;
+  name: string;
+  ownerId: number;
+  createdAt: string;
+};
+
 export function api(path: string, init?: RequestInit) {
   return fetch(`${API_URL}${path}`, init);
 }
@@ -40,4 +47,40 @@ export async function getProfile(token: string): Promise<Profile | null> {
   });
 
   return res.ok ? res.json() : null;
+}
+
+export async function getCommunities(token: string): Promise<Community[]> {
+  const res = await api("/communities", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return res.ok ? res.json() : [];
+}
+
+export async function getCommunity(
+  token: string,
+  id: string,
+): Promise<Community | null> {
+  const res = await api(`/communities/${encodeURIComponent(id)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return res.ok ? res.json() : null;
+}
+
+export async function createCommunity(
+  token: string,
+  name: string,
+): Promise<Community> {
+  const res = await api("/communities", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ name }),
+  });
+
+  if (!res.ok) throw new Error("Could not create the community. Please try again.");
+  return res.json();
 }

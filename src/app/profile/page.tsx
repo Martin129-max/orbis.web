@@ -24,12 +24,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <Template.CenteredTemplate>
-      {profile ? (
-        <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
-      ) : (
-        <p>Loading...</p>
-      )}
-    </Template.CenteredTemplate>
+    <Template.AppTemplate>
+      <Template.CenteredTemplate>
+        {profile ? (
+          <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
+        ) : (
+          <p>Loading...</p>
+        )}
+      </Template.CenteredTemplate>
+    </Template.AppTemplate>
   );
 }
