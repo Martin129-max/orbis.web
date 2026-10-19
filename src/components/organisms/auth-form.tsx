@@ -10,14 +10,16 @@ type Mode = "login" | "signup";
 
 const content = {
   login: {
-    title: "Log in",
+    title: "Welcome back",
+    subtitle: "Log in to get back to your communities.",
     submit: "Log in",
-    switchText: "No account yet?",
-    switchLabel: "Sign up",
-    switchHref: "/signup",
+    switchText: "New to Orbis?",
+    switchLabel: "Create an account",
+    switchHref: "/register",
   },
   signup: {
-    title: "Sign up",
+    title: "Create your account",
+    subtitle: "Join communities and share what's happening.",
     submit: "Create account",
     switchText: "Already have an account?",
     switchLabel: "Log in",
@@ -30,7 +32,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const action = useAuthStore((state) => state[mode]);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const { title, submit, switchText, switchLabel, switchHref } = content[mode];
+  const { title, subtitle, submit, switchText, switchLabel, switchHref } =
+    content[mode];
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,33 +54,39 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="flex w-full max-w-sm flex-col gap-4 rounded-lg border border-black/10 p-6 dark:border-white/15"
-    >
-      <Atom.Heading>{title}</Atom.Heading>
-      <Molecule.FormField
-        label="Email"
-        name="email"
-        type="email"
-        required
-        autoComplete="email"
-      />
-      <Molecule.FormField
-        label="Password"
-        name="password"
-        type="password"
-        required
-        minLength={6}
-        autoComplete={mode === "login" ? "current-password" : "new-password"}
-      />
-      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      <Atom.Button type="submit" disabled={pending}>
-        {pending ? "Please wait..." : submit}
-      </Atom.Button>
-      <p className="text-sm">
-        {switchText} <Atom.TextLink href={switchHref}>{switchLabel}</Atom.TextLink>
-      </p>
-    </form>
+    <div className="flex w-full max-w-sm flex-col gap-10">
+      <Atom.Brand />
+      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+        <div className="flex flex-col gap-1">
+          <Atom.Heading>{title}</Atom.Heading>
+          <p className="text-sm text-zinc-500">{subtitle}</p>
+        </div>
+        <Molecule.FormField
+          label="Email"
+          name="email"
+          type="email"
+          size="large"
+          required
+          autoComplete="email"
+        />
+        <Molecule.FormField
+          label="Password"
+          name="password"
+          type="password"
+          size="large"
+          required
+          minLength={6}
+          autoComplete={mode === "login" ? "current-password" : "new-password"}
+        />
+        {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        <Atom.Button type="submit" size="large" block loading={pending}>
+          {submit}
+        </Atom.Button>
+        <p className="text-center text-sm text-zinc-500">
+          {switchText}{" "}
+          <Atom.TextLink href={switchHref}>{switchLabel}</Atom.TextLink>
+        </p>
+      </form>
+    </div>
   );
 }

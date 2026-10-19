@@ -1,16 +1,16 @@
-import { Suspense } from "react";
-import * as Atom from "@atom";
 import * as Organism from "@organism";
-import * as Template from "@template";
 
 export default function Home() {
   return (
-    <Template.CenteredTemplate>
-      <Atom.Heading>Orbis</Atom.Heading>
-      <Suspense fallback={<p>Connecting to server...</p>}>
-        <Organism.ServerStatus />
-      </Suspense>
-      <Organism.MainNav />
-    </Template.CenteredTemplate>
+    <div className="flex flex-1 flex-col font-sans">
+      <Organism.RedirectIfAuthenticated />
+      <Organism.SiteHeader />
+      <main className="flex-1">
+        <Organism.LandingHero />
+      </main>
+      <footer className="mx-auto w-full max-w-5xl px-6 py-6 text-sm text-zinc-500">
+        © {new Date().getFullYear()} Orbis
+      </footer>
+    </div>
   );
 }
