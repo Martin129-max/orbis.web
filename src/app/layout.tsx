@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import * as Organism from "@organism";
+import { themeScript } from "@/stores/theme-store";
 import { AntdProvider } from "./antd-provider";
 import "./globals.css";
 
@@ -23,9 +25,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
       <body className="min-h-full flex flex-col">
-        <AntdProvider>{children}</AntdProvider>
+        <AntdProvider>
+          <header className="flex justify-end p-4">
+            <Organism.ThemeToggle />
+          </header>
+          {children}
+        </AntdProvider>
       </body>
     </html>
   );
