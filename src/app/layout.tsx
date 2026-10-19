@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import * as Organism from "@organism";
+import { authScript } from "@/stores/auth-store";
 import { themeScript } from "@/stores/theme-store";
 import { AntdProvider } from "./antd-provider";
 import "./globals.css";
@@ -28,7 +29,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script
+          dangerouslySetInnerHTML={{ __html: themeScript + authScript }}
+        />
       </head>
       <body className="min-h-full flex flex-col">
         <AntdProvider>

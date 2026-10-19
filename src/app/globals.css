@@ -2,6 +2,8 @@
 
 @import "tailwindcss";
 
+@custom-variant authenticated (&:where([data-auth] *));
+
 @custom-variant dark {
   &:where([data-theme="dark"], [data-theme="dark"] *) {
     @slot;

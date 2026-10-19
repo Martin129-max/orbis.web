@@ -1,11 +1,39 @@
 "use client";
 
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  restrictToParentElement,
+  restrictToVerticalAxis,
+} from "@dnd-kit/modifiers";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { LogoutOutlined, PlusOutlined } from "@ant-design/icons";
 import { Popover, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import * as Atom from "@atom";
+import type { Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { CreateCommunityModal } from "./create-community-modal";
@@ -33,24 +61,77 @@ function itemClass(active: boolean) {
 function RailSlot({
   label,
   active = false,
+  dragging = false,
+  slotRef,
+  style,
   children,
 }: {
   label: string;
   active?: boolean;
+  dragging?: boolean;
+  slotRef?: (element: HTMLElement | null) => void;
+  style?: CSSProperties;
   children: ReactNode;
 }) {
   return (
-    <li className="group relative flex w-full justify-center">
+    <li
+      ref={slotRef}
+      style={style}
+      className={`group relative flex w-full justify-center ${dragging ? "z-10" : ""}`}
+    >
       <span
         aria-hidden
         className={`absolute top-1/2 left-0 w-1 -translate-y-1/2 rounded-r bg-foreground transition-[height] duration-200 motion-reduce:transition-none ${
           active ? "h-10" : "h-0 group-hover:h-5"
         }`}
       />
-      <Tooltip title={label} placement="right">
+      <Tooltip
+        title={label}
+        placement="right"
+        open={dragging ? false : undefined}
+      >
         {children}
       </Tooltip>
     </li>
+  );
+}
+
+function SortableCommunity({
+  community,
+  active,
+}: {
+  community: Community;
+  active: boolean;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: community.id });
+
+  return (
+    <RailSlot
+      label={community.name}
+      active={active}
+      dragging={isDragging}
+      slotRef={setNodeRef}
+      style={{ transform: CSS.Translate.toString(transform), transition }}
+    >
+      <Link
+        {...attributes}
+        {...listeners}
+        role={undefined}
+        href={`/communities/${community.id}`}
+        aria-label={community.name}
+        aria-current={active ? "page" : undefined}
+        className={`${itemClass(active)} ${isDragging ? "cursor-grabbing shadow-lg" : ""}`}
+      >
+        {initials(community.name)}
+      </Link>
+    </RailSlot>
   );
 }
 
@@ -119,7 +200,41 @@ export function CommunityRail() {
   const { communityId } = useParams<{ communityId?: string }>();
   const communities = useCommunityStore((state) => state.communities);
   const fetchCommunities = useCommunityStore((state) => state.fetchCommunities);
+  const reorderCommunities = useCommunityStore(
+    (state) => state.reorderCommunities,
+  );
   const [creating, setCreating] = useState(false);
+  const suppressClick = useRef(false);
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+      keyboardCodes: {
+        start: ["Space"],
+        cancel: ["Escape"],
+        end: ["Space", "Enter"],
+      },
+    }),
+  );
+  const ids = communities.map((community) => community.id);
+
+  function finishDrag() {
+    setTimeout(() => {
+      suppressClick.current = false;
+    });
+  }
+
+  function handleDragEnd({ active, over }: DragEndEvent) {
+    finishDrag();
+    if (!over || active.id === over.id) return;
+    reorderCommunities(
+      arrayMove(
+        ids,
+        ids.indexOf(Number(active.id)),
+        ids.indexOf(Number(over.id)),
+      ),
+    );
+  }
 
   useEffect(() => {
     fetchCommunities();
@@ -129,23 +244,34 @@ export function CommunityRail() {
     <nav
       aria-label="Communities"
       className="flex w-[72px] shrink-0 flex-col bg-rail"
+      onClickCapture={(event) => {
+        if (!suppressClick.current) return;
+        event.preventDefault();
+        event.stopPropagation();
+      }}
     >
       <ul className="flex flex-1 flex-col items-center gap-2 overflow-y-auto py-3">
-        {communities.map((community) => {
-          const active = String(community.id) === communityId;
-          return (
-            <RailSlot key={community.id} label={community.name} active={active}>
-              <Link
-                href={`/communities/${community.id}`}
-                aria-label={community.name}
-                aria-current={active ? "page" : undefined}
-                className={itemClass(active)}
-              >
-                {initials(community.name)}
-              </Link>
-            </RailSlot>
-          );
-        })}
+        <DndContext
+          id="community-rail"
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          modifiers={[restrictToVerticalAxis, restrictToParentElement]}
+          onDragStart={() => {
+            suppressClick.current = true;
+          }}
+          onDragEnd={handleDragEnd}
+          onDragCancel={finishDrag}
+        >
+          <SortableContext items={ids} strategy={verticalListSortingStrategy}>
+            {communities.map((community) => (
+              <SortableCommunity
+                key={community.id}
+                community={community}
+                active={String(community.id) === communityId}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
         <RailSlot label="Create a community">
           <button
             type="button"

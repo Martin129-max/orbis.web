@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import * as Atom from "@atom";
 import * as Organism from "@organism";
 import * as Template from "@template";
 import { useAuthStore } from "@/stores/auth-store";
@@ -29,7 +30,7 @@ export default function ProfilePage() {
         {profile ? (
           <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
         ) : (
-          <p>Loading...</p>
+          <Atom.Loader />
         )}
       </Template.CenteredTemplate>
     </Template.AppTemplate>

@@ -68,6 +68,22 @@ export async function getCommunity(
   return res.ok ? res.json() : null;
 }
 
+export async function reorderCommunities(
+  token: string,
+  communityIds: number[],
+): Promise<void> {
+  const res = await api("/communities/order", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ communityIds }),
+  });
+
+  if (!res.ok) throw new Error("Could not save the new order.");
+}
+
 export async function createCommunity(
   token: string,
   name: string,

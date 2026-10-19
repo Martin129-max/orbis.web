@@ -32,7 +32,7 @@ export default function CommunityPage() {
     <Template.AppTemplate>
       {!current ? (
         <Template.CenteredTemplate>
-          <p>Loading...</p>
+          <Atom.Loader />
         </Template.CenteredTemplate>
       ) : !current.community ? (
         <Template.CenteredTemplate>

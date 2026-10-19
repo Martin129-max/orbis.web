@@ -12,6 +12,14 @@ type AuthState = {
   fetchProfile: () => Promise<Profile | null>;
 };
 
+function markAuthenticated(authenticated: boolean) {
+  const root = document.documentElement;
+  if (authenticated) root.dataset.auth = "true";
+  else delete root.dataset.auth;
+}
+
+export const authScript = `try{if(JSON.parse(localStorage.getItem("auth")).state.token)document.documentElement.dataset.auth="true"}catch(e){}`;
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -19,11 +27,16 @@ export const useAuthStore = create<AuthState>()(
       profile: null,
       login: async (credentials) => {
         set({ token: await api.login(credentials) });
+        markAuthenticated(true);
       },
       signup: async (credentials) => {
         set({ token: await api.signup(credentials) });
+        markAuthenticated(true);
       },
-      logout: () => set({ token: null, profile: null }),
+      logout: () => {
+        markAuthenticated(false);
+        set({ token: null, profile: null });
+      },
       fetchProfile: async () => {
         const { token, logout } = get();
         const profile = token ? await api.getProfile(token) : null;

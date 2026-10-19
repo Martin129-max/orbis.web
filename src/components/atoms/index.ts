@@ -4,4 +4,5 @@ export * from "./button-link";
 export * from "./error-message";
 export * from "./heading";
 export * from "./input";
+export * from "./loader";
 export * from "./text-link";
