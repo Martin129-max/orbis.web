@@ -1,8 +1,10 @@
+import type { ThemeMode } from "@/stores/theme-store";
+
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type Credentials = { email: string; password: string };
 
-export type Profile = { userId: number; email: string };
+export type Profile = { userId: number; email: string; theme: ThemeMode };
 
 export type Community = {
   id: number;
@@ -71,6 +73,22 @@ export type Member = {
   joinedAt: string;
   isOwner: boolean;
 };
+
+export async function updatePreferences(
+  token: string,
+  preferences: { theme: ThemeMode },
+): Promise<void> {
+  const res = await api("/users/me/preferences", {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(preferences),
+  });
+
+  if (!res.ok) throw new Error("Could not save your preferences.");
+}
 
 export async function getCommunities(token: string): Promise<Community[]> {
   const res = await api("/communities", {

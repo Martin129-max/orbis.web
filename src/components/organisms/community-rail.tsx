@@ -37,6 +37,7 @@ import type { Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { CreateCommunityModal } from "./create-community-modal";
+import { ThemeToggle } from "./theme-toggle";
 
 function initials(name: string) {
   return name
@@ -167,6 +168,10 @@ function UserButton() {
             {profile && (
               <p className="text-xs text-zinc-500">User #{profile.userId}</p>
             )}
+          </div>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-sm">Theme</span>
+            <ThemeToggle />
           </div>
           <div className="flex items-center justify-between gap-2">
             <Atom.TextLink href="/profile" onClick={() => setOpen(false)}>

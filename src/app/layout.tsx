@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import * as Organism from "@organism";
 import { authScript } from "@/stores/auth-store";
 import { themeScript } from "@/stores/theme-store";
 import { AntdProvider } from "./antd-provider";
@@ -35,12 +34,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
-        <AntdProvider>
-          <div className="fixed top-4 right-4 z-10">
-            <Organism.ThemeToggle />
-          </div>
-          {children}
-        </AntdProvider>
+        <AntdProvider>{children}</AntdProvider>
       </body>
     </html>
   );

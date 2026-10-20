@@ -51,7 +51,7 @@ export default function CommunityPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <header className="flex h-16 shrink-0 items-center border-b border-black/10 pr-36 pl-6 dark:border-white/10">
+          <header className="flex h-16 shrink-0 items-center border-b border-black/10 px-6 dark:border-white/10">
             <Atom.Heading className="min-w-0 truncate">
               {current.community.name}
             </Atom.Heading>

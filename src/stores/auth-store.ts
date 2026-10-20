@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as api from "@/lib/api";
 import type { Credentials, Profile } from "@/lib/api";
+import { useThemeStore } from "./theme-store";
 
 type AuthState = {
   token: string | null;
@@ -41,8 +42,12 @@ export const useAuthStore = create<AuthState>()(
         const { token, logout } = get();
         const profile = token ? await api.getProfile(token) : null;
 
-        if (profile) set({ profile });
-        else logout();
+        if (profile) {
+          set({ profile });
+          useThemeStore.getState().setMode(profile.theme);
+        } else {
+          logout();
+        }
 
         return profile;
       },
