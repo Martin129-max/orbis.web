@@ -15,7 +15,13 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
   communities: [],
   fetchCommunities: async () => {
     const { token } = useAuthStore.getState();
-    set({ communities: token ? await api.getCommunities(token) : [] });
+    if (!token) {
+      set({ communities: [] });
+      return;
+    }
+
+    const communities = await api.getCommunities(token).catch(() => null);
+    if (communities) set({ communities });
   },
   createCommunity: async (name) => {
     const { token } = useAuthStore.getState();

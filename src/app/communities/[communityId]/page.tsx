@@ -3,12 +3,13 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import * as Organism from "@organism";
 import * as Template from "@template";
 import { getCommunity, type Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
-type Loaded = { id: string; community: Community | null };
+type Loaded = { id: string; community: Community | null; failed?: boolean };
 
 export default function CommunityPage() {
   const { communityId } = useParams<{ communityId: string }>();
@@ -22,9 +23,11 @@ export default function CommunityPage() {
       return;
     }
 
-    getCommunity(token, communityId).then((community) =>
-      setLoaded({ id: communityId, community }),
-    );
+    getCommunity(token, communityId)
+      .then((community) => setLoaded({ id: communityId, community }))
+      .catch(() =>
+        setLoaded({ id: communityId, community: null, failed: true }),
+      );
   }, [communityId, router]);
 
   const current = loaded?.id === communityId ? loaded : null;
@@ -34,6 +37,10 @@ export default function CommunityPage() {
       {!current ? (
         <Template.CenteredTemplate>
           <Atom.Loader />
+        </Template.CenteredTemplate>
+      ) : current.failed ? (
+        <Template.CenteredTemplate>
+          <Molecule.ConnectionError onRetry={() => window.location.reload()} />
         </Template.CenteredTemplate>
       ) : !current.community ? (
         <Template.CenteredTemplate>

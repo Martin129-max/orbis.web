@@ -11,8 +11,12 @@ export type Community = {
   createdAt: string;
 };
 
-export function api(path: string, init?: RequestInit) {
-  return fetch(`${API_URL}${path}`, init);
+export async function api(path: string, init?: RequestInit) {
+  try {
+    return await fetch(`${API_URL}${path}`, init);
+  } catch {
+    throw new Error("Can't reach Orbis right now. Please try again.");
+  }
 }
 
 async function authenticate(

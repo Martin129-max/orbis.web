@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import { createPost, getPosts, type Post } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { PostCard } from "./post-card";
@@ -9,11 +10,20 @@ import { PostComposer } from "./post-composer";
 
 export function CommunityFeed({ communityId }: { communityId: number }) {
   const [posts, setPosts] = useState<Post[] | null>(null);
+  const [failed, setFailed] = useState(false);
+  const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (token) getPosts(token, communityId).then(setPosts);
-  }, [communityId]);
+    if (!token) return;
+
+    getPosts(token, communityId)
+      .then((result) => {
+        setFailed(false);
+        setPosts(result);
+      })
+      .catch(() => setFailed(true));
+  }, [communityId, attempt]);
 
   async function handlePost(content: string) {
     const { token } = useAuthStore.getState();
@@ -26,7 +36,16 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
   return (
     <div className="flex flex-col gap-2">
       <PostComposer onPost={handlePost} />
-      {!posts ? (
+      {failed && !posts ? (
+        <div className="py-16">
+          <Molecule.ConnectionError
+            onRetry={() => {
+              setFailed(false);
+              setAttempt((count) => count + 1);
+            }}
+          />
+        </div>
+      ) : !posts ? (
         <div className="flex py-16">
           <Atom.Loader />
         </div>

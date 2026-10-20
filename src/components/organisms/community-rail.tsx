@@ -143,7 +143,7 @@ function UserButton() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    if (!useAuthStore.getState().profile) fetchProfile();
+    if (!useAuthStore.getState().profile) fetchProfile().catch(() => null);
   }, [fetchProfile]);
 
   function handleLogout() {
