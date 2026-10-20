@@ -49,6 +49,25 @@ export async function getProfile(token: string): Promise<Profile | null> {
   return res.ok ? res.json() : null;
 }
 
+export type Author = { id: number; email: string; name: string | null };
+
+export type Post = {
+  id: number;
+  communityId: number;
+  content: string;
+  createdAt: string;
+  author: Author;
+};
+
+export type Member = {
+  userId: number;
+  email: string;
+  name: string | null;
+  nickname: string | null;
+  joinedAt: string;
+  isOwner: boolean;
+};
+
 export async function getCommunities(token: string): Promise<Community[]> {
   const res = await api("/communities", {
     headers: { Authorization: `Bearer ${token}` },
@@ -99,4 +118,45 @@ export async function createCommunity(
 
   if (!res.ok) throw new Error("Could not create the community. Please try again.");
   return res.json();
+}
+
+export async function getPosts(
+  token: string,
+  communityId: number,
+): Promise<Post[]> {
+  const res = await api(`/communities/${communityId}/posts`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return res.ok ? res.json() : [];
+}
+
+export async function createPost(
+  token: string,
+  communityId: number,
+  content: string,
+): Promise<Post> {
+  const res = await api(`/communities/${communityId}/posts`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (res.status === 400) throw new Error("Write something before posting.");
+  if (!res.ok) throw new Error("Could not post. Please try again.");
+  return res.json();
+}
+
+export async function getMembers(
+  token: string,
+  communityId: number,
+): Promise<Member[]> {
+  const res = await api(`/communities/${communityId}/members`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  return res.ok ? res.json() : [];
 }

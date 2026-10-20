@@ -3,6 +3,7 @@
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
+import * as Organism from "@organism";
 import * as Template from "@template";
 import { getCommunity, type Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
@@ -42,16 +43,26 @@ export default function CommunityPage() {
           </p>
         </Template.CenteredTemplate>
       ) : (
-        <main className="flex flex-1 flex-col">
+        <main className="flex min-h-0 flex-1 flex-col">
           <header className="flex h-16 shrink-0 items-center border-b border-black/10 pr-36 pl-6 dark:border-white/10">
-            <Atom.Heading>{current.community.name}</Atom.Heading>
+            <Atom.Heading className="min-w-0 truncate">
+              {current.community.name}
+            </Atom.Heading>
           </header>
-          <section className="flex flex-1 flex-col items-center justify-center gap-1 p-6 text-center">
-            <p className="font-medium">No posts yet</p>
-            <p className="text-sm text-zinc-500">
-              Posts from members will show up here.
-            </p>
-          </section>
+          <div className="flex min-h-0 flex-1">
+            <div className="min-w-0 flex-1 overflow-y-auto">
+              <div className="mx-auto w-full max-w-2xl px-6 py-6">
+                <Organism.CommunityFeed
+                  key={current.community.id}
+                  communityId={current.community.id}
+                />
+              </div>
+            </div>
+            <Organism.MemberList
+              key={current.community.id}
+              communityId={current.community.id}
+            />
+          </div>
         </main>
       )}
     </Template.AppTemplate>
