@@ -34,7 +34,7 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-6">
         <p className="text-xs font-bold text-accent uppercase">
-          Your Orbis, your way
+          Your profile
         </p>
         <div className="flex items-center gap-6">
           <Atom.Avatar size="lg" label={profile.username} seed={profile.userId} />
@@ -58,7 +58,7 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
         <div className="flex flex-col gap-3">
           <p className="text-sm">Theme</p>
           <p className="text-xs text-muted">
-            Paper by day, ink by night. System follows your device’s appearance.
+            Choose how Orbis looks. System follows your device’s setting.
           </p>
           <ThemeToggle />
         </div>
@@ -68,8 +68,8 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
             <AppearOfflineSwitch />
           </div>
           <p className="text-xs text-muted">
-            Take a little quiet time. Friends will see you as offline, but you
-            can still read, post, and join discussions.
+            Friends will see you as offline. You can still read, post, and
+            comment as usual.
           </p>
         </div>
       </Section>

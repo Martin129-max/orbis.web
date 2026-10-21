@@ -43,11 +43,11 @@ function ForumThreads({
       empty={{
         title: "No threads yet.",
         description:
-          "Ask the big question, share a theory, or start the weekly watchlist. Good discussions start somewhere.",
+          "Start a thread to begin a discussion in this community.",
       }}
       end={
         <p className="pt-6 text-xs text-muted">
-          You’ve reached the end. Start the next great discussion.
+          You’ve reached the end of the thread list.
         </p>
       }
     />
@@ -98,8 +98,8 @@ function NewThreadModal({
       <div className="flex flex-col gap-6">
         <Molecule.ModalHeader
           eyebrow={`${communityName ?? "Community"} / New thread`}
-          title="Start a good discussion."
-          description="A big question, a tiny detail, a theory you can’t shake. Give it a place to live."
+          title="Start a new thread."
+          description="Ask a question or start a discussion with this community."
         />
         <Molecule.FormField
           label="Title"
@@ -114,7 +114,7 @@ function NewThreadModal({
           <PostComposer
             allowEmpty
             onCancel={close}
-            placeholder="Add the details, context, or your hot take…"
+            placeholder="Add details or context…"
             submitLabel="Post thread"
             onPost={handlePost}
             onPosted={() => {

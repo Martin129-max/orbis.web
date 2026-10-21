@@ -76,7 +76,7 @@ export default function CommunitySettingsPage() {
                 <div className="flex flex-col gap-4 sm:pt-12">
                   <Molecule.FeedState
                     icon={<Lock size={32} strokeWidth={1.5} />}
-                    title="This room is for the admins."
+                    title="You don’t have access."
                     description={`You don’t have access to community settings. Only the owner and admins can make changes to ${current.community.name}.`}
                     action={
                       <Atom.ButtonLink
@@ -87,7 +87,7 @@ export default function CommunitySettingsPage() {
                     }
                   />
                   <p className="border-t border-divider pt-4 text-xs text-muted">
-                    Need something changed? Reach out to the community owner.
+                    To request changes, contact the community owner.
                   </p>
                 </div>
               )}

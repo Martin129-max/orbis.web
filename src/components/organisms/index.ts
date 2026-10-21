@@ -18,6 +18,8 @@ export * from "./post-composer";
 export * from "./post-list";
 export * from "./profile-card";
 export * from "./side-panel";
+export * from "./site-footer";
 export * from "./site-header";
+export * from "./site-stats";
 export * from "./theme-toggle";
 export * from "./thread-card";

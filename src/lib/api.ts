@@ -507,3 +507,18 @@ export async function vote(
   if (!res.ok) throw new Error("Could not save your vote.");
   return res.json();
 }
+
+export type Stats = {
+  members: number;
+  communities: number;
+  posts: number;
+  threads: number;
+  comments: number;
+};
+
+export async function getStats(): Promise<Stats> {
+  const res = await api("/stats");
+
+  if (!res.ok) throw new Error("Could not load statistics.");
+  return res.json();
+}

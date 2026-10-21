@@ -19,7 +19,7 @@ const barlowCondensed = Barlow_Condensed({
 export const metadata: Metadata = {
   title: "Orbis",
   description:
-    "Orbis is a home for groups of people. Create a community, bring people in, and share posts everyone can follow.",
+    "Orbis is a platform for online communities, with feeds for updates and forums for discussions.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

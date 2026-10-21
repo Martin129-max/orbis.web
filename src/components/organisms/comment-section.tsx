@@ -185,7 +185,7 @@ export function CommentSection({
       <div className="flex flex-col gap-2">
         <p className="text-[13px] font-semibold">Join the discussion</p>
         <PostComposer
-          placeholder="Add your take. Make it a good one."
+          placeholder="Write a comment…"
           submitLabel="Comment"
           onPost={(content) => handleReply(content)}
         />
@@ -203,7 +203,7 @@ export function CommentSection({
         </div>
       ) : comments.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">
-          No comments yet. Start the conversation.
+          No comments yet.
         </p>
       ) : (
         <>

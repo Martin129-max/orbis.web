@@ -93,7 +93,7 @@ export function MemberList({ communityId }: { communityId: number }) {
         })}
       </ul>
       <p className="text-xs text-muted">
-        Good discussions start with good company.
+        Everyone in this community.
       </p>
     </>
   );

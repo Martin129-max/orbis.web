@@ -57,8 +57,8 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
       <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-6">
         <Molecule.ModalHeader
           eyebrow="Create a community"
-          title="Make room for your people."
-          description="A home for the things you can talk about forever. One account, as many little worlds as you like."
+          title="Create a new community."
+          description="Give your community a name. You can change it and its visibility later in settings."
         />
         <Molecule.FormField
           label="Community name"

@@ -1,7 +1,7 @@
 "use client";
 
 import { Select } from "antd";
-import { ArrowDownWideNarrow, ChevronDown, CircleCheck } from "lucide-react";
+import { ChevronDown, CircleCheck } from "lucide-react";
 import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -70,27 +70,21 @@ export function HomeFeed() {
           }
         />
       )}
-      <div className="flex items-center justify-between gap-3 text-xs">
-        <p className="uppercase">From your communities</p>
-        <p className="flex items-center gap-2 text-muted">
-          <ArrowDownWideNarrow size={16} />
-          Newest first
-        </p>
-      </div>
+      <p className="text-xs uppercase">From your communities</p>
       <PostList
         showCommunity
         feed={feed}
         empty={{
-          title: "Every clubhouse starts with a hello.",
+          title: "No posts yet.",
           description:
-            "No posts yet. Share your current watchlist, introduce yourself, or ask the question you’ve been saving.",
+            "Posts and threads from your communities will appear here.",
         }}
         end={
           <Molecule.FeedState
-            eyebrow="End of feed / You’re all caught up"
+            eyebrow="End of feed"
             icon={<CircleCheck size={24} strokeWidth={1.5} />}
-            title="Roll the credits."
-            description="You’ve seen everything new in your communities. Watch an episode, touch some grass, or discover another little world."
+            title="You’re all caught up."
+            description="You’ve seen all recent posts and threads from your communities. Explore other communities to find more discussions."
             action={
               <Atom.ButtonLink href="/explore" variant="secondary">
                 Explore communities

@@ -13,21 +13,31 @@ type Mode = "login" | "signup";
 const content = {
   login: {
     title: "Welcome home.",
-    subtitle: "Your communities have been busy. Let’s catch up.",
     submit: "Log in",
     switchText: "New to Orbis?",
     switchLabel: "Create an account",
     switchHref: "/register",
-    footnote: "A little corner of the internet, just for your people.",
+    footnote: null,
   },
   signup: {
     title: "Find your people.",
-    subtitle: "One account for every corner of your fandom.",
     submit: "Create account",
     switchText: "Already have a home here?",
     switchLabel: "Log in",
     switchHref: "/login",
-    footnote: "By signing up, you agree to our Terms and Community Guidelines.",
+    footnote: (
+      <>
+        By signing up, you agree to our{" "}
+        <Link href="/terms" className="underline hover:text-foreground">
+          Terms
+        </Link>{" "}
+        and{" "}
+        <Link href="/guidelines" className="underline hover:text-foreground">
+          Community guidelines
+        </Link>
+        .
+      </>
+    ),
   },
 };
 
@@ -37,7 +47,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const signup = useAuthStore((state) => state.signup);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const { title, subtitle, submit, switchText, switchLabel, switchHref, footnote } =
+  const { title, submit, switchText, switchLabel, switchHref, footnote } =
     content[mode];
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -75,12 +85,9 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </Link>
       <div className="flex flex-col gap-6">
         <Atom.Brand className="text-5xl" />
-        <div className="flex flex-col gap-3">
-          <h1 className="font-display text-5xl leading-[1.04] font-bold">
-            {title}
-          </h1>
-          <p className="text-sm text-muted">{subtitle}</p>
-        </div>
+        <h1 className="font-display text-5xl leading-[1.04] font-bold">
+          {title}
+        </h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {mode === "login" ? (
             <Molecule.FormField
@@ -126,7 +133,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             autoComplete={mode === "login" ? "current-password" : "new-password"}
             extra={
               mode === "signup"
-                ? "At least 6 characters. Make it a good one."
+                ? "At least 6 characters."
                 : undefined
             }
           />
@@ -150,7 +157,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
             {switchLabel}
           </Link>
         </p>
-        <p className="text-[11px] text-muted">{footnote}</p>
+        {footnote && <p className="text-[11px] text-muted">{footnote}</p>}
       </div>
     </div>
   );

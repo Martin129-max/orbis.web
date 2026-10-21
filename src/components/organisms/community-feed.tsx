@@ -28,9 +28,9 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
       <PostList
         feed={feed}
         empty={{
-          title: "Every clubhouse starts with a hello.",
+          title: "No posts yet.",
           description:
-            "No posts yet. Share your current watchlist, introduce yourself, or ask the question you’ve been saving.",
+            "Be the first to share a post with this community.",
         }}
       />
     </div>

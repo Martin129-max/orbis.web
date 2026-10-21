@@ -1,17 +1,18 @@
 "use client";
 
 import { Segmented } from "antd";
+import { Monitor, Moon, Sun } from "lucide-react";
 import { updatePreferences } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore, type ThemeMode } from "@/stores/theme-store";
 
 const options = [
-  { value: "system", label: "System" },
-  { value: "light", label: "Light" },
-  { value: "dark", label: "Dark" },
-] satisfies { value: ThemeMode; label: string }[];
+  { value: "system", label: "System", icon: <Monitor size={14} /> },
+  { value: "light", label: "Light", icon: <Sun size={14} /> },
+  { value: "dark", label: "Dark", icon: <Moon size={14} /> },
+] satisfies { value: ThemeMode; label: string; icon: React.ReactNode }[];
 
-export function ThemeToggle() {
+export function ThemeToggle({ block = false }: { block?: boolean }) {
   const mode = useThemeStore((state) => state.mode);
   const setMode = useThemeStore((state) => state.setMode);
 
@@ -25,6 +26,7 @@ export function ThemeToggle() {
   return (
     <Segmented<ThemeMode>
       aria-label="Theme"
+      block={block}
       options={options}
       value={mode}
       onChange={handleChange}

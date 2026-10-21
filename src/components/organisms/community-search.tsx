@@ -62,9 +62,9 @@ export function CommunitySearch() {
   return (
     <div className="flex flex-col gap-8">
       <Molecule.PageIntro
-        eyebrow="Find your next obsession"
-        title="There’s a club for that."
-        description="Find a familiar world. Or fall into a completely new one."
+        eyebrow="Explore"
+        title="Find a community."
+        description="Search public communities and join the ones that interest you."
       />
       <div className="flex flex-col gap-2">
         <label htmlFor="community-search" className="text-[13px] font-semibold">
@@ -76,7 +76,7 @@ export function CommunitySearch() {
           allowClear
           autoFocus
           prefix={<Search size={16} className="text-muted" />}
-          placeholder="Anime, manga, a very specific theory…"
+          placeholder="Search by community name…"
           value={query}
           onChange={(event) => setQuery(event.target.value)}
         />
@@ -89,8 +89,8 @@ export function CommunitySearch() {
           </h3>
           {results && results.length > 0 && (
             <span className="text-xs text-muted">
-              {results.length} {results.length === 1 ? "club" : "clubs"}
-              {query.trim() ? "" : " to get you started"}
+              {results.length} {results.length === 1 ? "community" : "communities"}
+              
             </span>
           )}
         </div>
@@ -110,7 +110,7 @@ export function CommunitySearch() {
         ) : results.length === 0 ? (
           <p className="py-8 text-sm text-muted">
             {query.trim()
-              ? "No clubs match that yet. Try a different name."
+              ? "No communities match your search."
               : "No one has made a public community yet."}
           </p>
         ) : (
@@ -157,7 +157,7 @@ export function CommunitySearch() {
         )}
       </section>
       <p className="text-xs text-muted">
-        Missing your niche? Create the community you wish existed.
+        Can’t find what you’re looking for? Create a new community.
       </p>
     </div>
   );

@@ -22,7 +22,7 @@ export function PostList<T extends FeedItem>({
   empty,
   end = (
     <p className="pt-6 text-xs text-muted">
-      All caught up. A good time to watch that next episode.
+      You’re all caught up.
     </p>
   ),
   showCommunity = false,
@@ -37,23 +37,23 @@ export function PostList<T extends FeedItem>({
     return (
       <Molecule.FeedState
         role="alert"
-        eyebrow="Error / Connection interrupted"
+        eyebrow="Connection error"
         icon={<CloudOff size={24} strokeWidth={1.5} />}
-        title="A brief intermission."
-        description="We couldn’t load the feed. Check your connection and give it another go. Your draft is safe."
+        title="The feed couldn’t be loaded."
+        description="Check your connection and try again. Anything you were writing has been kept."
         action={<Atom.Button onClick={retry}>Try again</Atom.Button>}
       />
     );
   }
 
   if (!items) {
-    return <Molecule.FeedSkeleton label="Loading your clubhouse bulletin…" />;
+    return <Molecule.FeedSkeleton label="Loading posts…" />;
   }
 
   if (items.length === 0) {
     return (
       <Molecule.FeedState
-        eyebrow="Empty / Not for long"
+        eyebrow="Empty"
         icon={<NotebookPen size={24} strokeWidth={1.5} />}
         title={empty.title}
         description={empty.description}

@@ -220,7 +220,7 @@ function DangerZone({ community }: { community: Community }) {
   return (
     <Section
       title="Delete community"
-      description="This permanently removes every post, thread, and membership. There’s no undo — please be sure."
+      description="This permanently removes all posts, threads, and memberships. This action can’t be undone."
     >
       <Atom.Button
         danger
@@ -241,7 +241,7 @@ function DangerZone({ community }: { community: Community }) {
           </h4>
           <p className="text-xs text-muted">
             {members > 1
-              ? `${members.toLocaleString()} members will lose their clubhouse. `
+              ? `${members.toLocaleString()} members will lose access. `
               : ""}
             All discussions will be permanently deleted.
           </p>
@@ -269,8 +269,8 @@ export function CommunitySettings({ community }: { community: Community }) {
     <div className="flex flex-col gap-8">
       <Molecule.PageIntro
         eyebrow={`${community.name} / ${community.role === "owner" ? "Owner" : "Admin"}`}
-        title="Keep your clubhouse in shape."
-        description="A few good rules. A little care. A place people want to return to."
+        title="Community settings"
+        description="Manage this community’s details, admins, and visibility."
       />
       <GeneralSettings community={community} />
       <AdminSettings community={community} />

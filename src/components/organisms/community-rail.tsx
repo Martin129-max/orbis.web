@@ -150,7 +150,7 @@ function UserButton() {
 
   const username = profile ? `@${profile.username}` : "Account";
   const menuRow =
-    "focus-ring flex w-full items-center gap-3 rounded-sm text-left text-sm transition-colors";
+    "focus-ring -mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-rail-item hover:text-foreground";
 
   return (
     <Popover
@@ -159,9 +159,10 @@ function UserButton() {
       trigger="click"
       placement="rightBottom"
       arrow={false}
+      align={{ offset: [12, 0] }}
       styles={{ container: { padding: 20, borderRadius: 12 } }}
       content={
-        <div className="flex w-[264px] flex-col gap-4">
+        <div className="flex w-[300px] flex-col gap-4">
           {profile && (
             <div className="flex items-center gap-3">
               <Atom.Avatar label={profile.username} seed={profile.userId} />
@@ -173,7 +174,7 @@ function UserButton() {
           )}
           <hr className="border-divider" />
           <p className="text-xs text-muted uppercase">Theme</p>
-          <ThemeToggle />
+          <ThemeToggle block />
           <label className="flex items-center justify-between gap-2">
             <span className="text-sm">Appear offline</span>
             <AppearOfflineSwitch />
@@ -182,7 +183,7 @@ function UserButton() {
           <Link
             href="/profile"
             onClick={() => setOpen(false)}
-            className={`${menuRow} hover:text-accent`}
+            className={menuRow}
           >
             <User size={18} />
             View profile
@@ -190,7 +191,7 @@ function UserButton() {
           <button
             type="button"
             onClick={handleLogout}
-            className={`${menuRow} text-accent hover:underline`}
+            className={menuRow}
           >
             <LogOut size={18} />
             Log out
