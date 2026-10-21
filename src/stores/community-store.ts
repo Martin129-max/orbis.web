@@ -12,6 +12,7 @@ type CommunityState = {
     communityId: number,
     changes: Partial<Pick<Community, "name" | "isPublic">>,
   ) => Promise<Community>;
+  setCommunityIcon: (communityId: number, file: File | null) => Promise<Community>;
   deleteCommunity: (communityId: number) => Promise<void>;
   reorderCommunities: (communityIds: number[]) => Promise<void>;
 };
@@ -57,6 +58,22 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
       communities: state.communities.map((community) =>
         community.id === communityId
           ? { ...community, name: updated.name, isPublic: updated.isPublic }
+          : community,
+      ),
+    }));
+    return updated;
+  },
+  setCommunityIcon: async (communityId, file) => {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const updated = file
+      ? await api.uploadCommunityIcon(token, communityId, file)
+      : await api.removeCommunityIcon(token, communityId);
+    set((state) => ({
+      communities: state.communities.map((community) =>
+        community.id === communityId
+          ? { ...community, iconUrl: updated.iconUrl }
           : community,
       ),
     }));

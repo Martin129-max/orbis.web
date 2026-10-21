@@ -60,7 +60,12 @@ function CommentItem({
     <li className="flex flex-col gap-3">
       <div className="flex flex-col gap-3">
         <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-          <Atom.Avatar size="xs" label={author} seed={node.author.id} />
+          <Atom.Avatar
+            size="xs"
+            label={author}
+            src={node.author.avatarUrl}
+            seed={node.author.id}
+          />
           <span className="text-foreground">{author}</span>
           <time
             dateTime={node.createdAt}

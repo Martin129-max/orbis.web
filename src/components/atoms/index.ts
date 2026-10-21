@@ -2,6 +2,7 @@ export * from "./avatar";
 export * from "./brand";
 export * from "./button";
 export * from "./button-link";
+export * from "./community-icon";
 export * from "./error-message";
 export * from "./heading";
 export * from "./input";

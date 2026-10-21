@@ -71,7 +71,12 @@ export function MemberList({ communityId }: { communityId: number }) {
           const label = member.nickname ?? displayName(member);
           return (
             <li key={member.userId} className="flex items-center gap-3 py-2">
-              <Atom.Avatar size="sm" label={label} seed={member.userId} />
+              <Atom.Avatar
+                size="sm"
+                label={label}
+                src={member.avatarUrl}
+                seed={member.userId}
+              />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-[13px] font-semibold">
                   {label}

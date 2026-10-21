@@ -1,3 +1,5 @@
+import Image from "next/image";
+
 const tones = ["bg-accent-soft", "bg-rail-item"];
 
 const sizes = {
@@ -18,11 +20,13 @@ function toneFor(seed: string | number) {
 
 export function Avatar({
   label,
+  src,
   seed = label,
   size = "md",
   presence,
 }: {
   label: string;
+  src?: string | null;
   seed?: string | number;
   size?: keyof typeof sizes;
   presence?: "online" | "offline";
@@ -32,7 +36,17 @@ export function Avatar({
       aria-hidden
       className={`relative flex shrink-0 items-center justify-center rounded-full border border-divider font-display leading-none font-bold text-foreground ${sizes[size]} ${toneFor(seed)}`}
     >
-      {Array.from(label)[0]?.toUpperCase()}
+      {src ? (
+        <Image
+          src={src}
+          alt=""
+          fill
+          unoptimized
+          className="rounded-full object-cover"
+        />
+      ) : (
+        Array.from(label)[0]?.toUpperCase()
+      )}
       {presence && (
         <span
           className={`absolute -right-px -bottom-px h-3 w-3 rounded-full border-2 border-surface ${

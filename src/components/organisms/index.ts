@@ -1,5 +1,6 @@
 export * from "./appear-offline-switch";
 export * from "./auth-form";
+export * from "./avatar-picker";
 export * from "./comment-section";
 export * from "./community-feed";
 export * from "./community-forum";

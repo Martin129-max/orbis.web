@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { searchCommunities, type CommunitySearchResult } from "@/lib/api";
-import { initials } from "@/lib/initials";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 
@@ -122,9 +121,12 @@ export function CommunitySearch() {
               >
                 <span
                   aria-hidden
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[22px] leading-none font-bold"
+                  className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[22px] leading-none font-bold"
                 >
-                  {initials(community.name)}
+                  <Atom.CommunityIcon
+                    name={community.name}
+                    src={community.iconUrl}
+                  />
                 </span>
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate">{community.name}</span>

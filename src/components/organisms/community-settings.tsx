@@ -118,6 +118,38 @@ function GeneralSettings({ community }: { community: Community }) {
   );
 }
 
+function IconSettings({ community }: { community: Community }) {
+  const setCommunityIcon = useCommunityStore((state) => state.setCommunityIcon);
+  const [iconUrl, setIconUrl] = useState(community.iconUrl);
+
+  async function save(file: File | null) {
+    const updated = await setCommunityIcon(community.id, file);
+    setIconUrl(updated.iconUrl);
+  }
+
+  return (
+    <Section
+      title="Icon"
+      description="Shown in the sidebar, in Explore, and next to posts from this community."
+    >
+      <div className="flex items-center gap-6">
+        <span
+          aria-hidden
+          className="relative flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full border border-divider bg-rail-item font-display text-[44px] leading-none font-bold"
+        >
+          <Atom.CommunityIcon name={community.name} src={iconUrl} />
+        </span>
+        <Molecule.ImagePicker
+          noun="icon"
+          hasImage={Boolean(iconUrl)}
+          onUpload={save}
+          onRemove={() => save(null)}
+        />
+      </div>
+    </Section>
+  );
+}
+
 function AdminSettings({ community }: { community: Community }) {
   const isOwner = community.role === "owner";
   const [members, setMembers] = useState<Member[] | null>(null);
@@ -169,7 +201,12 @@ function AdminSettings({ community }: { community: Community }) {
             const label = member.nickname ?? displayName(member);
             return (
               <li key={member.userId} className="flex items-center gap-3 py-1">
-                <Atom.Avatar size="sm" label={label} seed={member.userId} />
+                <Atom.Avatar
+                  size="sm"
+                  label={label}
+                  src={member.avatarUrl}
+                  seed={member.userId}
+                />
                 <div className="flex min-w-0 flex-1 flex-col">
                   <span className="truncate text-[13px] font-semibold">
                     {label}
@@ -273,6 +310,7 @@ export function CommunitySettings({ community }: { community: Community }) {
         description="Manage this community’s details, admins, and visibility."
       />
       <GeneralSettings community={community} />
+      <IconSettings community={community} />
       <AdminSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}
     </div>

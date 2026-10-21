@@ -6,7 +6,6 @@ import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { createPost, getFeed } from "@/lib/api";
-import { initials } from "@/lib/initials";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
@@ -45,9 +44,9 @@ export function HomeFeed() {
             <div className="flex items-center gap-3">
               <span
                 aria-hidden
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-divider bg-rail-item font-display text-[17.6px] leading-none font-bold"
+                className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-divider bg-rail-item font-display text-[17.6px] leading-none font-bold"
               >
-                {initials(target.name)}
+                <Atom.CommunityIcon name={target.name} src={target.iconUrl} />
               </span>
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="text-xs text-muted uppercase">Post to</span>

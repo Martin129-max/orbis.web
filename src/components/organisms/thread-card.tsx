@@ -1,10 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { Thread } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
-import { initials } from "@/lib/initials";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
 
@@ -25,9 +25,12 @@ export function ThreadMeta({
         >
           <span
             aria-hidden
-            className="flex h-5 w-5 items-center justify-center rounded-full bg-rail-item font-display text-[9.6px] leading-none font-bold"
+            className="relative flex h-5 w-5 items-center justify-center rounded-full bg-rail-item font-display text-[9.6px] leading-none font-bold"
           >
-            {initials(thread.community.name)}
+            <Atom.CommunityIcon
+              name={thread.community.name}
+              src={thread.community.iconUrl}
+            />
           </span>
           {thread.community.name}
         </Link>

@@ -35,6 +35,7 @@ function FriendRow({
         <Atom.Avatar
           size="sm"
           label={displayName(user)}
+          src={user.avatarUrl}
           seed={user.userId}
           presence={presence}
         />

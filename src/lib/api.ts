@@ -12,6 +12,7 @@ export type Profile = {
   userId: number;
   email: string;
   username: string;
+  avatarUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
   createdAt: string;
@@ -22,6 +23,7 @@ export type CommunityRole = "owner" | "admin" | "member";
 export type Community = {
   id: number;
   name: string;
+  iconUrl: string | null;
   ownerId: number;
   isPublic: boolean;
   createdAt: string;
@@ -32,6 +34,7 @@ export type Community = {
 export type CommunitySearchResult = {
   id: number;
   name: string;
+  iconUrl: string | null;
   memberCount: number;
   joined: boolean;
 };
@@ -92,9 +95,14 @@ export async function getProfile(token: string): Promise<Profile | null> {
   return res.ok ? res.json() : null;
 }
 
-export type Author = { id: number; username: string; name: string | null };
+export type Author = {
+  id: number;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+};
 
-export type CommunitySummary = Pick<Community, "id" | "name">;
+export type CommunitySummary = Pick<Community, "id" | "name" | "iconUrl">;
 
 export type Post = {
   type: "post";
@@ -147,6 +155,7 @@ export type Member = {
   userId: number;
   username: string;
   name: string | null;
+  avatarUrl: string | null;
   nickname: string | null;
   joinedAt: string;
   isOwner: boolean;
@@ -167,6 +176,36 @@ export async function updatePreferences(
   });
 
   if (!res.ok) throw new Error("Could not save your preferences.");
+  return res.json();
+}
+
+export async function uploadAvatar(
+  token: string,
+  file: File,
+): Promise<Profile> {
+  const body = new FormData();
+  body.append("file", file);
+
+  const res = await api("/users/me/avatar", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  });
+
+  if (res.status === 413) throw new Error("Pictures must be 10 MB or smaller.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not upload your picture."));
+  }
+  return res.json();
+}
+
+export async function removeAvatar(token: string): Promise<Profile> {
+  const res = await api("/users/me/avatar", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not remove your picture.");
   return res.json();
 }
 
@@ -244,6 +283,41 @@ export async function updateCommunity(
   if (res.status === 403) throw new Error("Only admins can change these settings.");
   if (!res.ok) throw new Error("Could not save the settings. Please try again.");
   return res.json();
+}
+
+async function sendCommunityIcon(
+  token: string,
+  communityId: number,
+  init: RequestInit,
+): Promise<Community> {
+  const res = await api(`/communities/${communityId}/icon`, {
+    ...init,
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only admins can change the icon.");
+  if (res.status === 413) throw new Error("Icons must be 10 MB or smaller.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not save the icon."));
+  }
+  return res.json();
+}
+
+export function uploadCommunityIcon(
+  token: string,
+  communityId: number,
+  file: File,
+): Promise<Community> {
+  const body = new FormData();
+  body.append("file", file);
+  return sendCommunityIcon(token, communityId, { method: "POST", body });
+}
+
+export function removeCommunityIcon(
+  token: string,
+  communityId: number,
+): Promise<Community> {
+  return sendCommunityIcon(token, communityId, { method: "DELETE" });
 }
 
 export async function deleteCommunity(
@@ -370,6 +444,7 @@ export type FriendUser = {
   userId: number;
   username: string;
   name: string | null;
+  avatarUrl: string | null;
 };
 
 export type Friend = FriendUser & { online: boolean };

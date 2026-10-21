@@ -34,6 +34,7 @@ function ThreadDetail({
           <Atom.Avatar
             size="xs"
             label={displayName(thread.author)}
+            src={thread.author.avatarUrl}
             seed={thread.author.id}
           />
           {displayName(thread.author)} · {timeAgo(thread.createdAt)}

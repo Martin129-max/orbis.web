@@ -34,7 +34,6 @@ import {
 } from "react";
 import * as Atom from "@atom";
 import type { Community } from "@/lib/api";
-import { initials } from "@/lib/initials";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
@@ -43,7 +42,7 @@ import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
 
 function itemClass(active: boolean) {
-  return `focus-ring flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
+  return `focus-ring relative flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
     active
       ? "bg-accent text-accent-foreground"
       : "bg-rail-item text-foreground hover:bg-accent-soft"
@@ -120,12 +119,14 @@ function SortableCommunity({
         aria-label={community.name}
         aria-current={active ? "page" : undefined}
         className={`${itemClass(active)} ${
+          active ? "ring-2 ring-accent ring-offset-2 ring-offset-rail" : ""
+        } ${
           isDragging
             ? "cursor-grabbing border-2 border-dashed border-accent opacity-50"
             : ""
         }`}
       >
-        {initials(community.name)}
+        <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
       </Link>
     </RailSlot>
   );
@@ -165,7 +166,11 @@ function UserButton() {
         <div className="flex w-[300px] flex-col gap-4">
           {profile && (
             <div className="flex items-center gap-3">
-              <Atom.Avatar label={profile.username} seed={profile.userId} />
+              <Atom.Avatar
+                label={profile.username}
+                src={profile.avatarUrl}
+                seed={profile.userId}
+              />
               <div className="flex min-w-0 flex-col">
                 <span className="truncate">{profile.username}</span>
                 <span className="truncate text-xs text-muted">{username}</span>
@@ -208,6 +213,7 @@ function UserButton() {
         <Atom.Avatar
           size="rail"
           label={profile?.username ?? "?"}
+          src={profile?.avatarUrl}
           seed={profile?.userId ?? 0}
           presence={profile?.appearOffline ? "offline" : "online"}
         />

@@ -4,9 +4,9 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
 import type { Profile } from "@/lib/api";
-import { initials } from "@/lib/initials";
 import { useCommunityStore } from "@/stores/community-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
+import { AvatarPicker } from "./avatar-picker";
 import { ThemeToggle } from "./theme-toggle";
 
 type ProfileCardProps = {
@@ -37,7 +37,12 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
           Your profile
         </p>
         <div className="flex items-center gap-6">
-          <Atom.Avatar size="lg" label={profile.username} seed={profile.userId} />
+          <Atom.Avatar
+            size="lg"
+            label={profile.username}
+            src={profile.avatarUrl}
+            seed={profile.userId}
+          />
           <div className="flex min-w-0 flex-col gap-1">
             <h2 className="truncate font-display text-4xl leading-[1.04] font-bold sm:text-5xl">
               {profile.username}
@@ -46,6 +51,7 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
             <p className="text-xs text-muted">Member since {memberSince}</p>
           </div>
         </div>
+        <AvatarPicker />
         <div className="flex flex-col gap-1 rounded-lg bg-surface p-4">
           <p className="text-[11px] font-bold text-muted uppercase">
             Email · Only you can see this
@@ -89,9 +95,12 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
                 >
                   <span
                     aria-hidden
-                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[17.6px] leading-none font-bold text-foreground"
+                    className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[17.6px] leading-none font-bold text-foreground"
                   >
-                    {initials(community.name)}
+                    <Atom.CommunityIcon
+                      name={community.name}
+                      src={community.iconUrl}
+                    />
                   </span>
                   <span className="min-w-0 flex-1 truncate text-sm font-semibold">
                     {community.name}
