@@ -5,13 +5,15 @@ export function PageIntro({
   title,
   description,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
 }) {
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-xs font-bold text-accent uppercase">{eyebrow}</p>
+      {eyebrow && (
+        <p className="text-xs font-bold text-accent uppercase">{eyebrow}</p>
+      )}
       <h2 className="font-display text-4xl leading-[1.04] font-bold sm:text-5xl">
         {title}
       </h2>

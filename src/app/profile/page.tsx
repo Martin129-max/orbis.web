@@ -32,7 +32,6 @@ export default function ProfilePage() {
     <Template.AppTemplate>
       <main className="flex min-h-0 flex-1 flex-col">
         <Template.PageHeader
-          tagline="Your little corner of the internet"
           actions={<Organism.SidePanelToggle label="Friends" />}
         >
           <Atom.Heading>Your profile</Atom.Heading>

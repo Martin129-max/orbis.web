@@ -34,14 +34,13 @@ export function HomeFeed() {
   return (
     <div className="flex flex-col gap-6">
       <Molecule.PageIntro
-        eyebrow="The clubhouse bulletin"
         title={`Good to see you${profile ? `, ${profile.username}` : ""}.`}
-        description="Fresh thoughts from your favorite corners of the fandom."
+        description="The latest posts and discussions from your communities."
       />
       {target && (
         <PostComposer
           onPost={handlePost}
-          placeholder="What’s living rent-free in your head?"
+          placeholder="Share an update with your community…"
           target={
             <div className="flex items-center gap-3">
               <span
