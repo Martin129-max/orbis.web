@@ -75,7 +75,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
           type="password"
           size="large"
           required
-          minLength={6}
+          minLength={mode === "signup" ? 6 : undefined}
           autoComplete={mode === "login" ? "current-password" : "new-password"}
         />
         {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
