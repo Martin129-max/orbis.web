@@ -1,6 +1,6 @@
 "use client";
 
-import { Modal } from "antd";
+import { Modal, Switch } from "antd";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as Atom from "@atom";
@@ -19,9 +19,11 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
   const createCommunity = useCommunityStore((state) => state.createCommunity);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [isPublic, setIsPublic] = useState(false);
 
   function handleClose() {
     setError(null);
+    setIsPublic(false);
     onClose();
   }
 
@@ -32,7 +34,7 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
     setPending(true);
 
     try {
-      const community = await createCommunity(name);
+      const community = await createCommunity(name, isPublic);
       handleClose();
       router.push(`/communities/${community.id}`);
     } catch (e) {
@@ -62,6 +64,15 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
           autoComplete="off"
           autoFocus
         />
+        <label className="flex items-start justify-between gap-4">
+          <span className="flex flex-col">
+            <span className="text-sm font-medium">Public community</span>
+            <span className="text-xs text-muted">
+              Anyone can find it in Explore and join.
+            </span>
+          </span>
+          <Switch checked={isPublic} onChange={setIsPublic} />
+        </label>
         {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       </form>
     </Modal>

@@ -1,6 +1,7 @@
 export * from "./auth-form";
 export * from "./community-feed";
 export * from "./community-rail";
+export * from "./community-search";
 export * from "./create-community-modal";
 export * from "./friends-panel";
 export * from "./guest-gate";

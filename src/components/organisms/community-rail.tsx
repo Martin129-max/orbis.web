@@ -21,7 +21,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { HomeOutlined, LogoutOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  CompassOutlined,
+  HomeOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+} from "@ant-design/icons";
 import { Popover, Switch, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -34,20 +39,12 @@ import {
 } from "react";
 import * as Atom from "@atom";
 import { updatePreferences, type Community } from "@/lib/api";
+import { initials } from "@/lib/initials";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
 import { CreateCommunityModal } from "./create-community-modal";
 import { ThemeToggle } from "./theme-toggle";
-
-function initials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => Array.from(word)[0].toUpperCase())
-    .join("");
-}
 
 const itemBase =
   "flex h-12 w-12 items-center justify-center text-base font-semibold transition-[border-radius,background-color,color] duration-200 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
@@ -321,6 +318,20 @@ export function CommunityRail() {
           >
             <PlusOutlined />
           </button>
+        </RailSlot>
+        <RailSlot label="Explore communities" active={pathname === "/explore"}>
+          <Link
+            href="/explore"
+            aria-label="Explore communities"
+            aria-current={pathname === "/explore" ? "page" : undefined}
+            className={
+              pathname === "/explore"
+                ? itemClass(true)
+                : `${itemBase} rounded-3xl bg-rail-item text-accent hover:rounded-2xl hover:bg-accent hover:text-white`
+            }
+          >
+            <CompassOutlined />
+          </Link>
         </RailSlot>
       </ul>
       <div className="flex justify-center border-t border-rail-divider py-3">

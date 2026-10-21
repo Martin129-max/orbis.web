@@ -6,7 +6,8 @@ import { useAuthStore } from "./auth-store";
 type CommunityState = {
   communities: Community[];
   fetchCommunities: () => Promise<void>;
-  createCommunity: (name: string) => Promise<Community>;
+  createCommunity: (name: string, isPublic: boolean) => Promise<Community>;
+  joinCommunity: (communityId: number) => Promise<Community>;
   reorderCommunities: (communityIds: number[]) => Promise<void>;
 };
 
@@ -22,12 +23,24 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     const communities = await api.getCommunities(token).catch(() => null);
     if (communities) set({ communities });
   },
-  createCommunity: async (name) => {
+  createCommunity: async (name, isPublic) => {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
 
-    const community = await api.createCommunity(token, name);
+    const community = await api.createCommunity(token, name, isPublic);
     set((state) => ({ communities: [...state.communities, community] }));
+    return community;
+  },
+  joinCommunity: async (communityId) => {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const community = await api.joinCommunity(token, communityId);
+    set((state) => ({
+      communities: state.communities.some(({ id }) => id === community.id)
+        ? state.communities
+        : [...state.communities, community],
+    }));
     return community;
   },
   reorderCommunities: async (communityIds) => {

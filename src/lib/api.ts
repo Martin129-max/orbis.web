@@ -15,7 +15,15 @@ export type Community = {
   id: number;
   name: string;
   ownerId: number;
+  isPublic: boolean;
   createdAt: string;
+};
+
+export type CommunitySearchResult = {
+  id: number;
+  name: string;
+  memberCount: number;
+  joined: boolean;
 };
 
 export async function api(path: string, init?: RequestInit) {
@@ -135,6 +143,7 @@ export async function reorderCommunities(
 export async function createCommunity(
   token: string,
   name: string,
+  isPublic: boolean,
 ): Promise<Community> {
   const res = await api("/communities", {
     method: "POST",
@@ -142,10 +151,37 @@ export async function createCommunity(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify({ name, isPublic }),
   });
 
   if (!res.ok) throw new Error("Could not create the community. Please try again.");
+  return res.json();
+}
+
+export async function searchCommunities(
+  token: string,
+  query: string,
+): Promise<CommunitySearchResult[]> {
+  const res = await api(
+    `/communities/search?${new URLSearchParams({ q: query })}`,
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+
+  if (!res.ok) throw new Error("Could not search communities.");
+  return res.json();
+}
+
+export async function joinCommunity(
+  token: string,
+  communityId: number,
+): Promise<Community> {
+  const res = await api(`/communities/${communityId}/join`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404) throw new Error("This community is no longer public.");
+  if (!res.ok) throw new Error("Could not join the community. Please try again.");
   return res.json();
 }
 
