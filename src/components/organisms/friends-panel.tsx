@@ -5,11 +5,10 @@ import { Button, Popconfirm, Tooltip } from "antd";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import type { FriendUser } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { useFriendsStore } from "@/stores/friends-store";
 
-function label(user: FriendUser) {
-  return user.name ?? user.email;
-}
+const label = displayName;
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -52,7 +51,9 @@ function FriendRow({
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="truncate text-sm font-medium">{label(user)}</span>
-        {subtitle && <span className="text-xs text-muted">{subtitle}</span>}
+        <span className="truncate text-xs text-muted">
+          {subtitle ?? `@${user.username}`}
+        </span>
       </div>
       <div className="flex shrink-0 gap-1">{children}</div>
     </li>
@@ -90,13 +91,13 @@ function AddFriendForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const email = String(new FormData(form).get("email")).trim();
+    const username = String(new FormData(form).get("username")).trim();
     setError(null);
     setSent(false);
     setPending(true);
 
     try {
-      await addFriend({ email });
+      await addFriend({ username });
       form.reset();
       setSent(true);
     } catch (e) {
@@ -110,11 +111,11 @@ function AddFriendForm() {
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
       <div className="flex gap-2">
         <Atom.Input
-          name="email"
-          type="email"
+          name="username"
           required
-          placeholder="Add a friend by email"
-          aria-label="Friend's email"
+          placeholder="Add a friend by username"
+          aria-label="Friend's username"
+          autoCapitalize="none"
           autoComplete="off"
           onChange={() => setSent(false)}
         />
@@ -201,7 +202,7 @@ export function FriendsPanel() {
             <div className="flex flex-col gap-1 py-4 text-center">
               <p className="text-sm font-medium">No friends yet</p>
               <p className="text-xs text-muted">
-                Add people by email, or from a community&apos;s member list.
+                Add people by username, or from a community&apos;s member list.
               </p>
             </div>
           ) : (

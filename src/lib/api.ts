@@ -2,11 +2,16 @@ import type { ThemeMode } from "@/stores/theme-store";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
-export type Credentials = { email: string; password: string };
+export type LoginCredentials = { identifier: string; password: string };
+
+export type SignupDetails = { email: string; username: string; password: string };
+
+export type Credentials = LoginCredentials | SignupDetails;
 
 export type Profile = {
   userId: number;
   email: string;
+  username: string;
   theme: ThemeMode;
   appearOffline: boolean;
 };
@@ -37,6 +42,11 @@ export async function api(path: string, init?: RequestInit) {
   }
 }
 
+async function errorMessage(res: Response, fallback: string) {
+  const { message } = await res.json().catch(() => ({ message: null }));
+  return typeof message === "string" ? `${message}.` : fallback;
+}
+
 async function authenticate(
   path: string,
   credentials: Credentials,
@@ -47,19 +57,28 @@ async function authenticate(
     body: JSON.stringify(credentials),
   });
 
-  if (res.status === 401) throw new Error("Invalid email or password");
-  if (res.status === 409) throw new Error("Email is already registered");
+  if (res.status === 401) {
+    throw new Error("Invalid username, email, or password.");
+  }
+  if (res.status === 409) {
+    throw new Error(await errorMessage(res, "That account already exists."));
+  }
+  if (res.status === 400) {
+    throw new Error(
+      "Usernames are 3–20 characters: letters, numbers, or underscores.",
+    );
+  }
   if (!res.ok) throw new Error("Something went wrong. Please try again.");
 
   const { access_token } = await res.json();
   return access_token;
 }
 
-export function signup(credentials: Credentials) {
-  return authenticate("/auth/signup", credentials);
+export function signup(details: SignupDetails) {
+  return authenticate("/auth/signup", details);
 }
 
-export function login(credentials: Credentials) {
+export function login(credentials: LoginCredentials) {
   return authenticate("/auth/login", credentials);
 }
 
@@ -71,7 +90,7 @@ export async function getProfile(token: string): Promise<Profile | null> {
   return res.ok ? res.json() : null;
 }
 
-export type Author = { id: number; email: string; name: string | null };
+export type Author = { id: number; username: string; name: string | null };
 
 export type CommunitySummary = Pick<Community, "id" | "name">;
 
@@ -124,7 +143,7 @@ export type VoteResult = { score: number; myVote: number };
 
 export type Member = {
   userId: number;
-  email: string;
+  username: string;
   name: string | null;
   nickname: string | null;
   joinedAt: string;
@@ -345,7 +364,11 @@ export async function getMembers(
   return res.ok ? res.json() : [];
 }
 
-export type FriendUser = { userId: number; email: string; name: string | null };
+export type FriendUser = {
+  userId: number;
+  username: string;
+  name: string | null;
+};
 
 export type Friend = FriendUser & { online: boolean };
 
@@ -355,7 +378,7 @@ export type FriendList = {
   outgoing: FriendUser[];
 };
 
-export type FriendTarget = { userId: number } | { email: string };
+export type FriendTarget = { userId: number } | { username: string };
 
 export async function getFriends(token: string): Promise<FriendList> {
   const res = await api("/friends", {
@@ -379,11 +402,11 @@ export async function addFriend(
     body: JSON.stringify(target),
   });
 
-  if (res.status === 404) throw new Error("No one with that email is on Orbis.");
-  if (res.status === 400) throw new Error("You can't add yourself.");
-  if (res.status === 409) {
-    const { message } = await res.json();
-    throw new Error(`${message}.`);
+  if (res.status === 404) {
+    throw new Error("No one with that username is on Orbis.");
+  }
+  if (res.status === 400 || res.status === 409) {
+    throw new Error(await errorMessage(res, "That isn't a valid username."));
   }
   if (!res.ok) throw new Error("Could not send the request. Please try again.");
 }

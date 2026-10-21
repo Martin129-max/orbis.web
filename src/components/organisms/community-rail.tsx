@@ -158,7 +158,7 @@ function UserButton() {
     }
   }
 
-  const email = profile?.email ?? "Account";
+  const username = profile ? `@${profile.username}` : "Account";
 
   return (
     <Popover
@@ -169,7 +169,7 @@ function UserButton() {
       content={
         <div className="flex w-60 flex-col gap-4">
           <div className="min-w-0">
-            <p className="truncate font-semibold">{email}</p>
+            <p className="truncate font-semibold">{username}</p>
             {profile && (
               <p className="text-xs text-muted">User #{profile.userId}</p>
             )}
@@ -205,11 +205,11 @@ function UserButton() {
     >
       <button
         type="button"
-        aria-label={`Account: ${email}`}
+        aria-label={`Account: ${username}`}
         aria-expanded={open}
         className={itemClass(open)}
       >
-        {profile ? Array.from(profile.email)[0].toUpperCase() : null}
+        {profile ? Array.from(profile.username)[0].toUpperCase() : null}
       </button>
     </Popover>
   );

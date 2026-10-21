@@ -10,6 +10,7 @@ import {
   type Comment,
   type Commentable,
 } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
 import { useAuthStore } from "@/stores/auth-store";
@@ -54,7 +55,7 @@ function CommentItem({
   onChange: (comment: Comment) => void;
 }) {
   const [replying, setReplying] = useState(false);
-  const author = node.author.name ?? node.author.email;
+  const author = displayName(node.author);
 
   return (
     <li className="flex flex-col gap-3">

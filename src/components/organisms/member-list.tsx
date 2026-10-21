@@ -5,6 +5,7 @@ import { Button, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import { getMembers, type Member } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
 
@@ -64,7 +65,7 @@ export function MemberList({ communityId }: { communityId: number }) {
       </h2>
       <ul className="flex flex-col gap-1">
         {members.map((member) => {
-          const label = member.nickname ?? member.name ?? member.email;
+          const label = member.nickname ?? displayName(member);
           return (
             <li
               key={member.userId}
@@ -73,11 +74,15 @@ export function MemberList({ communityId }: { communityId: number }) {
               <Atom.Avatar label={label} seed={member.userId} />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium">{label}</span>
-                {(member.isOwner || member.isAdmin) && (
-                  <span className="text-xs text-accent">
-                    {member.isOwner ? "Owner" : "Admin"}
-                  </span>
-                )}
+                <span className="truncate text-xs text-muted">
+                  @{member.username}
+                  {(member.isOwner || member.isAdmin) && (
+                    <span className="text-accent">
+                      {" · "}
+                      {member.isOwner ? "Owner" : "Admin"}
+                    </span>
+                  )}
+                </span>
               </div>
               {myId !== undefined && member.userId !== myId && (
                 <FriendAction userId={member.userId} />

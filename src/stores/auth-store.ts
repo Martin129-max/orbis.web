@@ -1,14 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import * as api from "@/lib/api";
-import type { Credentials, Profile } from "@/lib/api";
+import type { LoginCredentials, Profile, SignupDetails } from "@/lib/api";
 import { useThemeStore } from "./theme-store";
 
 type AuthState = {
   token: string | null;
   profile: Profile | null;
-  login: (credentials: Credentials) => Promise<void>;
-  signup: (credentials: Credentials) => Promise<void>;
+  login: (credentials: LoginCredentials) => Promise<void>;
+  signup: (details: SignupDetails) => Promise<void>;
   logout: () => void;
   fetchProfile: () => Promise<Profile | null>;
 };
@@ -30,8 +30,8 @@ export const useAuthStore = create<AuthState>()(
         set({ token: await api.login(credentials) });
         markAuthenticated(true);
       },
-      signup: async (credentials) => {
-        set({ token: await api.signup(credentials) });
+      signup: async (details) => {
+        set({ token: await api.signup(details) });
         markAuthenticated(true);
       },
       logout: () => {

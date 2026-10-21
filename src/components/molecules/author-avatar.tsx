@@ -4,6 +4,7 @@ import { Tooltip } from "antd";
 import Link from "next/link";
 import * as Atom from "@atom";
 import type { Author, CommunitySummary } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { initials } from "@/lib/initials";
 
 export function AuthorAvatar({
@@ -15,7 +16,7 @@ export function AuthorAvatar({
 }) {
   return (
     <div className="relative h-fit shrink-0">
-      <Atom.Avatar label={author.name ?? author.email} seed={author.id} />
+      <Atom.Avatar label={displayName(author)} seed={author.id} />
       {community && (
         <Tooltip title={community.name}>
           <Link

@@ -12,6 +12,7 @@ import {
   type Community,
   type Member,
 } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 
@@ -157,7 +158,7 @@ function AdminSettings({ community }: { community: Community }) {
       ) : (
         <ul className="flex flex-col gap-1">
           {members.map((member) => {
-            const label = member.nickname ?? member.name ?? member.email;
+            const label = member.nickname ?? displayName(member);
             return (
               <li
                 key={member.userId}

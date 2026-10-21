@@ -3,6 +3,7 @@
 import Link from "next/link";
 import * as Molecule from "@molecule";
 import type { Thread } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { initials } from "@/lib/initials";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
@@ -34,7 +35,7 @@ export function ThreadMeta({
           <span aria-hidden>·</span>
         </>
       )}
-      <span>{thread.author.name ?? thread.author.email}</span>
+      <span>{displayName(thread.author)}</span>
       <span aria-hidden>·</span>
       <time
         dateTime={thread.createdAt}

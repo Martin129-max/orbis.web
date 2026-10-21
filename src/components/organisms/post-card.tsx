@@ -1,5 +1,6 @@
 import * as Molecule from "@molecule";
 import type { Post } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 
 type PostCardProps = {
@@ -13,7 +14,7 @@ export function PostCard({
   showCommunity = false,
   onOpenComments,
 }: PostCardProps) {
-  const author = post.author.name ?? post.author.email;
+  const author = displayName(post.author);
 
   return (
     <article className="flex gap-3 rounded-xl border border-black/10 bg-surface p-4 dark:border-white/10">

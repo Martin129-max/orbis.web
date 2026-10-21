@@ -29,7 +29,8 @@ const content = {
 
 export function AuthForm({ mode }: { mode: Mode }) {
   const router = useRouter();
-  const action = useAuthStore((state) => state[mode]);
+  const login = useAuthStore((state) => state.login);
+  const signup = useAuthStore((state) => state.signup);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const { title, subtitle, submit, switchText, switchLabel, switchHref } =
@@ -42,10 +43,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
     setPending(true);
 
     try {
-      await action({
-        email: String(form.get("email")),
-        password: String(form.get("password")),
-      });
+      const password = String(form.get("password"));
+      if (mode === "login") {
+        await login({ identifier: String(form.get("identifier")).trim(), password });
+      } else {
+        await signup({
+          email: String(form.get("email")),
+          username: String(form.get("username")),
+          password,
+        });
+      }
       router.push("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -68,21 +75,46 @@ export function AuthForm({ mode }: { mode: Mode }) {
           <Atom.Heading>{title}</Atom.Heading>
           <p className="text-sm text-muted">{subtitle}</p>
         </div>
-        <Molecule.FormField
-          label="Email"
-          name="email"
-          type="email"
-          size="large"
-          required
-          autoComplete="email"
-        />
+        {mode === "login" ? (
+          <Molecule.FormField
+            label="Email or username"
+            name="identifier"
+            size="large"
+            required
+            autoCapitalize="none"
+            autoComplete="username"
+          />
+        ) : (
+          <>
+            <Molecule.FormField
+              label="Email"
+              name="email"
+              type="email"
+              size="large"
+              required
+              autoComplete="email"
+            />
+            <Molecule.FormField
+              label="Username"
+              name="username"
+              size="large"
+              required
+              minLength={3}
+              maxLength={20}
+              pattern="[A-Za-z0-9_]+"
+              title="3–20 characters: letters, numbers, or underscores"
+              autoCapitalize="none"
+              autoComplete="username"
+            />
+          </>
+        )}
         <Molecule.FormField
           label="Password"
           name="password"
           type="password"
           size="large"
           required
-          minLength={mode === "signup" ? 6 : undefined}
+          minLength={6}
           autoComplete={mode === "login" ? "current-password" : "new-password"}
         />
         {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
