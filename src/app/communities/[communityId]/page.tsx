@@ -1,6 +1,12 @@
 "use client";
 
-import { Globe, Lock, Settings } from "lucide-react";
+import {
+  Globe,
+  Lock,
+  MessagesSquare,
+  Newspaper,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { Tooltip } from "antd";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -15,8 +21,8 @@ import { useAuthStore } from "@/stores/auth-store";
 type Loaded = { id: string; community: Community | null; failed?: boolean };
 
 const tabs = [
-  { value: "feed", label: "Feed" },
-  { value: "forum", label: "Forum" },
+  { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
+  { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
 ] as const;
 
 export default function CommunityPage() {
@@ -61,7 +67,6 @@ export default function CommunityPage() {
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
           <Template.PageHeader
-            tagline="Your clubhouse"
             actions={
               <>
                 {canManage(current.community) && (
@@ -87,19 +92,20 @@ export default function CommunityPage() {
             aria-label="Community sections"
             className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
           >
-            {tabs.map(({ value, label }) => (
+            {tabs.map(({ value, label, icon }) => (
               <Link
                 key={value}
                 href={`/communities/${current.community!.id}${
                   value === "forum" ? "?tab=forum" : ""
                 }`}
                 aria-current={tab === value ? "page" : undefined}
-                className={`focus-ring -mb-px rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+                className={`focus-ring -mb-px flex items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
                   tab === value
                     ? "border-accent text-accent"
                     : "border-transparent font-semibold text-foreground hover:text-accent"
                 }`}
               >
+                {icon}
                 {label}
               </Link>
             ))}

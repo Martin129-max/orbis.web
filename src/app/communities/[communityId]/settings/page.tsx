@@ -54,7 +54,6 @@ export default function CommunitySettingsPage() {
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
           <Template.PageHeader
-            tagline="Your clubhouse"
             actions={<Organism.SidePanelToggle label="Members" />}
           >
             <Link

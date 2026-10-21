@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal, Segmented } from "antd";
+import { Flame, Sparkles, TrendingUp } from "lucide-react";
 import { useCallback, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -16,10 +17,10 @@ import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 
 const sorts = [
-  { value: "hot", label: "Hot" },
-  { value: "new", label: "New" },
-  { value: "top", label: "Top" },
-] satisfies { value: ThreadSort; label: string }[];
+  { value: "hot", label: "Hot", icon: <Flame size={14} /> },
+  { value: "new", label: "New", icon: <Sparkles size={14} /> },
+  { value: "top", label: "Top", icon: <TrendingUp size={14} /> },
+] satisfies { value: ThreadSort; label: string; icon: React.ReactNode }[];
 
 function ForumThreads({
   communityId,

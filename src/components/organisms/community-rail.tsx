@@ -80,6 +80,15 @@ function RailSlot({
   );
 }
 
+const FADE = "24px";
+
+function fadeMask({ above, below }: { above: boolean; below: boolean }) {
+  if (!above && !below) return undefined;
+
+  const mask = `linear-gradient(to bottom, ${above ? "transparent" : "#000"}, #000 ${FADE}, #000 calc(100% - ${FADE}), ${below ? "transparent" : "#000"})`;
+  return { maskImage: mask, WebkitMaskImage: mask };
+}
+
 function SortableCommunity({
   community,
   active,
@@ -216,6 +225,21 @@ export function CommunityRail() {
   );
   const [creating, setCreating] = useState(false);
   const suppressClick = useRef(false);
+  const scrollList = useRef<HTMLUListElement>(null);
+  const [overflow, setOverflow] = useState({ above: false, below: false });
+
+  function measureOverflow() {
+    const list = scrollList.current;
+    if (!list) return;
+
+    const above = list.scrollTop > 0;
+    const below = list.scrollTop + list.clientHeight < list.scrollHeight - 1;
+    setOverflow((current) =>
+      current.above === above && current.below === below
+        ? current
+        : { above, below },
+    );
+  }
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, {
@@ -246,6 +270,16 @@ export function CommunityRail() {
       ),
     );
   }
+
+  useEffect(() => {
+    const list = scrollList.current;
+    if (!list) return;
+
+    const observer = new ResizeObserver(measureOverflow);
+    observer.observe(list);
+    Array.from(list.children).forEach((child) => observer.observe(child));
+    return () => observer.disconnect();
+  }, [communities.length]);
 
   useEffect(() => {
     fetchCommunities();
@@ -282,7 +316,12 @@ export function CommunityRail() {
         </RailSlot>
         <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
       </ul>
-      <ul className="-mx-2 flex min-h-0 w-[calc(100%+1rem)] flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-1 [scrollbar-width:none] sm:-mx-4 sm:w-[calc(100%+2rem)] sm:px-4">
+      <ul
+        ref={scrollList}
+        onScroll={measureOverflow}
+        style={fadeMask(overflow)}
+        className="-mx-2 flex min-h-0 w-[calc(100%+1rem)] flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-1 [scrollbar-width:none] sm:-mx-4 sm:w-[calc(100%+2rem)] sm:px-4"
+      >
         <DndContext
           id="community-rail"
           sensors={sensors}
@@ -326,6 +365,7 @@ export function CommunityRail() {
           </Link>
         </RailSlot>
       </ul>
+      <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
       <div className="shrink-0">
         <UserButton />
       </div>
