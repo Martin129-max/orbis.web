@@ -56,6 +56,13 @@ export function AuthForm({ mode }: { mode: Mode }) {
   return (
     <div className="flex w-full max-w-sm flex-col gap-10">
       <Atom.Brand />
+      <Atom.Button
+        type="button"
+        variant="secondary"
+        onClick={() => router.push("/")}
+      >
+       ← Back to homepage
+      </Atom.Button>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <Atom.Heading>{title}</Atom.Heading>
