@@ -62,10 +62,12 @@ export function PanelHeading({
   title: string;
   label: string;
 }) {
+  const isDesktop = useIsDesktop();
+
   return (
     <div className="flex items-center justify-between gap-2">
       <h2 className="font-display text-2xl font-bold">{title}</h2>
-      <SidePanelToggle label={label} />
+      {!isDesktop && <SidePanelToggle label={label} />}
     </div>
   );
 }
