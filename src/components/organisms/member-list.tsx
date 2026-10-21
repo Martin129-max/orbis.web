@@ -58,10 +58,7 @@ export function MemberList({ communityId }: { communityId: number }) {
   }, [communityId]);
 
   return (
-    <aside
-      aria-label="Members"
-      className="hidden w-72 shrink-0 flex-col gap-3 overflow-y-auto border-l border-black/10 bg-surface px-4 py-6 lg:flex dark:border-white/10"
-    >
+    <div className="flex flex-col gap-3">
       <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
         Members — {members.length}
       </h2>
@@ -89,6 +86,6 @@ export function MemberList({ communityId }: { communityId: number }) {
           );
         })}
       </ul>
-    </aside>
+    </div>
   );
 }

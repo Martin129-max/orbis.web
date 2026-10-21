@@ -156,10 +156,7 @@ export function FriendsPanel() {
   }
 
   return (
-    <aside
-      aria-label="Friends"
-      className="hidden w-72 shrink-0 flex-col gap-6 overflow-y-auto border-l border-black/10 bg-surface px-4 py-6 lg:flex dark:border-white/10"
-    >
+    <div className="flex flex-col gap-6">
       <AddFriendForm />
       {!loaded ? (
         <div className="flex py-8">
@@ -229,6 +226,6 @@ export function FriendsPanel() {
           )}
         </>
       )}
-    </aside>
+    </div>
   );
 }

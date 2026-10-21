@@ -93,17 +93,20 @@ export default function CommunityPage() {
                 )}
               </span>
             </Tooltip>
-            {canManage(current.community) && (
-              <Tooltip title="Community settings">
-                <Link
-                  href={`/communities/${current.community.id}/settings`}
-                  aria-label="Community settings"
-                  className="ml-auto flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
-                >
-                  <Settings size={20} />
-                </Link>
-              </Tooltip>
-            )}
+            <div className="ml-auto flex items-center gap-1">
+              {canManage(current.community) && (
+                <Tooltip title="Community settings">
+                  <Link
+                    href={`/communities/${current.community.id}/settings`}
+                    aria-label="Community settings"
+                    className="flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+                  >
+                    <Settings size={20} />
+                  </Link>
+                </Tooltip>
+              )}
+              <Organism.SidePanelToggle label="Members" />
+            </div>
           </header>
           <nav
             aria-label="Community sections"
@@ -143,10 +146,12 @@ export default function CommunityPage() {
                 )}
               </div>
             </div>
-            <Organism.MemberList
-              key={current.community.id}
-              communityId={current.community.id}
-            />
+            <Organism.SidePanel label="Members">
+              <Organism.MemberList
+                key={current.community.id}
+                communityId={current.community.id}
+              />
+            </Organism.SidePanel>
           </div>
         </main>
       )}

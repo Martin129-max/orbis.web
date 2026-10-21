@@ -10,6 +10,9 @@ export default function Home() {
           <main className="flex min-h-0 flex-1 flex-col">
             <header className="flex h-16 shrink-0 items-center border-b border-black/10 px-6 dark:border-white/10">
               <Atom.Heading>Home</Atom.Heading>
+              <div className="ml-auto">
+                <Organism.SidePanelToggle label="Friends" />
+              </div>
             </header>
             <div className="flex min-h-0 flex-1">
               <div className="min-w-0 flex-1 overflow-y-auto">
@@ -17,7 +20,9 @@ export default function Home() {
                   <Organism.HomeFeed />
                 </div>
               </div>
-              <Organism.FriendsPanel />
+              <Organism.SidePanel label="Friends">
+                <Organism.FriendsPanel />
+              </Organism.SidePanel>
             </div>
           </main>
         </Template.AppTemplate>
