@@ -22,7 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { HomeOutlined, LogoutOutlined, PlusOutlined } from "@ant-design/icons";
-import { Popover, Tooltip } from "antd";
+import { Popover, Switch, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
@@ -33,9 +33,10 @@ import {
   type ReactNode,
 } from "react";
 import * as Atom from "@atom";
-import type { Community } from "@/lib/api";
+import { updatePreferences, type Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
+import { useFriendsStore } from "@/stores/friends-store";
 import { CreateCommunityModal } from "./create-community-modal";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -153,6 +154,18 @@ function UserButton() {
     router.push("/login");
   }
 
+  async function handleAppearOffline(appearOffline: boolean) {
+    const { token, profile: current } = useAuthStore.getState();
+    if (!token || !current) return;
+
+    useAuthStore.setState({ profile: { ...current, appearOffline } });
+    try {
+      await updatePreferences(token, { appearOffline });
+    } catch {
+      useAuthStore.setState({ profile: current });
+    }
+  }
+
   const email = profile?.email ?? "Account";
 
   return (
@@ -173,6 +186,15 @@ function UserButton() {
             <span className="text-sm">Theme</span>
             <ThemeToggle />
           </div>
+          <label className="flex items-center justify-between gap-2">
+            <span className="text-sm">Appear offline</span>
+            <Switch
+              size="small"
+              checked={profile?.appearOffline ?? false}
+              disabled={!profile}
+              onChange={handleAppearOffline}
+            />
+          </label>
           <div className="flex items-center justify-between gap-2">
             <Atom.TextLink href="/profile" onClick={() => setOpen(false)}>
               View profile
@@ -244,6 +266,7 @@ export function CommunityRail() {
 
   useEffect(() => {
     fetchCommunities();
+    useFriendsStore.getState().connect();
   }, [fetchCommunities]);
 
   return (

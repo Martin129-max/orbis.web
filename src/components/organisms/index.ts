@@ -2,6 +2,7 @@ export * from "./auth-form";
 export * from "./community-feed";
 export * from "./community-rail";
 export * from "./create-community-modal";
+export * from "./friends-panel";
 export * from "./guest-gate";
 export * from "./home-feed";
 export * from "./landing-hero";

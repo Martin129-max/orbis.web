@@ -4,7 +4,12 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 export type Credentials = { email: string; password: string };
 
-export type Profile = { userId: number; email: string; theme: ThemeMode };
+export type Profile = {
+  userId: number;
+  email: string;
+  theme: ThemeMode;
+  appearOffline: boolean;
+};
 
 export type Community = {
   id: number;
@@ -77,8 +82,8 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: { theme: ThemeMode },
-): Promise<void> {
+  preferences: Partial<Pick<Profile, "theme" | "appearOffline">>,
+): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",
     headers: {
@@ -89,6 +94,7 @@ export async function updatePreferences(
   });
 
   if (!res.ok) throw new Error("Could not save your preferences.");
+  return res.json();
 }
 
 export async function getCommunities(token: string): Promise<Community[]> {
@@ -191,4 +197,58 @@ export async function getMembers(
   });
 
   return res.ok ? res.json() : [];
+}
+
+export type FriendUser = { userId: number; email: string; name: string | null };
+
+export type Friend = FriendUser & { online: boolean };
+
+export type FriendList = {
+  friends: Friend[];
+  incoming: FriendUser[];
+  outgoing: FriendUser[];
+};
+
+export type FriendTarget = { userId: number } | { email: string };
+
+export async function getFriends(token: string): Promise<FriendList> {
+  const res = await api("/friends", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your friends.");
+  return res.json();
+}
+
+export async function addFriend(
+  token: string,
+  target: FriendTarget,
+): Promise<void> {
+  const res = await api("/friends", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(target),
+  });
+
+  if (res.status === 404) throw new Error("No one with that email is on Orbis.");
+  if (res.status === 400) throw new Error("You can't add yourself.");
+  if (res.status === 409) {
+    const { message } = await res.json();
+    throw new Error(`${message}.`);
+  }
+  if (!res.ok) throw new Error("Could not send the request. Please try again.");
+}
+
+export async function removeFriend(token: string, userId: number): Promise<void> {
+  const res = await api(`/friends/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok && res.status !== 404) {
+    throw new Error("Could not update your friends. Please try again.");
+  }
 }

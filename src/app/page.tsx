@@ -11,10 +11,13 @@ export default function Home() {
             <header className="flex h-16 shrink-0 items-center border-b border-black/10 px-6 dark:border-white/10">
               <Atom.Heading>Home</Atom.Heading>
             </header>
-            <div className="min-w-0 flex-1 overflow-y-auto">
-              <div className="mx-auto w-full max-w-2xl px-6 py-6">
-                <Organism.HomeFeed />
+            <div className="flex min-h-0 flex-1">
+              <div className="min-w-0 flex-1 overflow-y-auto">
+                <div className="mx-auto w-full max-w-2xl px-6 py-6">
+                  <Organism.HomeFeed />
+                </div>
               </div>
+              <Organism.FriendsPanel />
             </div>
           </main>
         </Template.AppTemplate>
