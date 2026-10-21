@@ -241,19 +241,25 @@ export async function joinCommunity(
   return res.json();
 }
 
+function withCursor(path: string, cursor?: number) {
+  return cursor === undefined ? path : `${path}?cursor=${cursor}`;
+}
+
 export async function getPosts(
   token: string,
   communityId: number,
+  cursor?: number,
 ): Promise<Post[]> {
-  const res = await api(`/communities/${communityId}/posts`, {
+  const res = await api(withCursor(`/communities/${communityId}/posts`, cursor), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  return res.ok ? res.json() : [];
+  if (!res.ok) throw new Error("Could not load posts.");
+  return res.json();
 }
 
-export async function getFeed(token: string): Promise<Post[]> {
-  const res = await api("/feed", {
+export async function getFeed(token: string, cursor?: number): Promise<Post[]> {
+  const res = await api(withCursor("/feed", cursor), {
     headers: { Authorization: `Bearer ${token}` },
   });
 

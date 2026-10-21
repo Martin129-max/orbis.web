@@ -11,6 +11,7 @@ export * from "./landing-hero";
 export * from "./member-list";
 export * from "./post-card";
 export * from "./post-composer";
+export * from "./post-list";
 export * from "./profile-card";
 export * from "./site-header";
 export * from "./theme-toggle";
