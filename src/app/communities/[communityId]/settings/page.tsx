@@ -53,24 +53,22 @@ export default function CommunitySettingsPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <header className="flex h-16 shrink-0 items-center gap-3 border-b border-black/10 px-6 dark:border-white/10">
+          <Template.PageHeader>
             <Link
               href={`/communities/${current.community.id}`}
               aria-label={`Back to ${current.community.name}`}
-              className="flex rounded-md p-1.5 text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+              className="icon-button -ml-1.5"
             >
               <ArrowLeft size={20} />
             </Link>
             <Atom.Heading className="min-w-0 truncate">Settings</Atom.Heading>
-          </header>
-          <div className="min-w-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-2xl px-6 py-6">
-              <Organism.CommunitySettings
-                key={current.community.id}
-                community={current.community}
-              />
-            </div>
-          </div>
+          </Template.PageHeader>
+          <Template.PageColumn>
+            <Organism.CommunitySettings
+              key={current.community.id}
+              community={current.community}
+            />
+          </Template.PageColumn>
         </main>
       )}
     </Template.AppTemplate>

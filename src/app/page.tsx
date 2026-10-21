@@ -8,18 +8,15 @@ export default function Home() {
       home={
         <Template.AppTemplate>
           <main className="flex min-h-0 flex-1 flex-col">
-            <header className="flex h-16 shrink-0 items-center border-b border-black/10 px-6 dark:border-white/10">
+            <Template.PageHeader
+              actions={<Organism.SidePanelToggle label="Friends" />}
+            >
               <Atom.Heading>Home</Atom.Heading>
-              <div className="ml-auto">
-                <Organism.SidePanelToggle label="Friends" />
-              </div>
-            </header>
+            </Template.PageHeader>
             <div className="flex min-h-0 flex-1">
-              <div className="min-w-0 flex-1 overflow-y-auto">
-                <div className="mx-auto w-full max-w-2xl px-6 py-6">
-                  <Organism.HomeFeed />
-                </div>
-              </div>
+              <Template.PageColumn>
+                <Organism.HomeFeed />
+              </Template.PageColumn>
               <Organism.SidePanel label="Friends">
                 <Organism.FriendsPanel />
               </Organism.SidePanel>
@@ -33,7 +30,7 @@ export default function Home() {
         <main className="flex-1">
           <Organism.LandingHero />
         </main>
-        <footer className="mx-auto w-full max-w-5xl px-6 py-6 text-sm text-muted">
+        <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-sm text-muted sm:px-6">
           © {new Date().getFullYear()} Orbis
         </footer>
       </div>

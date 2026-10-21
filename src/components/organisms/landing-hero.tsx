@@ -17,9 +17,9 @@ const points = [
 
 export function LandingHero() {
   return (
-    <div className="mx-auto flex w-full max-w-5xl flex-col gap-20 px-6 py-16 sm:py-24">
+    <div className="mx-auto flex w-full max-w-5xl flex-col gap-20 px-4 py-16 sm:px-6 sm:py-24">
       <section className="flex max-w-2xl flex-col gap-6">
-        <h1 className="text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
+        <h1 className="text-4xl leading-tight font-semibold tracking-tight sm:text-5xl">
           Your communities, in one feed.
         </h1>
         <p className="max-w-xl text-lg text-muted">

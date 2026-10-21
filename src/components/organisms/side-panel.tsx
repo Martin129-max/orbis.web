@@ -68,7 +68,7 @@ export function SidePanelToggle({ label }: { label: string }) {
         aria-expanded={open}
         aria-controls="side-panel"
         onClick={() => togglePanel(isDesktop)}
-        className="flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+        className="icon-button"
       >
         {open ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
       </button>

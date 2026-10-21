@@ -21,17 +21,24 @@ function colorFor(seed: string | number) {
   return colors[hash % colors.length];
 }
 
+const sizes = {
+  md: "h-9 w-9 text-sm",
+  lg: "h-16 w-16 text-2xl",
+};
+
 export function Avatar({
   label,
   seed = label,
+  size = "md",
 }: {
   label: string;
   seed?: string | number;
+  size?: keyof typeof sizes;
 }) {
   return (
     <span
       aria-hidden
-      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-semibold text-white ${colorFor(seed)}`}
+      className={`flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${sizes[size]} ${colorFor(seed)}`}
     >
       {Array.from(label)[0]?.toUpperCase()}
     </span>

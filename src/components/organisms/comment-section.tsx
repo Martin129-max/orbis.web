@@ -92,7 +92,7 @@ function CommentItem({
               type="button"
               onClick={() => setReplying((open) => !open)}
               aria-expanded={replying}
-              className="inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+              className="focus-ring inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
             >
               <Reply size={14} />
               Reply

@@ -1,5 +1,7 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as Atom from "@atom";
@@ -62,14 +64,16 @@ export function AuthForm({ mode }: { mode: Mode }) {
 
   return (
     <div className="flex w-full max-w-sm flex-col gap-10">
-      <Atom.Brand />
-      <Atom.Button
-        type="button"
-        variant="secondary"
-        onClick={() => router.push("/")}
-      >
-       ← Back to homepage
-      </Atom.Button>
+      <div className="flex flex-col gap-8">
+        <Link
+          href="/"
+          className="focus-ring inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted transition-colors hover:text-foreground"
+        >
+          <ArrowLeft size={16} />
+          Back to homepage
+        </Link>
+        <Atom.Brand />
+      </div>
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <Atom.Heading>{title}</Atom.Heading>

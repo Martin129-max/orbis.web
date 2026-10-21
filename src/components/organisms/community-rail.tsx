@@ -22,7 +22,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { Compass, House, LogOut, Plus } from "lucide-react";
-import { Popover, Switch, Tooltip } from "antd";
+import { Popover, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
 import {
@@ -33,12 +33,13 @@ import {
   type ReactNode,
 } from "react";
 import * as Atom from "@atom";
-import { updatePreferences, type Community } from "@/lib/api";
+import type { Community } from "@/lib/api";
 import { initials } from "@/lib/initials";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
 import { CreateCommunityModal } from "./create-community-modal";
+import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
 
 const itemBase =
@@ -146,18 +147,6 @@ function UserButton() {
     router.push("/login");
   }
 
-  async function handleAppearOffline(appearOffline: boolean) {
-    const { token, profile: current } = useAuthStore.getState();
-    if (!token || !current) return;
-
-    useAuthStore.setState({ profile: { ...current, appearOffline } });
-    try {
-      await updatePreferences(token, { appearOffline });
-    } catch {
-      useAuthStore.setState({ profile: current });
-    }
-  }
-
   const username = profile ? `@${profile.username}` : "Account";
 
   return (
@@ -180,12 +169,7 @@ function UserButton() {
           </div>
           <label className="flex items-center justify-between gap-2">
             <span className="text-sm">Appear offline</span>
-            <Switch
-              size="small"
-              checked={profile?.appearOffline ?? false}
-              disabled={!profile}
-              onChange={handleAppearOffline}
-            />
+            <AppearOfflineSwitch size="small" />
           </label>
           <div className="flex items-center justify-between gap-2">
             <Atom.TextLink href="/profile" onClick={() => setOpen(false)}>

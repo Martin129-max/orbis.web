@@ -30,15 +30,26 @@ export default function ProfilePage() {
 
   return (
     <Template.AppTemplate>
-      <Template.CenteredTemplate>
+      <main className="flex min-h-0 flex-1 flex-col">
+        <Template.PageHeader>
+          <Atom.Heading>Profile</Atom.Heading>
+        </Template.PageHeader>
         {profile ? (
-          <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
-        ) : failed ? (
-          <Molecule.ConnectionError onRetry={() => window.location.reload()} />
+          <Template.PageColumn>
+            <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
+          </Template.PageColumn>
         ) : (
-          <Atom.Loader />
+          <Template.CenteredTemplate>
+            {failed ? (
+              <Molecule.ConnectionError
+                onRetry={() => window.location.reload()}
+              />
+            ) : (
+              <Atom.Loader />
+            )}
+          </Template.CenteredTemplate>
         )}
-      </Template.CenteredTemplate>
+      </main>
     </Template.AppTemplate>
   );
 }

@@ -22,7 +22,7 @@ export function ThreadMeta({
           <Link
             href={`/communities/${thread.community.id}?tab=forum`}
             onClick={(event) => event.stopPropagation()}
-            className="flex items-center gap-1.5 font-semibold text-foreground hover:underline"
+            className="focus-ring flex items-center gap-1.5 rounded-sm font-semibold text-foreground hover:underline"
           >
             <span
               aria-hidden
@@ -83,7 +83,7 @@ export function ThreadCard({
               event.stopPropagation();
               onOpen();
             }}
-            className="text-left hover:underline"
+            className="focus-ring rounded-sm text-left hover:underline"
           >
             {thread.title}
           </button>

@@ -16,7 +16,7 @@ export function VoteControl({
   orientation = "vertical",
 }: VoteControlProps) {
   const button =
-    "flex rounded-md p-0.5 text-muted transition-colors hover:bg-black/5 dark:hover:bg-white/10";
+    "focus-ring flex rounded-md p-0.5 text-muted transition-colors hover:bg-black/5 dark:hover:bg-white/10";
 
   return (
     <div
