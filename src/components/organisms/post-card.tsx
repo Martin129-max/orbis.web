@@ -7,7 +7,7 @@ export function PostCard({ post }: { post: Post }) {
   const author = post.author.name ?? post.author.email;
 
   return (
-    <article className="flex gap-3 border-b border-black/10 py-5 dark:border-white/10">
+    <article className="flex gap-3 rounded-xl border border-black/10 bg-surface p-4 dark:border-white/10">
       <Atom.Avatar label={author} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <header className="flex flex-wrap items-baseline gap-x-2">
@@ -15,7 +15,7 @@ export function PostCard({ post }: { post: Post }) {
           <time
             dateTime={post.createdAt}
             title={new Date(post.createdAt).toLocaleString()}
-            className="text-xs text-zinc-500"
+            className="text-xs text-muted"
           >
             {timeAgo(post.createdAt)}
           </time>

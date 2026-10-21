@@ -20,9 +20,9 @@ export function MemberList({ communityId }: { communityId: number }) {
   return (
     <aside
       aria-label="Members"
-      className="hidden w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-black/10 px-4 py-6 lg:flex dark:border-white/10"
+      className="hidden w-64 shrink-0 flex-col gap-3 overflow-y-auto border-l border-black/10 bg-surface px-4 py-6 lg:flex dark:border-white/10"
     >
-      <h2 className="text-xs font-semibold tracking-wide text-zinc-500 uppercase">
+      <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
         Members — {members.length}
       </h2>
       <ul className="flex flex-col gap-1">

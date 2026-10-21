@@ -22,7 +22,7 @@ export function LandingHero() {
         <h1 className="text-4xl leading-tight font-semibold tracking-tight sm:text-6xl">
           Your communities, in one feed.
         </h1>
-        <p className="max-w-xl text-lg text-zinc-500">
+        <p className="max-w-xl text-lg text-muted">
           Orbis is a home for groups of people. Create a community, bring
           people in, and share posts everyone can follow.
         </p>
@@ -39,7 +39,7 @@ export function LandingHero() {
         {points.map((point) => (
           <li key={point.title} className="flex flex-col gap-1">
             <h2 className="font-semibold">{point.title}</h2>
-            <p className="text-sm text-zinc-500">{point.text}</p>
+            <p className="text-sm text-muted">{point.text}</p>
           </li>
         ))}
       </ul>

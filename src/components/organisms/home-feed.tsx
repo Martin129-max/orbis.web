@@ -60,12 +60,12 @@ export function HomeFeed() {
   ) : posts.length === 0 ? (
     <div className="flex flex-col items-center gap-1 py-16 text-center">
       <p className="font-medium">No posts yet</p>
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-muted">
         Posts from your communities will show up here.
       </p>
     </div>
   ) : (
-    <div>
+    <div className="flex flex-col gap-3">
       {posts.map((post) => (
         <PostCard key={post.id} post={post} />
       ))}
@@ -73,7 +73,7 @@ export function HomeFeed() {
   );
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-4">
       {target && (
         <PostComposer
           onPost={handlePost}

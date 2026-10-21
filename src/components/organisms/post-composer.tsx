@@ -105,7 +105,7 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="rounded-lg border border-black/15 focus-within:border-accent dark:border-white/20 dark:focus-within:border-accent"
+        className="rounded-xl border border-black/15 bg-surface focus-within:border-accent dark:border-white/20 dark:focus-within:border-accent"
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
@@ -134,7 +134,7 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
         </div>
         <div className="relative">
           {state?.empty && (
-            <p className="pointer-events-none absolute top-3 left-4 text-zinc-500">
+            <p className="pointer-events-none absolute top-3 left-4 text-muted">
               Share something with the community…
             </p>
           )}
@@ -144,7 +144,7 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       <div className="flex items-center justify-end gap-3">
         {target && <div className="mr-auto min-w-0">{target}</div>}
-        <span className="hidden text-xs text-zinc-500 sm:inline">
+        <span className="hidden text-xs text-muted sm:inline">
           ⌘/Ctrl + Enter to post
         </span>
         <Atom.Button onClick={submit} loading={pending} disabled={state?.empty}>

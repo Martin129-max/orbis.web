@@ -166,7 +166,7 @@ function UserButton() {
           <div className="min-w-0">
             <p className="truncate font-semibold">{email}</p>
             {profile && (
-              <p className="text-xs text-zinc-500">User #{profile.userId}</p>
+              <p className="text-xs text-muted">User #{profile.userId}</p>
             )}
           </div>
           <div className="flex items-center justify-between gap-2">

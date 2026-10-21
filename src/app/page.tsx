@@ -25,7 +25,7 @@ export default function Home() {
         <main className="flex-1">
           <Organism.LandingHero />
         </main>
-        <footer className="mx-auto w-full max-w-5xl px-6 py-6 text-sm text-zinc-500">
+        <footer className="mx-auto w-full max-w-5xl px-6 py-6 text-sm text-muted">
           © {new Date().getFullYear()} Orbis
         </footer>
       </div>

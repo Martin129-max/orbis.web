@@ -45,7 +45,7 @@ export default function CommunityPage() {
       ) : !current.community ? (
         <Template.CenteredTemplate>
           <Atom.Heading>Community not found</Atom.Heading>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted">
             It doesn&apos;t exist, or you&apos;re not a member.
           </p>
         </Template.CenteredTemplate>

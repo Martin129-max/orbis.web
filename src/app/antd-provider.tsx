@@ -35,7 +35,12 @@ export function AntdProvider({ children }: { children: ReactNode }) {
       <ConfigProvider
         theme={{
           algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
-          token: { fontFamily: "var(--font-geist-sans)" },
+          token: {
+            fontFamily: "var(--font-geist-sans)",
+            colorBgContainer: isDark ? "#212328" : "#ffffff",
+            colorBgElevated: isDark ? "#2a2c32" : "#ffffff",
+            colorBgLayout: isDark ? "#17181c" : "#f3f4f6",
+          },
         }}
       >
         {children}

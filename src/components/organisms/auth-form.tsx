@@ -59,7 +59,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       <form onSubmit={handleSubmit} className="flex flex-col gap-5">
         <div className="flex flex-col gap-1">
           <Atom.Heading>{title}</Atom.Heading>
-          <p className="text-sm text-zinc-500">{subtitle}</p>
+          <p className="text-sm text-muted">{subtitle}</p>
         </div>
         <Molecule.FormField
           label="Email"
@@ -82,7 +82,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <Atom.Button type="submit" size="large" block loading={pending}>
           {submit}
         </Atom.Button>
-        <p className="text-center text-sm text-zinc-500">
+        <p className="text-center text-sm text-muted">
           {switchText}{" "}
           <Atom.TextLink href={switchHref}>{switchLabel}</Atom.TextLink>
         </p>

@@ -17,17 +17,21 @@
 }
 
 :root {
-  --background: #ffffff;
+  --background: #f3f4f6;
   --foreground: #171717;
-  --rail: #f2f3f5;
+  --surface: #ffffff;
+  --muted: #65676e;
+  --rail: #e3e5e9;
   --rail-item: #ffffff;
-  --rail-divider: #dcdee3;
+  --rail-divider: #cdd0d6;
   --accent: #1677ff;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-muted: var(--muted);
   --color-rail: var(--rail);
   --color-rail-item: var(--rail-item);
   --color-rail-divider: var(--rail-divider);
@@ -38,20 +42,24 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #0a0a0a;
+    --background: #17181c;
     --foreground: #ededed;
-    --rail: #141414;
-    --rail-item: #262626;
-    --rail-divider: #2e2e2e;
+    --surface: #212328;
+    --muted: #9a9ca3;
+    --rail: #0f1012;
+    --rail-item: #2a2c32;
+    --rail-divider: #30333a;
   }
 }
 
 :root[data-theme="dark"] {
-  --background: #0a0a0a;
+  --background: #17181c;
   --foreground: #ededed;
-  --rail: #141414;
-  --rail-item: #262626;
-  --rail-divider: #2e2e2e;
+  --surface: #212328;
+  --muted: #9a9ca3;
+  --rail: #0f1012;
+  --rail-item: #2a2c32;
+  --rail-divider: #30333a;
 }
 
 body {
