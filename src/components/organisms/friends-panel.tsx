@@ -1,6 +1,6 @@
 "use client";
 
-import { CheckOutlined, CloseOutlined } from "@ant-design/icons";
+import { Check, X } from "lucide-react";
 import { Button, Popconfirm, Tooltip } from "antd";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
@@ -40,7 +40,7 @@ function FriendRow({
       }`}
     >
       <span className="relative">
-        <Atom.Avatar label={label(user)} />
+        <Atom.Avatar label={label(user)} seed={user.userId} />
         {online !== undefined && (
           <span
             aria-hidden
@@ -149,7 +149,7 @@ export function FriendsPanel() {
         onConfirm={() => removeFriend(user.userId)}
       >
         <span>
-          <Action title="Remove friend" icon={<CloseOutlined />} />
+          <Action title="Remove friend" icon={<X size={16} />} />
         </span>
       </Popconfirm>
     );
@@ -177,14 +177,14 @@ export function FriendsPanel() {
                 >
                   <Action
                     title="Accept"
-                    icon={<CheckOutlined />}
+                    icon={<Check size={16} />}
                     onClick={() =>
                       addFriend({ userId: user.userId }).catch(() => null)
                     }
                   />
                   <Action
                     title="Decline"
-                    icon={<CloseOutlined />}
+                    icon={<X size={16} />}
                     onClick={() => removeFriend(user.userId).catch(() => null)}
                   />
                 </FriendRow>
@@ -193,7 +193,7 @@ export function FriendsPanel() {
                 <FriendRow key={user.userId} user={user} subtitle="Request sent">
                   <Action
                     title="Cancel request"
-                    icon={<CloseOutlined />}
+                    icon={<X size={16} />}
                     onClick={() => removeFriend(user.userId).catch(() => null)}
                   />
                 </FriendRow>

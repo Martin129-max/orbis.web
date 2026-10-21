@@ -21,12 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import {
-  CompassOutlined,
-  HomeOutlined,
-  LogoutOutlined,
-  PlusOutlined,
-} from "@ant-design/icons";
+import { Compass, House, LogOut, Plus } from "lucide-react";
 import { Popover, Switch, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -199,7 +194,7 @@ function UserButton() {
             <Atom.Button
               variant="secondary"
               danger
-              icon={<LogoutOutlined />}
+              icon={<LogOut size={16} />}
               onClick={handleLogout}
             >
               Log out
@@ -284,7 +279,7 @@ export function CommunityRail() {
             aria-current={pathname === "/" ? "page" : undefined}
             className={itemClass(pathname === "/")}
           >
-            <HomeOutlined />
+            <House size={20} />
           </Link>
         </RailSlot>
         <li aria-hidden className="h-0.5 w-8 shrink-0 rounded bg-rail-divider" />
@@ -316,7 +311,7 @@ export function CommunityRail() {
             onClick={() => setCreating(true)}
             className={`${itemBase} rounded-3xl bg-rail-item text-accent hover:rounded-2xl hover:bg-accent hover:text-white`}
           >
-            <PlusOutlined />
+            <Plus size={20} />
           </button>
         </RailSlot>
         <RailSlot label="Explore communities" active={pathname === "/explore"}>
@@ -330,7 +325,7 @@ export function CommunityRail() {
                 : `${itemBase} rounded-3xl bg-rail-item text-accent hover:rounded-2xl hover:bg-accent hover:text-white`
             }
           >
-            <CompassOutlined />
+            <Compass size={20} />
           </Link>
         </RailSlot>
       </ul>

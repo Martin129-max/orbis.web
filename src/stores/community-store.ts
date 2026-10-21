@@ -8,6 +8,11 @@ type CommunityState = {
   fetchCommunities: () => Promise<void>;
   createCommunity: (name: string, isPublic: boolean) => Promise<Community>;
   joinCommunity: (communityId: number) => Promise<Community>;
+  updateCommunity: (
+    communityId: number,
+    changes: Partial<Pick<Community, "name" | "isPublic">>,
+  ) => Promise<Community>;
+  deleteCommunity: (communityId: number) => Promise<void>;
   reorderCommunities: (communityIds: number[]) => Promise<void>;
 };
 
@@ -42,6 +47,29 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
         : [...state.communities, community],
     }));
     return community;
+  },
+  updateCommunity: async (communityId, changes) => {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const updated = await api.updateCommunity(token, communityId, changes);
+    set((state) => ({
+      communities: state.communities.map((community) =>
+        community.id === communityId
+          ? { ...community, name: updated.name, isPublic: updated.isPublic }
+          : community,
+      ),
+    }));
+    return updated;
+  },
+  deleteCommunity: async (communityId) => {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    await api.deleteCommunity(token, communityId);
+    set((state) => ({
+      communities: state.communities.filter(({ id }) => id !== communityId),
+    }));
   },
   reorderCommunities: async (communityIds) => {
     const { token } = useAuthStore.getState();

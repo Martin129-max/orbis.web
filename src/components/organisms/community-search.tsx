@@ -1,6 +1,6 @@
 "use client";
 
-import { SearchOutlined } from "@ant-design/icons";
+import { Search } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -65,7 +65,7 @@ export function CommunitySearch() {
         size="large"
         allowClear
         autoFocus
-        prefix={<SearchOutlined />}
+        prefix={<Search size={18} />}
         placeholder="Search public communities"
         aria-label="Search public communities"
         value={query}

@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  BoldOutlined,
-  CodeOutlined,
-  ItalicOutlined,
-  LinkOutlined,
-  OrderedListOutlined,
-  StrikethroughOutlined,
-  UnderlineOutlined,
-  UnorderedListOutlined,
-} from "@ant-design/icons";
+import { Bold, Code, Italic, Link as LinkIcon, List, ListOrdered, Strikethrough, Underline } from "lucide-react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Button, Tooltip } from "antd";
@@ -92,14 +83,14 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
   }
 
   const tools: { label: string; icon: ReactNode; active?: boolean; run: () => void }[] = [
-    { label: "Bold", icon: <BoldOutlined />, active: state?.bold, run: () => editor?.chain().focus().toggleBold().run() },
-    { label: "Italic", icon: <ItalicOutlined />, active: state?.italic, run: () => editor?.chain().focus().toggleItalic().run() },
-    { label: "Underline", icon: <UnderlineOutlined />, active: state?.underline, run: () => editor?.chain().focus().toggleUnderline().run() },
-    { label: "Strikethrough", icon: <StrikethroughOutlined />, active: state?.strike, run: () => editor?.chain().focus().toggleStrike().run() },
-    { label: "Inline code", icon: <CodeOutlined />, active: state?.code, run: () => editor?.chain().focus().toggleCode().run() },
-    { label: "Bulleted list", icon: <UnorderedListOutlined />, active: state?.bulletList, run: () => editor?.chain().focus().toggleBulletList().run() },
-    { label: "Numbered list", icon: <OrderedListOutlined />, active: state?.orderedList, run: () => editor?.chain().focus().toggleOrderedList().run() },
-    { label: state?.link ? "Remove link" : "Add link", icon: <LinkOutlined />, active: state?.link, run: toggleLink },
+    { label: "Bold", icon: <Bold size={16} />, active: state?.bold, run: () => editor?.chain().focus().toggleBold().run() },
+    { label: "Italic", icon: <Italic size={16} />, active: state?.italic, run: () => editor?.chain().focus().toggleItalic().run() },
+    { label: "Underline", icon: <Underline size={16} />, active: state?.underline, run: () => editor?.chain().focus().toggleUnderline().run() },
+    { label: "Strikethrough", icon: <Strikethrough size={16} />, active: state?.strike, run: () => editor?.chain().focus().toggleStrike().run() },
+    { label: "Inline code", icon: <Code size={16} />, active: state?.code, run: () => editor?.chain().focus().toggleCode().run() },
+    { label: "Bulleted list", icon: <List size={16} />, active: state?.bulletList, run: () => editor?.chain().focus().toggleBulletList().run() },
+    { label: "Numbered list", icon: <ListOrdered size={16} />, active: state?.orderedList, run: () => editor?.chain().focus().toggleOrderedList().run() },
+    { label: state?.link ? "Remove link" : "Add link", icon: <LinkIcon size={16} />, active: state?.link, run: toggleLink },
   ];
 
   return (

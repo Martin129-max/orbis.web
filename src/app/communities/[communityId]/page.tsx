@@ -1,5 +1,8 @@
 "use client";
 
+import { Globe, Lock, Settings } from "lucide-react";
+import Link from "next/link";
+import { Tooltip } from "antd";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -51,10 +54,44 @@ export default function CommunityPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <header className="flex h-16 shrink-0 items-center border-b border-black/10 px-6 dark:border-white/10">
+          <header className="flex h-16 shrink-0 items-center gap-2 border-b border-black/10 px-6 dark:border-white/10">
             <Atom.Heading className="min-w-0 truncate">
               {current.community.name}
             </Atom.Heading>
+            <Tooltip
+              title={
+                current.community.isPublic
+                  ? "Public: anyone can find and join it"
+                  : "Private: only members can see it"
+              }
+            >
+              <span
+                role="img"
+                aria-label={
+                  current.community.isPublic
+                    ? "Public community"
+                    : "Private community"
+                }
+                className="flex shrink-0 text-lg text-muted"
+              >
+                {current.community.isPublic ? (
+                  <Globe size={18} />
+                ) : (
+                  <Lock size={18} />
+                )}
+              </span>
+            </Tooltip>
+            {current.community.role !== "member" && (
+              <Tooltip title="Community settings">
+                <Link
+                  href={`/communities/${current.community.id}/settings`}
+                  aria-label="Community settings"
+                  className="ml-auto flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+                >
+                  <Settings size={20} />
+                </Link>
+              </Tooltip>
+            )}
           </header>
           <div className="flex min-h-0 flex-1">
             <div className="min-w-0 flex-1 overflow-y-auto">

@@ -11,12 +11,15 @@ export type Profile = {
   appearOffline: boolean;
 };
 
+export type CommunityRole = "owner" | "admin" | "member";
+
 export type Community = {
   id: number;
   name: string;
   ownerId: number;
   isPublic: boolean;
   createdAt: string;
+  role?: CommunityRole;
 };
 
 export type CommunitySearchResult = {
@@ -86,6 +89,7 @@ export type Member = {
   nickname: string | null;
   joinedAt: string;
   isOwner: boolean;
+  isAdmin: boolean;
 };
 
 export async function updatePreferences(
@@ -155,6 +159,54 @@ export async function createCommunity(
   });
 
   if (!res.ok) throw new Error("Could not create the community. Please try again.");
+  return res.json();
+}
+
+export async function updateCommunity(
+  token: string,
+  communityId: number,
+  changes: Partial<Pick<Community, "name" | "isPublic">>,
+): Promise<Community> {
+  const res = await api(`/communities/${communityId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(changes),
+  });
+
+  if (res.status === 403) throw new Error("Only admins can change these settings.");
+  if (!res.ok) throw new Error("Could not save the settings. Please try again.");
+  return res.json();
+}
+
+export async function deleteCommunity(
+  token: string,
+  communityId: number,
+): Promise<void> {
+  const res = await api(`/communities/${communityId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the owner can delete this community.");
+  if (!res.ok) throw new Error("Could not delete the community. Please try again.");
+}
+
+export async function setCommunityAdmin(
+  token: string,
+  communityId: number,
+  userId: number,
+  isAdmin: boolean,
+): Promise<Member[]> {
+  const res = await api(`/communities/${communityId}/admins/${userId}`, {
+    method: isAdmin ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the owner can change admins.");
+  if (!res.ok) throw new Error("Could not update admins. Please try again.");
   return res.json();
 }
 

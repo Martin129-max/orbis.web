@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  CheckOutlined,
-  ClockCircleOutlined,
-  UserAddOutlined,
-} from "@ant-design/icons";
+import { Check, Clock, UserPlus } from "lucide-react";
 import { Button, Tooltip } from "antd";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -29,9 +25,9 @@ function FriendAction({ userId }: { userId: number }) {
   if (status === "unknown" || status === "friend") return null;
 
   const { title, icon } = {
-    sent: { title: "Friend request sent", icon: <ClockCircleOutlined /> },
-    incoming: { title: "Accept friend request", icon: <CheckOutlined /> },
-    none: { title: "Add friend", icon: <UserAddOutlined /> },
+    sent: { title: "Friend request sent", icon: <Clock size={16} /> },
+    incoming: { title: "Accept friend request", icon: <Check size={16} /> },
+    none: { title: "Add friend", icon: <UserPlus size={16} /> },
   }[status];
 
   return (
@@ -77,11 +73,13 @@ export function MemberList({ communityId }: { communityId: number }) {
               key={member.userId}
               className="flex items-center gap-3 rounded-md px-2 py-1.5"
             >
-              <Atom.Avatar label={label} />
+              <Atom.Avatar label={label} seed={member.userId} />
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="truncate text-sm font-medium">{label}</span>
-                {member.isOwner && (
-                  <span className="text-xs text-accent">Owner</span>
+                {(member.isOwner || member.isAdmin) && (
+                  <span className="text-xs text-accent">
+                    {member.isOwner ? "Owner" : "Admin"}
+                  </span>
                 )}
               </div>
               {myId !== undefined && member.userId !== myId && (

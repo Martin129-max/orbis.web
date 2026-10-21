@@ -8,7 +8,7 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <article className="flex gap-3 rounded-xl border border-black/10 bg-surface p-4 dark:border-white/10">
-      <Atom.Avatar label={author} />
+      <Atom.Avatar label={author} seed={post.author.id} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <header className="flex flex-wrap items-baseline gap-x-2">
           <span className="truncate font-semibold">{author}</span>
