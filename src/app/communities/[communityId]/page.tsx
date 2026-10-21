@@ -9,7 +9,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Organism from "@organism";
 import * as Template from "@template";
-import { getCommunity, type Community } from "@/lib/api";
+import { canManage, getCommunity, type Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
 type Loaded = { id: string; community: Community | null; failed?: boolean };
@@ -81,7 +81,7 @@ export default function CommunityPage() {
                 )}
               </span>
             </Tooltip>
-            {current.community.role !== "member" && (
+            {canManage(current.community) && (
               <Tooltip title="Community settings">
                 <Link
                   href={`/communities/${current.community.id}/settings`}

@@ -8,7 +8,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Organism from "@organism";
 import * as Template from "@template";
-import { getCommunity, type Community } from "@/lib/api";
+import { canManage, getCommunity, type Community } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
 type Loaded = { id: string; community: Community | null; failed?: boolean };
@@ -44,7 +44,7 @@ export default function CommunitySettingsPage() {
         <Template.CenteredTemplate>
           <Molecule.ConnectionError onRetry={() => window.location.reload()} />
         </Template.CenteredTemplate>
-      ) : !current.community || current.community.role === "member" ? (
+      ) : !current.community || !canManage(current.community) ? (
         <Template.CenteredTemplate>
           <Atom.Heading>No access</Atom.Heading>
           <p className="text-sm text-muted">

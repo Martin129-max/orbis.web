@@ -117,6 +117,10 @@ export async function getCommunities(token: string): Promise<Community[]> {
   return res.ok ? res.json() : [];
 }
 
+export function canManage(community: Community) {
+  return community.role === "owner" || community.role === "admin";
+}
+
 export async function getCommunity(
   token: string,
   id: string,
