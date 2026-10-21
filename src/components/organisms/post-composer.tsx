@@ -18,9 +18,10 @@ import * as Atom from "@atom";
 
 type PostComposerProps = {
   onPost: (content: string) => Promise<void>;
+  target?: ReactNode;
 };
 
-export function PostComposer({ onPost }: PostComposerProps) {
+export function PostComposer({ onPost, target }: PostComposerProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -142,6 +143,7 @@ export function PostComposer({ onPost }: PostComposerProps) {
       </div>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       <div className="flex items-center justify-end gap-3">
+        {target && <div className="mr-auto min-w-0">{target}</div>}
         <span className="hidden text-xs text-zinc-500 sm:inline">
           ⌘/Ctrl + Enter to post
         </span>

@@ -63,6 +63,7 @@ export type Post = {
   content: string;
   createdAt: string;
   author: Author;
+  community?: Pick<Community, "id" | "name">;
 };
 
 export type Member = {
@@ -151,6 +152,15 @@ export async function getPosts(
   });
 
   return res.ok ? res.json() : [];
+}
+
+export async function getFeed(token: string): Promise<Post[]> {
+  const res = await api("/feed", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your feed.");
+  return res.json();
 }
 
 export async function createPost(

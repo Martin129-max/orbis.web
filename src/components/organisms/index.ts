@@ -3,6 +3,7 @@ export * from "./community-feed";
 export * from "./community-rail";
 export * from "./create-community-modal";
 export * from "./guest-gate";
+export * from "./home-feed";
 export * from "./landing-hero";
 export * from "./member-list";
 export * from "./post-card";

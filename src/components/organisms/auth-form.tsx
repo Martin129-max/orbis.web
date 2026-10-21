@@ -5,7 +5,6 @@ import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { useAuthStore } from "@/stores/auth-store";
-import { useCommunityStore } from "@/stores/community-store";
 
 type Mode = "login" | "signup";
 
@@ -47,7 +46,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
         email: String(form.get("email")),
         password: String(form.get("password")),
       });
-      router.push(await useCommunityStore.getState().homePath());
+      router.push("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setPending(false);

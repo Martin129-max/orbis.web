@@ -1,3 +1,4 @@
+import Link from "next/link";
 import * as Atom from "@atom";
 import type { Post } from "@/lib/api";
 import { timeAgo } from "@/lib/time";
@@ -18,6 +19,14 @@ export function PostCard({ post }: { post: Post }) {
           >
             {timeAgo(post.createdAt)}
           </time>
+          {post.community && (
+            <Link
+              href={`/communities/${post.community.id}`}
+              className="truncate text-xs text-accent hover:underline"
+            >
+              {post.community.name}
+            </Link>
+          )}
         </header>
         <div
           className="rich-text"

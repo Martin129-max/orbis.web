@@ -21,10 +21,10 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { LogoutOutlined, PlusOutlined } from "@ant-design/icons";
+import { HomeOutlined, LogoutOutlined, PlusOutlined } from "@ant-design/icons";
 import { Popover, Tooltip } from "antd";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, usePathname, useRouter } from "next/navigation";
 import {
   useEffect,
   useRef,
@@ -203,6 +203,7 @@ function UserButton() {
 
 export function CommunityRail() {
   const { communityId } = useParams<{ communityId?: string }>();
+  const pathname = usePathname();
   const communities = useCommunityStore((state) => state.communities);
   const fetchCommunities = useCommunityStore((state) => state.fetchCommunities);
   const reorderCommunities = useCommunityStore(
@@ -256,6 +257,17 @@ export function CommunityRail() {
       }}
     >
       <ul className="flex flex-1 flex-col items-center gap-2 overflow-y-auto py-3">
+        <RailSlot label="Home" active={pathname === "/"}>
+          <Link
+            href="/"
+            aria-label="Home"
+            aria-current={pathname === "/" ? "page" : undefined}
+            className={itemClass(pathname === "/")}
+          >
+            <HomeOutlined />
+          </Link>
+        </RailSlot>
+        <li aria-hidden className="h-0.5 w-8 shrink-0 rounded bg-rail-divider" />
         <DndContext
           id="community-rail"
           sensors={sensors}

@@ -8,7 +8,6 @@ type CommunityState = {
   fetchCommunities: () => Promise<void>;
   createCommunity: (name: string) => Promise<Community>;
   reorderCommunities: (communityIds: number[]) => Promise<void>;
-  homePath: () => Promise<string>;
 };
 
 export const useCommunityStore = create<CommunityState>()((set, get) => ({
@@ -43,10 +42,5 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     } catch {
       await get().fetchCommunities();
     }
-  },
-  homePath: async () => {
-    await get().fetchCommunities();
-    const [first] = get().communities;
-    return first ? `/communities/${first.id}` : "/profile";
   },
 }));
