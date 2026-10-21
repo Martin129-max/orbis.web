@@ -47,16 +47,23 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
   return (
     <Modal
       open={open}
-      title="Create a community"
-      okText="Create"
+      title={null}
       onCancel={handleClose}
-      okButtonProps={{ htmlType: "submit", form: formId, loading: pending }}
+      footer={null}
+      width={520}
       destroyOnHidden
+      styles={{ container: { padding: 24 } }}
     >
-      <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-4 pt-2">
+      <form id={formId} onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <Molecule.ModalHeader
+          eyebrow="Create a community"
+          title="Make room for your people."
+          description="A home for the things you can talk about forever. One account, as many little worlds as you like."
+        />
         <Molecule.FormField
           label="Community name"
           name="name"
+          size="large"
           required
           maxLength={100}
           pattern=".*\S.*"
@@ -65,8 +72,8 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
           autoFocus
         />
         <label className="flex items-start justify-between gap-4">
-          <span className="flex flex-col">
-            <span className="text-sm font-medium">Public community</span>
+          <span className="flex flex-col gap-1">
+            <span className="text-sm">Public community</span>
             <span className="text-xs text-muted">
               Anyone can find it in Explore and join.
             </span>
@@ -74,6 +81,14 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
           <Switch checked={isPublic} onChange={setIsPublic} />
         </label>
         {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        <div className="flex justify-end gap-2 border-t border-divider pt-6">
+          <Atom.Button variant="secondary" onClick={handleClose}>
+            Cancel
+          </Atom.Button>
+          <Atom.Button type="submit" loading={pending}>
+            Create
+          </Atom.Button>
+        </div>
       </form>
     </Modal>
   );

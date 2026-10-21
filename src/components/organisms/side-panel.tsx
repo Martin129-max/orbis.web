@@ -1,7 +1,7 @@
 "use client";
 
 import { Drawer, Tooltip } from "antd";
-import { PanelRightClose, PanelRightOpen } from "lucide-react";
+import { PanelRightClose, PanelRightOpen, X } from "lucide-react";
 import { useEffect, type ReactNode } from "react";
 import { useIsDesktop } from "@/lib/use-is-desktop";
 import { useLayoutStore } from "@/stores/layout-store";
@@ -30,7 +30,7 @@ export function SidePanel({
       <aside
         id="side-panel"
         aria-label={label}
-        className="hidden w-72 shrink-0 flex-col overflow-y-auto border-l border-black/10 bg-surface px-4 py-6 lg:flex dark:border-white/10"
+        className="hidden w-72 shrink-0 flex-col gap-6 overflow-y-auto border-l border-divider bg-surface p-6 lg:flex"
       >
         {children}
       </aside>
@@ -43,12 +43,30 @@ export function SidePanel({
       onClose={closeDrawer}
       placement="right"
       size={PANEL_WIDTH}
-      title={label}
+      title={null}
+      closable={false}
       destroyOnHidden
-      styles={{ body: { padding: "1rem" } }}
+      styles={{ body: { padding: 24 } }}
     >
-      <div id="side-panel">{children}</div>
+      <div id="side-panel" aria-label={label} className="flex flex-col gap-6">
+        {children}
+      </div>
     </Drawer>
+  );
+}
+
+export function PanelHeading({
+  title,
+  label,
+}: {
+  title: string;
+  label: string;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-2">
+      <h2 className="font-display text-2xl font-bold">{title}</h2>
+      <SidePanelToggle label={label} />
+    </div>
   );
 }
 
@@ -70,7 +88,13 @@ export function SidePanelToggle({ label }: { label: string }) {
         onClick={() => togglePanel(isDesktop)}
         className="icon-button"
       >
-        {open ? <PanelRightClose size={20} /> : <PanelRightOpen size={20} />}
+        {!isDesktop && open ? (
+          <X size={20} />
+        ) : open ? (
+          <PanelRightClose size={20} />
+        ) : (
+          <PanelRightOpen size={20} />
+        )}
       </button>
     </Tooltip>
   );

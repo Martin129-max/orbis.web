@@ -1,9 +1,8 @@
 "use client";
 
-import { Bold, Code, Italic, Link as LinkIcon, List, ListOrdered, Strikethrough, Underline } from "lucide-react";
 import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Button, Tooltip } from "antd";
+import { Tooltip } from "antd";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 
@@ -49,7 +48,7 @@ export function PostComposer({
     ],
     editorProps: {
       attributes: {
-        class: "rich-text min-h-24 px-4 py-3 outline-none",
+        class: "rich-text min-h-12 outline-none",
         "aria-label": "Write a post",
         role: "textbox",
         "aria-multiline": "true",
@@ -99,21 +98,26 @@ export function PostComposer({
     if (href) editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
   }
 
-  const tools: { label: string; icon: ReactNode; active?: boolean; run: () => void }[] = [
-    { label: "Bold", icon: <Bold size={16} />, active: state?.bold, run: () => editor?.chain().focus().toggleBold().run() },
-    { label: "Italic", icon: <Italic size={16} />, active: state?.italic, run: () => editor?.chain().focus().toggleItalic().run() },
-    { label: "Underline", icon: <Underline size={16} />, active: state?.underline, run: () => editor?.chain().focus().toggleUnderline().run() },
-    { label: "Strikethrough", icon: <Strikethrough size={16} />, active: state?.strike, run: () => editor?.chain().focus().toggleStrike().run() },
-    { label: "Inline code", icon: <Code size={16} />, active: state?.code, run: () => editor?.chain().focus().toggleCode().run() },
-    { label: "Bulleted list", icon: <List size={16} />, active: state?.bulletList, run: () => editor?.chain().focus().toggleBulletList().run() },
-    { label: "Numbered list", icon: <ListOrdered size={16} />, active: state?.orderedList, run: () => editor?.chain().focus().toggleOrderedList().run() },
-    { label: state?.link ? "Remove link" : "Add link", icon: <LinkIcon size={16} />, active: state?.link, run: toggleLink },
+  const tools: {
+    label: string;
+    glyph: ReactNode;
+    active?: boolean;
+    run: () => void;
+  }[] = [
+    { label: "Bold", glyph: <span className="font-extrabold">B</span>, active: state?.bold, run: () => editor?.chain().focus().toggleBold().run() },
+    { label: "Italic", glyph: <span className="font-medium italic">I</span>, active: state?.italic, run: () => editor?.chain().focus().toggleItalic().run() },
+    { label: "Underline", glyph: <span className="font-medium underline">U</span>, active: state?.underline, run: () => editor?.chain().focus().toggleUnderline().run() },
+    { label: "Strikethrough", glyph: <span className="font-medium line-through">S</span>, active: state?.strike, run: () => editor?.chain().focus().toggleStrike().run() },
+    { label: "Inline code", glyph: "</>", active: state?.code, run: () => editor?.chain().focus().toggleCode().run() },
+    { label: "Bulleted list", glyph: "≡", active: state?.bulletList, run: () => editor?.chain().focus().toggleBulletList().run() },
+    { label: "Numbered list", glyph: "1.", active: state?.orderedList, run: () => editor?.chain().focus().toggleOrderedList().run() },
+    { label: state?.link ? "Remove link" : "Add link", glyph: "↗", active: state?.link, run: toggleLink },
   ];
 
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="rounded-xl border border-black/15 bg-surface focus-within:border-accent dark:border-white/20 dark:focus-within:border-accent"
+        className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-4 transition-colors focus-within:border-accent"
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
@@ -121,53 +125,59 @@ export function PostComposer({
           }
         }}
       >
-        <div
-          role="toolbar"
-          aria-label="Formatting"
-          className="flex flex-wrap gap-1 border-b border-black/10 px-2 py-1.5 dark:border-white/10"
-        >
-          {tools.map((tool) => (
-            <Tooltip key={tool.label} title={tool.label}>
-              <Button
-                type={tool.active ? "primary" : "text"}
-                size="small"
-                icon={tool.icon}
-                aria-label={tool.label}
-                aria-pressed={tool.active}
-                onMouseDown={(event) => event.preventDefault()}
-                onClick={tool.run}
-              />
-            </Tooltip>
-          ))}
-        </div>
+        {target}
         <div className="relative">
           {state?.empty && (
-            <p className="pointer-events-none absolute top-3 left-4 text-muted">
+            <p className="pointer-events-none absolute top-0 left-0 text-sm text-muted">
               {placeholder}
             </p>
           )}
           <EditorContent editor={editor} />
         </div>
+        <hr className="border-divider" />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div
+            role="toolbar"
+            aria-label="Formatting"
+            className="flex flex-wrap items-center gap-1 text-[13px] font-medium"
+          >
+            {tools.map((tool) => (
+              <Tooltip key={tool.label} title={tool.label}>
+                <button
+                  type="button"
+                  aria-label={tool.label}
+                  aria-pressed={tool.active}
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={tool.run}
+                  className={`focus-ring flex h-7 min-w-7 items-center justify-center rounded-md px-1 transition-colors ${
+                    tool.active
+                      ? "bg-accent-soft text-accent"
+                      : "text-muted hover:text-foreground"
+                  }`}
+                >
+                  {tool.glyph}
+                </button>
+              </Tooltip>
+            ))}
+          </div>
+          <div className="flex items-center gap-2">
+            {onCancel && (
+              <Atom.Button size="small" variant="text" onClick={onCancel}>
+                Cancel
+              </Atom.Button>
+            )}
+            <Atom.Button
+              size="small"
+              onClick={submit}
+              loading={pending}
+              disabled={state?.empty && !allowEmpty}
+            >
+              {submitLabel}
+            </Atom.Button>
+          </div>
+        </div>
       </div>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      <div className="flex items-center justify-end gap-3">
-        {target && <div className="mr-auto min-w-0">{target}</div>}
-        <span className="hidden text-xs text-muted sm:inline">
-          ⌘/Ctrl + Enter to post
-        </span>
-        {onCancel && (
-          <Atom.Button variant="secondary" onClick={onCancel}>
-            Cancel
-          </Atom.Button>
-        )}
-        <Atom.Button
-          onClick={submit}
-          loading={pending}
-          disabled={state?.empty && !allowEmpty}
-        >
-          {submitLabel}
-        </Atom.Button>
-      </div>
     </div>
   );
 }

@@ -6,12 +6,20 @@ export default function ExplorePage() {
   return (
     <Template.AppTemplate>
       <main className="flex min-h-0 flex-1 flex-col">
-        <Template.PageHeader>
+        <Template.PageHeader
+          tagline="Your little corner of the internet"
+          actions={<Organism.SidePanelToggle label="Friends" />}
+        >
           <Atom.Heading>Explore</Atom.Heading>
         </Template.PageHeader>
-        <Template.PageColumn>
-          <Organism.CommunitySearch />
-        </Template.PageColumn>
+        <div className="flex min-h-0 flex-1">
+          <Template.PageColumn>
+            <Organism.CommunitySearch />
+          </Template.PageColumn>
+          <Organism.SidePanel label="Friends">
+            <Organism.FriendsPanel />
+          </Organism.SidePanel>
+        </div>
       </main>
     </Template.AppTemplate>
   );

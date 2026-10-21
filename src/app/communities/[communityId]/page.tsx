@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Globe,
-  Lock,
-  MessagesSquare,
-  Newspaper,
-  Settings,
-} from "lucide-react";
+import { Globe, Lock, Settings } from "lucide-react";
 import Link from "next/link";
 import { Tooltip } from "antd";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -21,8 +15,8 @@ import { useAuthStore } from "@/stores/auth-store";
 type Loaded = { id: string; community: Community | null; failed?: boolean };
 
 const tabs = [
-  { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
-  { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
+  { value: "feed", label: "Feed" },
+  { value: "forum", label: "Forum" },
 ] as const;
 
 export default function CommunityPage() {
@@ -67,6 +61,7 @@ export default function CommunityPage() {
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
           <Template.PageHeader
+            tagline="Your clubhouse"
             actions={
               <>
                 {canManage(current.community) && (
@@ -87,54 +82,49 @@ export default function CommunityPage() {
             <Atom.Heading className="min-w-0 truncate">
               {current.community.name}
             </Atom.Heading>
-            <Tooltip
-              title={
-                current.community.isPublic
-                  ? "Public: anyone can find and join it"
-                  : "Private: only members can see it"
-              }
-            >
-              <span
-                role="img"
-                aria-label={
-                  current.community.isPublic
-                    ? "Public community"
-                    : "Private community"
-                }
-                className="flex shrink-0 text-lg text-muted"
-              >
-                {current.community.isPublic ? (
-                  <Globe size={18} />
-                ) : (
-                  <Lock size={18} />
-                )}
-              </span>
-            </Tooltip>
           </Template.PageHeader>
-          <nav
-            aria-label="Community sections"
-            className="flex shrink-0 gap-1 overflow-x-auto border-b border-black/10 px-4 sm:px-6 dark:border-white/10"
-          >
-            {tabs.map(({ value, label, icon }) => (
-              <Link
-                key={value}
-                href={`/communities/${current.community!.id}${
-                  value === "forum" ? "?tab=forum" : ""
-                }`}
-                aria-current={tab === value ? "page" : undefined}
-                className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-md border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
-                  tab === value
-                    ? "border-accent text-foreground"
-                    : "border-transparent text-muted hover:text-foreground"
-                }`}
-              >
-                {icon}
-                {label}
-              </Link>
-            ))}
-          </nav>
           <div className="flex min-h-0 flex-1">
             <Template.PageColumn>
+              <div className="flex flex-col gap-2">
+                <h2 className="font-display text-4xl leading-[1.04] font-bold">
+                  {current.community.name}
+                </h2>
+                <p className="flex items-center gap-2 text-xs text-muted">
+                  {current.community.isPublic ? (
+                    <Globe size={14} aria-hidden />
+                  ) : (
+                    <Lock size={14} aria-hidden />
+                  )}
+                  {current.community.isPublic
+                    ? "Public community"
+                    : "Private community"}
+                  {current.community.memberCount !== undefined &&
+                    ` · ${current.community.memberCount.toLocaleString()} ${
+                      current.community.memberCount === 1 ? "member" : "members"
+                    }`}
+                </p>
+              </div>
+              <nav
+                aria-label="Community sections"
+                className="mt-6 mb-6 flex gap-2 border-b border-divider"
+              >
+                {tabs.map(({ value, label }) => (
+                  <Link
+                    key={value}
+                    href={`/communities/${current.community!.id}${
+                      value === "forum" ? "?tab=forum" : ""
+                    }`}
+                    aria-current={tab === value ? "page" : undefined}
+                    className={`focus-ring -mb-px rounded-t-sm border-b-2 px-1 pb-2 text-sm transition-colors ${
+                      tab === value
+                        ? "border-accent text-accent"
+                        : "border-transparent font-semibold text-foreground hover:text-accent"
+                    } ${value === "forum" ? "ml-6" : ""}`}
+                  >
+                    {label}
+                  </Link>
+                ))}
+              </nav>
               {tab === "forum" ? (
                 <Organism.CommunityForum
                   key={current.community.id}

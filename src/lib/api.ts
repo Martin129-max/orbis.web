@@ -14,6 +14,7 @@ export type Profile = {
   username: string;
   theme: ThemeMode;
   appearOffline: boolean;
+  createdAt: string;
 };
 
 export type CommunityRole = "owner" | "admin" | "member";
@@ -25,6 +26,7 @@ export type Community = {
   isPublic: boolean;
   createdAt: string;
   role?: CommunityRole;
+  memberCount?: number;
 };
 
 export type CommunitySearchResult = {

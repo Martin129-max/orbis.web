@@ -1,6 +1,5 @@
 "use client";
 
-import { Reply } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -34,8 +33,8 @@ function buildTree(comments: Comment[]) {
   const sort = (list: CommentNode[]) => {
     list.sort(
       (a, b) =>
-        b.score - a.score ||
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime() ||
+        a.id - b.id,
     );
     list.forEach((node) => sort(node.replies));
   };
@@ -59,65 +58,61 @@ function CommentItem({
 
   return (
     <li className="flex flex-col gap-3">
-      <div className="flex gap-3">
-        <Atom.Avatar label={author} seed={node.author.id} />
-        <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <p className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted">
-            <span className="text-sm font-semibold text-foreground">
-              {author}
-            </span>
-            <time
-              dateTime={node.createdAt}
-              title={new Date(node.createdAt).toLocaleString()}
-            >
-              {timeAgo(node.createdAt)}
-            </time>
-          </p>
-          <div
-            className="rich-text text-sm"
-            dangerouslySetInnerHTML={{ __html: node.content }}
+      <div className="flex flex-col gap-3">
+        <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+          <Atom.Avatar size="xs" label={author} seed={node.author.id} />
+          <span className="text-foreground">{author}</span>
+          <time
+            dateTime={node.createdAt}
+            title={new Date(node.createdAt).toLocaleString()}
+          >
+            {timeAgo(node.createdAt)}
+          </time>
+        </p>
+        <div
+          className="rich-text"
+          dangerouslySetInnerHTML={{ __html: node.content }}
+        />
+        <div className="flex items-center gap-2">
+          <Molecule.VoteControl
+            orientation="horizontal"
+            score={node.score}
+            myVote={node.myVote}
+            onVote={(value) =>
+              castVote({ type: "comment", id: node.id }, node, value, (result) =>
+                onChange({ ...node, ...result }),
+              )
+            }
           />
-          <div className="flex items-center gap-2">
-            <Molecule.VoteControl
-              orientation="horizontal"
-              score={node.score}
-              myVote={node.myVote}
-              onVote={(value) =>
-                castVote({ type: "comment", id: node.id }, node, value, (result) =>
-                  onChange({ ...node, ...result }),
-                )
-              }
-            />
-            <button
-              type="button"
-              onClick={() => setReplying((open) => !open)}
-              aria-expanded={replying}
-              className="focus-ring inline-flex items-center gap-1 rounded-md px-1.5 py-1 text-xs font-medium text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
-            >
-              <Reply size={14} />
-              Reply
-            </button>
-          </div>
-          {replying && (
-            <div className="pt-1">
-              <PostComposer
-                autoFocus
-                placeholder={`Reply to ${author}…`}
-                submitLabel="Reply"
-                onPost={(content) => onReply(content, node.id)}
-                onPosted={() => setReplying(false)}
-                onCancel={() => setReplying(false)}
-              />
-            </div>
-          )}
+          <button
+            type="button"
+            onClick={() => setReplying((open) => !open)}
+            aria-expanded={replying}
+            className="focus-ring rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-foreground"
+          >
+            Reply
+          </button>
         </div>
+        {replying && (
+          <PostComposer
+            autoFocus
+            target={
+              <p className="text-xs text-muted">
+                Replying to @{node.author.username}
+              </p>
+            }
+            placeholder="Write a reply…"
+            submitLabel="Reply"
+            onPost={(content) => onReply(content, node.id)}
+            onPosted={() => setReplying(false)}
+            onCancel={() => setReplying(false)}
+          />
+        )}
       </div>
       {node.replies.length > 0 && (
         <ul
-          className={`flex flex-col gap-4 ${
-            depth < MAX_INDENT
-              ? "ml-4 border-l border-black/10 pl-4 dark:border-white/10"
-              : ""
+          className={`flex flex-col gap-6 ${
+            depth < MAX_INDENT ? "border-l border-divider pl-5" : ""
           }`}
         >
           {node.replies.map((child) => (
@@ -178,12 +173,23 @@ export function CommentSection({
   }
 
   return (
-    <section aria-label="Comments" className="flex flex-col gap-4">
-      <PostComposer
-        placeholder="Add a comment…"
-        submitLabel="Comment"
-        onPost={(content) => handleReply(content)}
-      />
+    <section aria-label="Comments" className="flex flex-col gap-6">
+      <div className="flex items-baseline justify-between gap-3">
+        <h3 className="font-display text-2xl font-bold">
+          {comments
+            ? `${comments.length} ${comments.length === 1 ? "comment" : "comments"}`
+            : "Comments"}
+        </h3>
+        <span className="text-xs text-muted">Oldest first</span>
+      </div>
+      <div className="flex flex-col gap-2">
+        <p className="text-[13px] font-semibold">Join the discussion</p>
+        <PostComposer
+          placeholder="Add your take. Make it a good one."
+          submitLabel="Comment"
+          onPost={(content) => handleReply(content)}
+        />
+      </div>
       {failed && !comments ? (
         <Molecule.ConnectionError
           onRetry={() => {
@@ -201,10 +207,7 @@ export function CommentSection({
         </p>
       ) : (
         <>
-          <h3 className="text-sm font-semibold">
-            {comments.length} {comments.length === 1 ? "comment" : "comments"}
-          </h3>
-          <ul className="flex flex-col gap-5">
+          <ul className="flex flex-col gap-6">
             {buildTree(comments).map((node) => (
               <CommentItem
                 key={node.id}

@@ -1,84 +1,53 @@
 "use client";
 
-import { Check, X } from "lucide-react";
-import { Button, Popconfirm, Tooltip } from "antd";
-import { useState, type ReactNode } from "react";
+import { X } from "lucide-react";
+import { Popconfirm, Tooltip } from "antd";
+import { Fragment, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import type { FriendUser } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useFriendsStore } from "@/stores/friends-store";
-
-const label = displayName;
+import { PanelHeading } from "./side-panel";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="text-xs font-semibold tracking-wide text-muted uppercase">
-        {title}
-      </h2>
-      <ul className="flex flex-col gap-1">{children}</ul>
+      <h3 className="text-[11px] font-bold text-muted uppercase">{title}</h3>
+      <ul className="flex flex-col">{children}</ul>
     </section>
   );
 }
 
 function FriendRow({
   user,
-  online,
-  subtitle,
-  children,
+  presence,
+  actions,
+  trailing,
 }: {
   user: FriendUser;
-  online?: boolean;
-  subtitle?: string;
-  children?: ReactNode;
+  presence?: "online" | "offline";
+  actions?: ReactNode;
+  trailing?: ReactNode;
 }) {
   return (
-    <li
-      className={`flex items-center gap-3 rounded-md px-2 py-1.5 ${
-        online === false ? "opacity-60" : ""
-      }`}
-    >
-      <span className="relative">
-        <Atom.Avatar label={label(user)} seed={user.userId} />
-        {online !== undefined && (
-          <span
-            aria-hidden
-            className={`absolute -right-0.5 -bottom-0.5 h-3.5 w-3.5 rounded-full border-2 border-surface ${
-              online ? "bg-emerald-500" : "bg-zinc-400"
-            }`}
-          />
-        )}
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-medium">{label(user)}</span>
-        <span className="truncate text-xs text-muted">
-          {subtitle ?? `@${user.username}`}
-        </span>
+    <li className="group flex flex-col gap-2 py-2">
+      <div className="flex items-center gap-3">
+        <Atom.Avatar
+          size="sm"
+          label={displayName(user)}
+          seed={user.userId}
+          presence={presence}
+        />
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="truncate text-[13px] font-semibold">
+            {displayName(user)}
+          </span>
+          <span className="truncate text-xs text-muted">@{user.username}</span>
+        </div>
+        {trailing}
       </div>
-      <div className="flex shrink-0 gap-1">{children}</div>
+      {actions && <div className="flex gap-2 pl-11">{actions}</div>}
     </li>
-  );
-}
-
-function Action({
-  title,
-  icon,
-  onClick,
-}: {
-  title: string;
-  icon: ReactNode;
-  onClick?: () => void;
-}) {
-  return (
-    <Tooltip title={title}>
-      <Button
-        type="text"
-        size="small"
-        icon={icon}
-        aria-label={title}
-        onClick={onClick}
-      />
-    </Tooltip>
   );
 }
 
@@ -91,7 +60,9 @@ function AddFriendForm() {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = event.currentTarget;
-    const username = String(new FormData(form).get("username")).trim();
+    const username = String(new FormData(form).get("username"))
+      .trim()
+      .replace(/^@/, "");
     setError(null);
     setSent(false);
     setPending(true);
@@ -109,22 +80,30 @@ function AddFriendForm() {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <div className="flex gap-2">
-        <Atom.Input
-          name="username"
-          required
-          placeholder="Add a friend by username"
-          aria-label="Friend's username"
-          autoCapitalize="none"
-          autoComplete="off"
-          onChange={() => setSent(false)}
-        />
-        <Atom.Button type="submit" loading={pending}>
-          Add
-        </Atom.Button>
-      </div>
+      <label htmlFor="friend-username" className="text-[13px] font-semibold">
+        Add a friend
+      </label>
+      <Atom.Input
+        id="friend-username"
+        name="username"
+        size="large"
+        required
+        placeholder="Enter @username"
+        autoCapitalize="none"
+        autoComplete="off"
+        onChange={() => setSent(false)}
+      />
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       {sent && <p className="text-xs text-muted">Friend request sent.</p>}
+      <Atom.Button
+        type="submit"
+        variant="secondary"
+        size="large"
+        loading={pending}
+        className="w-fit"
+      >
+        Send request
+      </Atom.Button>
     </form>
   );
 }
@@ -144,89 +123,119 @@ export function FriendsPanel() {
   function removeAction(user: FriendUser) {
     return (
       <Popconfirm
-        title={`Remove ${label(user)} from your friends?`}
+        title={`Remove ${displayName(user)} from your friends?`}
         okText="Remove"
         okButtonProps={{ danger: true }}
         onConfirm={() => removeFriend(user.userId)}
       >
-        <span>
-          <Action title="Remove friend" icon={<X size={16} />} />
-        </span>
+        <Tooltip title="Remove friend">
+          <button
+            type="button"
+            aria-label={`Remove ${displayName(user)}`}
+            className="icon-button opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+          >
+            <X size={16} />
+          </button>
+        </Tooltip>
       </Popconfirm>
     );
   }
 
+  const sections = [
+    requests > 0 && (
+      <Section key="requests" title={`Requests / ${requests}`}>
+        {incoming.map((user) => (
+          <FriendRow
+            key={user.userId}
+            user={user}
+            actions={
+              <>
+                <Atom.Button
+                  size="small"
+                  onClick={() =>
+                    addFriend({ userId: user.userId }).catch(() => null)
+                  }
+                >
+                  Accept
+                </Atom.Button>
+                <Atom.Button
+                  size="small"
+                  variant="text"
+                  onClick={() => removeFriend(user.userId).catch(() => null)}
+                >
+                  Decline
+                </Atom.Button>
+              </>
+            }
+          />
+        ))}
+        {outgoing.map((user) => (
+          <FriendRow
+            key={user.userId}
+            user={user}
+            actions={
+              <Atom.Button
+                size="small"
+                variant="text"
+                onClick={() => removeFriend(user.userId).catch(() => null)}
+              >
+                Cancel request
+              </Atom.Button>
+            }
+          />
+        ))}
+      </Section>
+    ),
+    online.length > 0 && (
+      <Section key="online" title={`Online / ${online.length}`}>
+        {online.map((friend) => (
+          <FriendRow
+            key={friend.userId}
+            user={friend}
+            presence="online"
+            trailing={removeAction(friend)}
+          />
+        ))}
+      </Section>
+    ),
+    offline.length > 0 && (
+      <Section key="offline" title={`Offline / ${offline.length}`}>
+        {offline.map((friend) => (
+          <FriendRow
+            key={friend.userId}
+            user={friend}
+            presence="offline"
+            trailing={removeAction(friend)}
+          />
+        ))}
+      </Section>
+    ),
+  ].filter(Boolean);
+
   return (
-    <div className="flex flex-col gap-6">
+    <>
+      <PanelHeading title={`Friends / ${friends.length}`} label="Friends" />
       <AddFriendForm />
       {!loaded ? (
         <div className="flex py-8">
           <Atom.Loader />
         </div>
+      ) : sections.length === 0 ? (
+        <p className="text-[13px] text-muted">
+          No friends yet. Add people by username, or from a community&apos;s
+          member list.
+        </p>
       ) : (
-        <>
-          {requests > 0 && (
-            <Section title={`Requests — ${requests}`}>
-              {incoming.map((user) => (
-                <FriendRow
-                  key={user.userId}
-                  user={user}
-                  subtitle="Wants to be friends"
-                >
-                  <Action
-                    title="Accept"
-                    icon={<Check size={16} />}
-                    onClick={() =>
-                      addFriend({ userId: user.userId }).catch(() => null)
-                    }
-                  />
-                  <Action
-                    title="Decline"
-                    icon={<X size={16} />}
-                    onClick={() => removeFriend(user.userId).catch(() => null)}
-                  />
-                </FriendRow>
-              ))}
-              {outgoing.map((user) => (
-                <FriendRow key={user.userId} user={user} subtitle="Request sent">
-                  <Action
-                    title="Cancel request"
-                    icon={<X size={16} />}
-                    onClick={() => removeFriend(user.userId).catch(() => null)}
-                  />
-                </FriendRow>
-              ))}
-            </Section>
-          )}
-          {friends.length === 0 ? (
-            <div className="flex flex-col gap-1 py-4 text-center">
-              <p className="text-sm font-medium">No friends yet</p>
-              <p className="text-xs text-muted">
-                Add people by username, or from a community&apos;s member list.
-              </p>
-            </div>
-          ) : (
-            <>
-              <Section title={`Online — ${online.length}`}>
-                {online.map((friend) => (
-                  <FriendRow key={friend.userId} user={friend} online>
-                    {removeAction(friend)}
-                  </FriendRow>
-                ))}
-              </Section>
-              {offline.length > 0 && (
-                <Section title={`Offline — ${offline.length}`}>
-                  {offline.map((friend) => (
-                    <FriendRow key={friend.userId} user={friend} online={false}>
-                      {removeAction(friend)}
-                    </FriendRow>
-                  ))}
-                </Section>
-              )}
-            </>
-          )}
-        </>
+        <div className="flex flex-col gap-4">
+          {sections.map((section, index) => (
+            <Fragment key={index}>
+              {index > 0 && <hr className="border-divider" />}
+              {section}
+            </Fragment>
+          ))}
+        </div>
       )}
-    </div>
+      <p className="text-xs text-muted">A little company between episodes.</p>
+    </>
   );
 }

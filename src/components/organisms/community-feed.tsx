@@ -25,7 +25,14 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
   return (
     <div className="flex flex-col gap-4">
       <PostComposer onPost={handlePost} />
-      <PostList feed={feed} empty="Be the first to share something." />
+      <PostList
+        feed={feed}
+        empty={{
+          title: "Every clubhouse starts with a hello.",
+          description:
+            "No posts yet. Share your current watchlist, introduce yourself, or ask the question you’ve been saving.",
+        }}
+      />
     </div>
   );
 }

@@ -1,8 +1,12 @@
 "use client";
 
 import { Select } from "antd";
+import { ArrowDownWideNarrow, ChevronDown, CircleCheck } from "lucide-react";
 import { useState } from "react";
+import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import { createPost, getFeed } from "@/lib/api";
+import { initials } from "@/lib/initials";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
@@ -11,6 +15,7 @@ import { PostList } from "./post-list";
 
 export function HomeFeed() {
   const feed = usePaged(getFeed);
+  const profile = useAuthStore((state) => state.profile);
   const communities = useCommunityStore((state) => state.communities);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const target =
@@ -27,29 +32,73 @@ export function HomeFeed() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-6">
+      <Molecule.PageIntro
+        eyebrow="The clubhouse bulletin"
+        title={`Good to see you${profile ? `, ${profile.username}` : ""}.`}
+        description="Fresh thoughts from your favorite corners of the fandom."
+      />
       {target && (
         <PostComposer
           onPost={handlePost}
+          placeholder="What’s living rent-free in your head?"
           target={
-            <Select
-              aria-label="Community"
-              value={target.id}
-              onChange={setSelectedId}
-              options={communities.map((community) => ({
-                value: community.id,
-                label: community.name,
-              }))}
-              popupMatchSelectWidth={false}
-              className="w-48 max-w-full"
-            />
+            <div className="flex items-center gap-3">
+              <span
+                aria-hidden
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-divider bg-rail-item font-display text-[17.6px] leading-none font-bold"
+              >
+                {initials(target.name)}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="text-xs text-muted uppercase">Post to</span>
+                <Select
+                  aria-label="Community"
+                  variant="borderless"
+                  size="small"
+                  value={target.id}
+                  onChange={setSelectedId}
+                  suffixIcon={<ChevronDown size={12} />}
+                  options={communities.map((community) => ({
+                    value: community.id,
+                    label: community.name,
+                  }))}
+                  popupMatchSelectWidth={false}
+                  className="-ml-[7px] w-fit max-w-full text-[13px] font-semibold"
+                />
+              </div>
+            </div>
           }
         />
       )}
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <p className="uppercase">From your communities</p>
+        <p className="flex items-center gap-2 text-muted">
+          <ArrowDownWideNarrow size={16} />
+          Newest first
+        </p>
+      </div>
       <PostList
         showCommunity
         feed={feed}
-        empty="Posts from your communities will show up here."
+        empty={{
+          title: "Every clubhouse starts with a hello.",
+          description:
+            "No posts yet. Share your current watchlist, introduce yourself, or ask the question you’ve been saving.",
+        }}
+        end={
+          <Molecule.FeedState
+            eyebrow="End of feed / You’re all caught up"
+            icon={<CircleCheck size={24} strokeWidth={1.5} />}
+            title="Roll the credits."
+            description="You’ve seen everything new in your communities. Watch an episode, touch some grass, or discover another little world."
+            action={
+              <Atom.ButtonLink href="/explore" variant="secondary">
+                Explore communities
+              </Atom.ButtonLink>
+            }
+          />
+        }
       />
     </div>
   );

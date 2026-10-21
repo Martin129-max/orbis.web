@@ -16,34 +16,32 @@ export function ThreadMeta({
   showCommunity: boolean;
 }) {
   return (
-    <p className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-muted">
+    <div className="flex flex-col gap-2">
       {showCommunity && (
-        <>
-          <Link
-            href={`/communities/${thread.community.id}?tab=forum`}
-            onClick={(event) => event.stopPropagation()}
-            className="focus-ring flex items-center gap-1.5 rounded-sm font-semibold text-foreground hover:underline"
+        <Link
+          href={`/communities/${thread.community.id}?tab=forum`}
+          onClick={(event) => event.stopPropagation()}
+          className="focus-ring flex w-fit items-center gap-2 rounded-sm text-xs font-semibold hover:underline"
+        >
+          <span
+            aria-hidden
+            className="flex h-5 w-5 items-center justify-center rounded-full bg-rail-item font-display text-[9.6px] leading-none font-bold"
           >
-            <span
-              aria-hidden
-              className="flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[8px] leading-none font-bold text-white"
-            >
-              {initials(thread.community.name)}
-            </span>
-            {thread.community.name}
-          </Link>
-          <span aria-hidden>·</span>
-        </>
+            {initials(thread.community.name)}
+          </span>
+          {thread.community.name}
+        </Link>
       )}
-      <span>{displayName(thread.author)}</span>
-      <span aria-hidden>·</span>
-      <time
-        dateTime={thread.createdAt}
-        title={new Date(thread.createdAt).toLocaleString()}
-      >
-        {timeAgo(thread.createdAt)}
-      </time>
-    </p>
+      <p className="text-xs text-muted">
+        {displayName(thread.author)} ·{" "}
+        <time
+          dateTime={thread.createdAt}
+          title={new Date(thread.createdAt).toLocaleString()}
+        >
+          {timeAgo(thread.createdAt)}
+        </time>
+      </p>
+    </div>
   );
 }
 
@@ -63,7 +61,7 @@ export function ThreadCard({
   return (
     <article
       onClick={onOpen}
-      className="flex cursor-pointer gap-3 rounded-xl border border-black/10 bg-surface p-4 transition-colors hover:border-black/25 dark:border-white/10 dark:hover:border-white/25"
+      className="flex cursor-pointer gap-4 border-b border-divider py-6"
     >
       <Molecule.VoteControl
         score={thread.score}
@@ -74,9 +72,9 @@ export function ThreadCard({
           )
         }
       />
-      <div className="flex min-w-0 flex-1 flex-col gap-1.5">
+      <div className="flex min-w-0 flex-1 flex-col gap-2">
         <ThreadMeta thread={thread} showCommunity={showCommunity} />
-        <h3 className="text-base font-semibold">
+        <h3 className="text-xl font-bold">
           <button
             type="button"
             onClick={(event) => {
@@ -90,7 +88,7 @@ export function ThreadCard({
         </h3>
         {thread.content && (
           <div
-            className="rich-text line-clamp-3 text-sm text-muted"
+            className="rich-text line-clamp-2 text-sm text-muted"
             dangerouslySetInnerHTML={{ __html: thread.content }}
           />
         )}

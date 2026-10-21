@@ -1,9 +1,9 @@
 "use client";
 
 import { Modal, Segmented } from "antd";
-import { Flame, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { useCallback, useState } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import {
   createThread,
   getThreads,
@@ -11,14 +11,15 @@ import {
 } from "@/lib/api";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
+import { useCommunityStore } from "@/stores/community-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 
 const sorts = [
-  { value: "hot", label: "Hot", icon: <Flame size={14} /> },
-  { value: "new", label: "New", icon: <Sparkles size={14} /> },
-  { value: "top", label: "Top", icon: <TrendingUp size={14} /> },
-] satisfies { value: ThreadSort; label: string; icon: React.ReactNode }[];
+  { value: "hot", label: "Hot" },
+  { value: "new", label: "New" },
+  { value: "top", label: "Top" },
+] satisfies { value: ThreadSort; label: string }[];
 
 function ForumThreads({
   communityId,
@@ -35,7 +36,21 @@ function ForumThreads({
     ),
   );
 
-  return <PostList feed={feed} empty="Start the first discussion." />;
+  return (
+    <PostList
+      feed={feed}
+      empty={{
+        title: "No threads yet.",
+        description:
+          "Ask the big question, share a theory, or start the weekly watchlist. Good discussions start somewhere.",
+      }}
+      end={
+        <p className="pt-6 text-xs text-muted">
+          You’ve reached the end. Start the next great discussion.
+        </p>
+      }
+    />
+  );
 }
 
 function NewThreadModal({
@@ -50,6 +65,11 @@ function NewThreadModal({
   onCreated: () => void;
 }) {
   const [title, setTitle] = useState("");
+  const communityName = useCommunityStore(
+    (state) =>
+      state.communities.find((community) => community.id === communityId)
+        ?.name,
+  );
 
   async function handlePost(content: string) {
     const { token } = useAuthStore.getState();
@@ -69,30 +89,39 @@ function NewThreadModal({
       open={open}
       onCancel={close}
       footer={null}
-      width={680}
+      width={640}
       destroyOnHidden
-      title="New thread"
+      title={null}
+      styles={{ container: { padding: 24 } }}
     >
-      <div className="flex flex-col gap-3 pt-2">
-        <Atom.Input
+      <div className="flex flex-col gap-6">
+        <Molecule.ModalHeader
+          eyebrow={`${communityName ?? "Community"} / New thread`}
+          title="Start a good discussion."
+          description="A big question, a tiny detail, a theory you can’t shake. Give it a place to live."
+        />
+        <Molecule.FormField
+          label="Title"
           size="large"
-          placeholder="Title"
-          aria-label="Thread title"
           maxLength={300}
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           autoFocus
         />
-        <PostComposer
-          allowEmpty
-          placeholder="Add more detail (optional)…"
-          submitLabel="Post thread"
-          onPost={handlePost}
-          onPosted={() => {
-            setTitle("");
-            onCreated();
-          }}
-        />
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] font-semibold">Body (optional)</p>
+          <PostComposer
+            allowEmpty
+            onCancel={close}
+            placeholder="Add the details, context, or your hot take…"
+            submitLabel="Post thread"
+            onPost={handlePost}
+            onPosted={() => {
+              setTitle("");
+              onCreated();
+            }}
+          />
+        </div>
       </div>
     </Modal>
   );
@@ -112,7 +141,7 @@ export function CommunityForum({ communityId }: { communityId: number }) {
           value={sort}
           onChange={setSort}
         />
-        <Atom.Button icon={<Plus size={16} />} onClick={() => setCreating(true)}>
+        <Atom.Button size="large" onClick={() => setCreating(true)}>
           New thread
         </Atom.Button>
       </div>

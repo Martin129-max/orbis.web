@@ -1,46 +1,45 @@
-const colors = [
-  "bg-blue-600",
-  "bg-violet-600",
-  "bg-pink-600",
-  "bg-rose-600",
-  "bg-orange-700",
-  "bg-amber-700",
-  "bg-emerald-700",
-  "bg-teal-700",
-  "bg-cyan-700",
-  "bg-indigo-600",
-  "bg-fuchsia-700",
-  "bg-sky-700",
-];
+const tones = ["bg-accent-soft", "bg-rail-item"];
 
-function colorFor(seed: string | number) {
+const sizes = {
+  xs: "h-5 w-5 text-[11px]",
+  sm: "h-8 w-8 text-[17.6px]",
+  md: "h-9 w-9 text-[19.8px]",
+  rail: "h-8 w-8 text-[17.6px] sm:h-10 sm:w-10 sm:text-[22px]",
+  lg: "h-[88px] w-[88px] text-[44px]",
+};
+
+function toneFor(seed: string | number) {
   const hash = Array.from(String(seed)).reduce(
     (total, char) => (total * 31 + char.codePointAt(0)!) >>> 0,
     7,
   );
-  return colors[hash % colors.length];
+  return tones[hash % tones.length];
 }
-
-const sizes = {
-  md: "h-9 w-9 text-sm",
-  lg: "h-16 w-16 text-2xl",
-};
 
 export function Avatar({
   label,
   seed = label,
   size = "md",
+  presence,
 }: {
   label: string;
   seed?: string | number;
   size?: keyof typeof sizes;
+  presence?: "online" | "offline";
 }) {
   return (
     <span
       aria-hidden
-      className={`flex shrink-0 items-center justify-center rounded-full font-semibold text-white ${sizes[size]} ${colorFor(seed)}`}
+      className={`relative flex shrink-0 items-center justify-center rounded-full border border-divider font-display leading-none font-bold text-foreground ${sizes[size]} ${toneFor(seed)}`}
     >
       {Array.from(label)[0]?.toUpperCase()}
+      {presence && (
+        <span
+          className={`absolute -right-px -bottom-px h-3 w-3 rounded-full border-2 border-surface ${
+            presence === "online" ? "bg-online" : "bg-offline"
+          }`}
+        />
+      )}
     </span>
   );
 }

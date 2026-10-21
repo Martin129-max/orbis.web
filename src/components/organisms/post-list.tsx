@@ -1,5 +1,6 @@
 "use client";
 
+import { CloudOff, NotebookPen } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -11,13 +12,19 @@ import { ThreadCard } from "./thread-card";
 
 type PostListProps<T extends FeedItem> = {
   feed: Paged<T>;
-  empty: ReactNode;
+  empty: { title: ReactNode; description: ReactNode; action?: ReactNode };
+  end?: ReactNode;
   showCommunity?: boolean;
 };
 
 export function PostList<T extends FeedItem>({
   feed,
   empty,
+  end = (
+    <p className="pt-6 text-xs text-muted">
+      All caught up. A good time to watch that next episode.
+    </p>
+  ),
   showCommunity = false,
 }: PostListProps<T>) {
   const { items, failed, retry, hasMore, loadingMore, moreFailed, loadMore } =
@@ -28,31 +35,35 @@ export function PostList<T extends FeedItem>({
 
   if (failed && !items) {
     return (
-      <div className="py-16">
-        <Molecule.ConnectionError onRetry={retry} />
-      </div>
+      <Molecule.FeedState
+        role="alert"
+        eyebrow="Error / Connection interrupted"
+        icon={<CloudOff size={24} strokeWidth={1.5} />}
+        title="A brief intermission."
+        description="We couldn’t load the feed. Check your connection and give it another go. Your draft is safe."
+        action={<Atom.Button onClick={retry}>Try again</Atom.Button>}
+      />
     );
   }
 
   if (!items) {
-    return (
-      <div className="flex py-16">
-        <Atom.Loader />
-      </div>
-    );
+    return <Molecule.FeedSkeleton label="Loading your clubhouse bulletin…" />;
   }
 
   if (items.length === 0) {
     return (
-      <div className="flex flex-col items-center gap-1 py-16 text-center">
-        <p className="font-medium">Nothing here yet</p>
-        <p className="text-sm text-muted">{empty}</p>
-      </div>
+      <Molecule.FeedState
+        eyebrow="Empty / Not for long"
+        icon={<NotebookPen size={24} strokeWidth={1.5} />}
+        title={empty.title}
+        description={empty.description}
+        action={empty.action}
+      />
     );
   }
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col">
       {items.map((item) =>
         item.type === "thread" ? (
           <ThreadCard
@@ -78,9 +89,7 @@ export function PostList<T extends FeedItem>({
           failed={moreFailed}
         />
       ) : (
-        <p className="py-4 text-center text-sm text-muted">
-          You&apos;re all caught up.
-        </p>
+        end
       )}
       <DiscussionModal
         item={open}

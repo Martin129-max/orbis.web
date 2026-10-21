@@ -1,12 +1,15 @@
 "use client";
 
 import { Form } from "antd";
-import { useId, type ComponentProps } from "react";
+import { useId, type ComponentProps, type ReactNode } from "react";
 import * as Atom from "@atom";
 
-type FormFieldProps = ComponentProps<typeof Atom.Input> & { label: string };
+type FormFieldProps = ComponentProps<typeof Atom.Input> & {
+  label: string;
+  extra?: ReactNode;
+};
 
-export function FormField({ label, id, ...inputProps }: FormFieldProps) {
+export function FormField({ label, id, extra, ...inputProps }: FormFieldProps) {
   const generatedId = useId();
   const inputId = id ?? generatedId;
 
@@ -16,6 +19,7 @@ export function FormField({ label, id, ...inputProps }: FormFieldProps) {
       htmlFor={inputId}
       layout="vertical"
       required={inputProps.required}
+      extra={extra}
       className="m-0"
     >
       <Atom.Input id={inputId} {...inputProps} />

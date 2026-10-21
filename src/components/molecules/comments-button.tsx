@@ -1,20 +1,23 @@
-import { MessageSquare } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 
 export function CommentsButton({
   count,
   onClick,
+  invite = false,
 }: {
   count: number;
   onClick: () => void;
+  invite?: boolean;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="focus-ring -ml-1.5 inline-flex w-fit items-center gap-1.5 rounded-md px-1.5 py-1 text-sm text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10"
+      className="focus-ring inline-flex w-fit items-center gap-2 rounded-sm text-xs text-muted transition-colors hover:text-foreground"
     >
-      <MessageSquare size={16} />
+      <MessageCircle size={invite ? 16 : 14} />
       {count} {count === 1 ? "comment" : "comments"}
+      {invite && <span>· Join the discussion</span>}
     </button>
   );
 }

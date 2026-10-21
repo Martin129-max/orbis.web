@@ -31,13 +31,21 @@ export default function ProfilePage() {
   return (
     <Template.AppTemplate>
       <main className="flex min-h-0 flex-1 flex-col">
-        <Template.PageHeader>
-          <Atom.Heading>Profile</Atom.Heading>
+        <Template.PageHeader
+          tagline="Your little corner of the internet"
+          actions={<Organism.SidePanelToggle label="Friends" />}
+        >
+          <Atom.Heading>Your profile</Atom.Heading>
         </Template.PageHeader>
         {profile ? (
-          <Template.PageColumn>
-            <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
-          </Template.PageColumn>
+          <div className="flex min-h-0 flex-1">
+            <Template.PageColumn>
+              <Organism.ProfileCard profile={profile} onLogout={handleLogout} />
+            </Template.PageColumn>
+            <Organism.SidePanel label="Friends">
+              <Organism.FriendsPanel />
+            </Organism.SidePanel>
+          </div>
         ) : (
           <Template.CenteredTemplate>
             {failed ? (

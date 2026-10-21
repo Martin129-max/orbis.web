@@ -1,7 +1,11 @@
-import { LogOut } from "lucide-react";
+"use client";
+
+import Link from "next/link";
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
 import type { Profile } from "@/lib/api";
+import { initials } from "@/lib/initials";
+import { useCommunityStore } from "@/stores/community-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -10,67 +14,103 @@ type ProfileCardProps = {
   onLogout: () => void;
 };
 
-function Setting({
-  label,
-  description,
-  children,
-}: {
-  label: string;
-  description: string;
-  children: ReactNode;
-}) {
+function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-6 py-4">
-      <div className="flex flex-col gap-0.5">
-        <span className="text-sm font-medium">{label}</span>
-        <span className="text-sm text-muted">{description}</span>
-      </div>
+    <section className="flex flex-col gap-6 border-t border-divider pt-8">
+      <h3 className="font-display text-2xl font-bold">{title}</h3>
       {children}
-    </div>
+    </section>
   );
 }
 
 export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
+  const communities = useCommunityStore((state) => state.communities);
+  const memberSince = new Date(profile.createdAt).toLocaleDateString(
+    undefined,
+    { month: "long", year: "numeric" },
+  );
+
   return (
-    <div className="flex flex-col gap-10">
-      <section className="flex items-center gap-4">
-        <Atom.Avatar label={profile.username} seed={profile.userId} size="lg" />
-        <div className="flex min-w-0 flex-col gap-1">
-          <h2 className="truncate text-xl font-semibold">@{profile.username}</h2>
-          <p className="truncate text-sm text-muted">
-            {profile.email}
-            <span className="hidden sm:inline"> · Only you can see your email</span>
+    <div className="flex flex-col gap-8">
+      <div className="flex flex-col gap-6">
+        <p className="text-xs font-bold text-accent uppercase">
+          Your Orbis, your way
+        </p>
+        <div className="flex items-center gap-6">
+          <Atom.Avatar size="lg" label={profile.username} seed={profile.userId} />
+          <div className="flex min-w-0 flex-col gap-1">
+            <h2 className="truncate font-display text-4xl leading-[1.04] font-bold sm:text-5xl">
+              {profile.username}
+            </h2>
+            <p className="text-sm text-muted">@{profile.username}</p>
+            <p className="text-xs text-muted">Member since {memberSince}</p>
+          </div>
+        </div>
+        <div className="flex flex-col gap-1 rounded-lg bg-surface p-4">
+          <p className="text-[11px] font-bold text-muted uppercase">
+            Email · Only you can see this
+          </p>
+          <p className="truncate text-sm">{profile.email}</p>
+        </div>
+      </div>
+
+      <Section title="Preferences">
+        <div className="flex flex-col gap-3">
+          <p className="text-sm">Theme</p>
+          <p className="text-xs text-muted">
+            Paper by day, ink by night. System follows your device’s appearance.
+          </p>
+          <ThemeToggle />
+        </div>
+        <div className="flex flex-col gap-3">
+          <div className="flex items-center justify-between gap-6">
+            <p className="text-sm">Appear offline</p>
+            <AppearOfflineSwitch />
+          </div>
+          <p className="text-xs text-muted">
+            Take a little quiet time. Friends will see you as offline, but you
+            can still read, post, and join discussions.
           </p>
         </div>
-      </section>
+      </Section>
 
-      <section aria-labelledby="preferences" className="flex flex-col">
-        <h2 id="preferences" className="pb-1 text-xs font-semibold tracking-wide text-muted uppercase">
-          Preferences
-        </h2>
-        <div className="divide-y divide-black/10 dark:divide-white/10">
-          <Setting label="Theme" description="Saved to your account on every device.">
-            <ThemeToggle />
-          </Setting>
-          <Setting
-            label="Appear offline"
-            description="Your friends will see you as offline."
-          >
-            <AppearOfflineSwitch />
-          </Setting>
-        </div>
-      </section>
+      <Section title="Your communities">
+        {communities.length === 0 ? (
+          <p className="text-sm text-muted">
+            You haven’t joined any communities yet.
+          </p>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {communities.map((community) => (
+              <li key={community.id}>
+                <Link
+                  href={`/communities/${community.id}`}
+                  className="focus-ring flex items-center gap-4 rounded-md py-2 hover:text-accent"
+                >
+                  <span
+                    aria-hidden
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[17.6px] leading-none font-bold text-foreground"
+                  >
+                    {initials(community.name)}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                    {community.name}
+                  </span>
+                  <span className="text-xs text-muted">
+                    {community.ownerId === profile.userId ? "Owner" : "Member"}
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Section>
 
-      <section className="border-t border-black/10 pt-6 dark:border-white/10">
-        <Atom.Button
-          variant="secondary"
-          danger
-          icon={<LogOut size={16} />}
-          onClick={onLogout}
-        >
+      <div className="border-t border-divider pt-6">
+        <Atom.Button variant="secondary" onClick={onLogout}>
           Log out
         </Atom.Button>
-      </section>
+      </div>
     </div>
   );
 }

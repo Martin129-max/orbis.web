@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Lock } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -44,16 +44,19 @@ export default function CommunitySettingsPage() {
         <Template.CenteredTemplate>
           <Molecule.ConnectionError onRetry={() => window.location.reload()} />
         </Template.CenteredTemplate>
-      ) : !current.community || !canManage(current.community) ? (
+      ) : !current.community ? (
         <Template.CenteredTemplate>
-          <Atom.Heading>No access</Atom.Heading>
+          <Atom.Heading>Community not found</Atom.Heading>
           <p className="text-sm text-muted">
-            Only the community&apos;s owner and admins can change its settings.
+            It doesn&apos;t exist, or you&apos;re not a member.
           </p>
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <Template.PageHeader>
+          <Template.PageHeader
+            tagline="Your clubhouse"
+            actions={<Organism.SidePanelToggle label="Members" />}
+          >
             <Link
               href={`/communities/${current.community.id}`}
               aria-label={`Back to ${current.community.name}`}
@@ -63,12 +66,40 @@ export default function CommunitySettingsPage() {
             </Link>
             <Atom.Heading className="min-w-0 truncate">Settings</Atom.Heading>
           </Template.PageHeader>
-          <Template.PageColumn>
-            <Organism.CommunitySettings
-              key={current.community.id}
-              community={current.community}
-            />
-          </Template.PageColumn>
+          <div className="flex min-h-0 flex-1">
+            <Template.PageColumn>
+              {canManage(current.community) ? (
+                <Organism.CommunitySettings
+                  key={current.community.id}
+                  community={current.community}
+                />
+              ) : (
+                <div className="flex flex-col gap-4 sm:pt-12">
+                  <Molecule.FeedState
+                    icon={<Lock size={32} strokeWidth={1.5} />}
+                    title="This room is for the admins."
+                    description={`You don’t have access to community settings. Only the owner and admins can make changes to ${current.community.name}.`}
+                    action={
+                      <Atom.ButtonLink
+                        href={`/communities/${current.community.id}`}
+                      >
+                        Back to community
+                      </Atom.ButtonLink>
+                    }
+                  />
+                  <p className="border-t border-divider pt-4 text-xs text-muted">
+                    Need something changed? Reach out to the community owner.
+                  </p>
+                </div>
+              )}
+            </Template.PageColumn>
+            <Organism.SidePanel label="Members">
+              <Organism.MemberList
+                key={current.community.id}
+                communityId={current.community.id}
+              />
+            </Organism.SidePanel>
+          </div>
         </main>
       )}
     </Template.AppTemplate>

@@ -23,7 +23,7 @@ export function AuthorAvatar({
             href={`/communities/${community.id}`}
             aria-label={`Posted in ${community.name}`}
             onClick={(event) => event.stopPropagation()}
-            className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 items-center justify-center rounded-full border-2 border-surface bg-accent text-[8px] leading-none font-bold text-white focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-accent"
+            className="focus-ring absolute -right-[5px] -bottom-[5px] flex h-4 w-4 items-center justify-center rounded-full border-2 border-surface bg-accent text-[8px] leading-none font-bold text-accent-foreground"
           >
             {initials(community.name)}
           </Link>

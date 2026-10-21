@@ -1,18 +1,12 @@
 import Link from "next/link";
 
-export function Brand() {
+export function Brand({ className = "text-[32px]" }: { className?: string }) {
   return (
     <Link
       href="/"
-      className="inline-flex items-center gap-2 text-lg font-semibold tracking-tight"
+      className={`focus-ring w-fit rounded-sm font-display leading-none font-extrabold text-accent ${className}`}
     >
-      <span
-        aria-hidden
-        className="flex h-8 w-8 items-center justify-center rounded-xl bg-accent text-sm text-white"
-      >
-        O
-      </span>
-      Orbis
+      orbis.
     </Link>
   );
 }

@@ -21,7 +21,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Compass, House, LogOut, Plus } from "lucide-react";
+import { Compass, House, LogOut, Plus, User } from "lucide-react";
 import { Popover, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -42,27 +42,22 @@ import { CreateCommunityModal } from "./create-community-modal";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
 
-const itemBase =
-  "flex h-12 w-12 items-center justify-center text-base font-semibold transition-[border-radius,background-color,color] duration-200 motion-reduce:transition-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
-
 function itemClass(active: boolean) {
-  return `${itemBase} ${
+  return `focus-ring flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
     active
-      ? "rounded-2xl bg-accent text-white"
-      : "rounded-3xl bg-rail-item text-foreground hover:rounded-2xl hover:bg-accent hover:text-white"
+      ? "bg-accent text-accent-foreground"
+      : "bg-rail-item text-foreground hover:bg-accent-soft"
   }`;
 }
 
 function RailSlot({
   label,
-  active = false,
   dragging = false,
   slotRef,
   style,
   children,
 }: {
   label: string;
-  active?: boolean;
   dragging?: boolean;
   slotRef?: (element: HTMLElement | null) => void;
   style?: CSSProperties;
@@ -72,14 +67,8 @@ function RailSlot({
     <li
       ref={slotRef}
       style={style}
-      className={`group relative flex w-full justify-center ${dragging ? "z-10" : ""}`}
+      className={`flex w-full justify-center ${dragging ? "z-10" : ""}`}
     >
-      <span
-        aria-hidden
-        className={`absolute top-1/2 left-0 w-1 -translate-y-1/2 rounded-r bg-foreground transition-[height] duration-200 motion-reduce:transition-none ${
-          active ? "h-10" : "h-0 group-hover:h-5"
-        }`}
-      />
       <Tooltip
         title={label}
         placement="right"
@@ -110,7 +99,6 @@ function SortableCommunity({
   return (
     <RailSlot
       label={community.name}
-      active={active}
       dragging={isDragging}
       slotRef={setNodeRef}
       style={{ transform: CSS.Translate.toString(transform), transition }}
@@ -122,7 +110,11 @@ function SortableCommunity({
         href={`/communities/${community.id}`}
         aria-label={community.name}
         aria-current={active ? "page" : undefined}
-        className={`${itemClass(active)} ${isDragging ? "cursor-grabbing shadow-lg" : ""}`}
+        className={`${itemClass(active)} ${
+          isDragging
+            ? "cursor-grabbing border-2 border-dashed border-accent opacity-50"
+            : ""
+        }`}
       >
         {initials(community.name)}
       </Link>
@@ -148,6 +140,8 @@ function UserButton() {
   }
 
   const username = profile ? `@${profile.username}` : "Account";
+  const menuRow =
+    "focus-ring flex w-full items-center gap-3 rounded-sm text-left text-sm transition-colors";
 
   return (
     <Popover
@@ -155,35 +149,43 @@ function UserButton() {
       onOpenChange={setOpen}
       trigger="click"
       placement="rightBottom"
+      arrow={false}
+      styles={{ container: { padding: 20, borderRadius: 12 } }}
       content={
-        <div className="flex w-60 flex-col gap-4">
-          <div className="min-w-0">
-            <p className="truncate font-semibold">{username}</p>
-            {profile && (
-              <p className="text-xs text-muted">User #{profile.userId}</p>
-            )}
-          </div>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-sm">Theme</span>
-            <ThemeToggle />
-          </div>
+        <div className="flex w-[264px] flex-col gap-4">
+          {profile && (
+            <div className="flex items-center gap-3">
+              <Atom.Avatar label={profile.username} seed={profile.userId} />
+              <div className="flex min-w-0 flex-col">
+                <span className="truncate">{profile.username}</span>
+                <span className="truncate text-xs text-muted">{username}</span>
+              </div>
+            </div>
+          )}
+          <hr className="border-divider" />
+          <p className="text-xs text-muted uppercase">Theme</p>
+          <ThemeToggle />
           <label className="flex items-center justify-between gap-2">
             <span className="text-sm">Appear offline</span>
-            <AppearOfflineSwitch size="small" />
+            <AppearOfflineSwitch />
           </label>
-          <div className="flex items-center justify-between gap-2">
-            <Atom.TextLink href="/profile" onClick={() => setOpen(false)}>
-              View profile
-            </Atom.TextLink>
-            <Atom.Button
-              variant="secondary"
-              danger
-              icon={<LogOut size={16} />}
-              onClick={handleLogout}
-            >
-              Log out
-            </Atom.Button>
-          </div>
+          <hr className="border-divider" />
+          <Link
+            href="/profile"
+            onClick={() => setOpen(false)}
+            className={`${menuRow} hover:text-accent`}
+          >
+            <User size={18} />
+            View profile
+          </Link>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className={`${menuRow} text-accent hover:underline`}
+          >
+            <LogOut size={18} />
+            Log out
+          </button>
         </div>
       }
     >
@@ -191,9 +193,14 @@ function UserButton() {
         type="button"
         aria-label={`Account: ${username}`}
         aria-expanded={open}
-        className={itemClass(open)}
+        className="focus-ring rounded-full"
       >
-        {profile ? Array.from(profile.username)[0].toUpperCase() : null}
+        <Atom.Avatar
+          size="rail"
+          label={profile?.username ?? "?"}
+          seed={profile?.userId ?? 0}
+          presence={profile?.appearOffline ? "offline" : "online"}
+        />
       </button>
     </Popover>
   );
@@ -248,15 +255,22 @@ export function CommunityRail() {
   return (
     <nav
       aria-label="Communities"
-      className="flex w-[72px] shrink-0 flex-col bg-rail"
+      className="flex w-14 shrink-0 flex-col items-center gap-4 overflow-y-auto bg-rail px-2 py-5 sm:w-20 sm:px-4"
       onClickCapture={(event) => {
         if (!suppressClick.current) return;
         event.preventDefault();
         event.stopPropagation();
       }}
     >
-      <ul className="flex flex-1 flex-col items-center gap-2 overflow-y-auto py-3">
-        <RailSlot label="Home" active={pathname === "/"}>
+      <Link
+        href="/"
+        aria-label="Orbis home"
+        className="focus-ring rounded-sm font-display text-2xl leading-none font-extrabold text-accent sm:text-[32px]"
+      >
+        o.
+      </Link>
+      <ul className="flex w-full flex-col items-center gap-4">
+        <RailSlot label="Home">
           <Link
             href="/"
             aria-label="Home"
@@ -266,7 +280,7 @@ export function CommunityRail() {
             <House size={20} />
           </Link>
         </RailSlot>
-        <li aria-hidden className="h-0.5 w-8 shrink-0 rounded bg-rail-divider" />
+        <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
         <DndContext
           id="community-rail"
           sensors={sensors}
@@ -288,32 +302,29 @@ export function CommunityRail() {
             ))}
           </SortableContext>
         </DndContext>
+        <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
         <RailSlot label="Create a community">
           <button
             type="button"
             aria-label="Create a community"
             onClick={() => setCreating(true)}
-            className={`${itemBase} rounded-3xl bg-rail-item text-accent hover:rounded-2xl hover:bg-accent hover:text-white`}
+            className={itemClass(false)}
           >
             <Plus size={20} />
           </button>
         </RailSlot>
-        <RailSlot label="Explore communities" active={pathname === "/explore"}>
+        <RailSlot label="Explore communities">
           <Link
             href="/explore"
             aria-label="Explore communities"
             aria-current={pathname === "/explore" ? "page" : undefined}
-            className={
-              pathname === "/explore"
-                ? itemClass(true)
-                : `${itemBase} rounded-3xl bg-rail-item text-accent hover:rounded-2xl hover:bg-accent hover:text-white`
-            }
+            className={itemClass(pathname === "/explore")}
           >
             <Compass size={20} />
           </Link>
         </RailSlot>
       </ul>
-      <div className="flex justify-center border-t border-rail-divider py-3">
+      <div className="mt-auto pt-4">
         <UserButton />
       </div>
       <CreateCommunityModal open={creating} onClose={() => setCreating(false)} />

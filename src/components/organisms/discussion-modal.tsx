@@ -1,12 +1,15 @@
 "use client";
 
 import { Modal } from "antd";
+import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { FeedItem, Thread } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
+import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
 import { CommentSection } from "./comment-section";
 import { PostCard } from "./post-card";
-import { ThreadMeta } from "./thread-card";
+
 
 function ThreadDetail({
   thread,
@@ -16,7 +19,7 @@ function ThreadDetail({
   onChange: (thread: Thread) => void;
 }) {
   return (
-    <article className="flex gap-3">
+    <article className="flex gap-4">
       <Molecule.VoteControl
         score={thread.score}
         myVote={thread.myVote}
@@ -26,9 +29,18 @@ function ThreadDetail({
           )
         }
       />
-      <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <ThreadMeta thread={thread} showCommunity />
-        <h2 className="text-xl font-semibold">{thread.title}</h2>
+      <div className="flex min-w-0 flex-1 flex-col gap-4">
+        <p className="flex items-center gap-2 text-xs text-muted">
+          <Atom.Avatar
+            size="xs"
+            label={displayName(thread.author)}
+            seed={thread.author.id}
+          />
+          {displayName(thread.author)} · {timeAgo(thread.createdAt)}
+        </p>
+        <h3 className="font-display text-3xl leading-[1.04] font-bold sm:text-4xl">
+          {thread.title}
+        </h3>
         {thread.content && (
           <div
             className="rich-text"
@@ -54,16 +66,23 @@ export function DiscussionModal({
       open={item !== null}
       onCancel={onClose}
       footer={null}
-      width={760}
+      width={840}
       destroyOnHidden
-      title={item?.type === "thread" ? "Thread" : "Post"}
+      title={null}
+      styles={{ container: { padding: 32 } }}
     >
       {item && (
-        <div className="flex flex-col gap-6 pt-2">
+        <div className="flex flex-col gap-6">
+          <Molecule.ModalHeader
+            eyebrow={`${item.community.name} / ${item.type === "thread" ? "Forum" : "Feed"}`}
+            title="The discussion"
+          />
           {item.type === "thread" ? (
             <ThreadDetail thread={item} onChange={onChange} />
           ) : (
-            <PostCard post={item} showCommunity />
+            <div className="-mt-6">
+              <PostCard post={item} showCommunity />
+            </div>
           )}
           <CommentSection
             key={`${item.type}-${item.id}`}

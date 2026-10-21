@@ -3,6 +3,7 @@ import { Button as AntButton, type ButtonProps as AntButtonProps } from "antd";
 const variants = {
   primary: "primary",
   secondary: "default",
+  text: "text",
 } as const;
 
 type ButtonProps = Omit<AntButtonProps, "type" | "htmlType" | "variant"> & {

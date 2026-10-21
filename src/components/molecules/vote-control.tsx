@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowBigDown, ArrowBigUp } from "lucide-react";
+import { ArrowDown, ArrowUp } from "lucide-react";
 
 type VoteControlProps = {
   score: number;
@@ -15,13 +15,17 @@ export function VoteControl({
   onVote,
   orientation = "vertical",
 }: VoteControlProps) {
-  const button =
-    "focus-ring flex rounded-md p-0.5 text-muted transition-colors hover:bg-black/5 dark:hover:bg-white/10";
+  const arrow = (active: boolean) =>
+    `focus-ring flex rounded-sm transition-colors ${
+      active ? "text-accent" : "text-muted hover:text-foreground"
+    }`;
 
   return (
     <div
-      className={`flex shrink-0 items-center gap-0.5 ${
-        orientation === "vertical" ? "flex-col" : "flex-row"
+      className={`flex shrink-0 items-center rounded-lg bg-background ${
+        orientation === "vertical"
+          ? "w-10 flex-col gap-1 py-2"
+          : "flex-row gap-2 p-2"
       }`}
       onClick={(event) => event.stopPropagation()}
     >
@@ -30,18 +34,14 @@ export function VoteControl({
         aria-label="Upvote"
         aria-pressed={myVote === 1}
         onClick={() => onVote(1)}
-        className={`${button} ${myVote === 1 ? "text-orange-600 hover:text-orange-600" : "hover:text-orange-600"}`}
+        className={arrow(myVote === 1)}
       >
-        <ArrowBigUp size={20} fill={myVote === 1 ? "currentColor" : "none"} />
+        <ArrowUp size={16} />
       </button>
       <span
         aria-label={`Score ${score}`}
-        className={`min-w-6 text-center text-sm font-semibold tabular-nums ${
-          myVote === 1
-            ? "text-orange-600"
-            : myVote === -1
-              ? "text-indigo-500"
-              : ""
+        className={`text-xs leading-none font-bold tabular-nums ${
+          myVote === 0 ? "text-foreground" : "text-accent"
         }`}
       >
         {score}
@@ -51,9 +51,9 @@ export function VoteControl({
         aria-label="Downvote"
         aria-pressed={myVote === -1}
         onClick={() => onVote(-1)}
-        className={`${button} ${myVote === -1 ? "text-indigo-500 hover:text-indigo-500" : "hover:text-indigo-500"}`}
+        className={arrow(myVote === -1)}
       >
-        <ArrowBigDown size={20} fill={myVote === -1 ? "currentColor" : "none"} />
+        <ArrowDown size={16} />
       </button>
     </div>
   );

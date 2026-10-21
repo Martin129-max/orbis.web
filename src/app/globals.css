@@ -17,14 +17,19 @@
 }
 
 :root {
-  --background: #f3f4f6;
-  --foreground: #171717;
-  --surface: #ffffff;
-  --muted: #65676e;
-  --rail: #e3e5e9;
-  --rail-item: #ffffff;
-  --rail-divider: #cdd0d6;
-  --accent: #1677ff;
+  --background: #f5f2eb;
+  --surface: #fffefa;
+  --rail: #eae5dc;
+  --rail-item: #ddd7cb;
+  --divider: #d6d0c5;
+  --foreground: #242320;
+  --muted: #777269;
+  --accent: #c4432d;
+  --accent-foreground: #ffffff;
+  --accent-soft: #f7e6df;
+  --danger: #b7312b;
+  --online: #54815b;
+  --offline: #99958e;
 }
 
 @theme inline {
@@ -34,38 +39,58 @@
   --color-muted: var(--muted);
   --color-rail: var(--rail);
   --color-rail-item: var(--rail-item);
-  --color-rail-divider: var(--rail-divider);
+  --color-divider: var(--divider);
   --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent-soft: var(--accent-soft);
+  --color-danger: var(--danger);
+  --color-online: var(--online);
+  --color-offline: var(--offline);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-barlow-condensed);
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --background: #17181c;
-    --foreground: #ededed;
-    --surface: #212328;
-    --muted: #9a9ca3;
-    --rail: #0f1012;
-    --rail-item: #2a2c32;
-    --rail-divider: #30333a;
+    --background: #1c1d1b;
+    --surface: #252623;
+    --rail: #151613;
+    --rail-item: #353630;
+    --divider: #42433c;
+    --foreground: #f1ede3;
+    --muted: #aca99e;
+    --accent: #f07357;
+    --accent-foreground: #211c18;
+    --accent-soft: #403029;
+    --danger: #f58276;
+    --online: #83ac83;
+    --offline: #777970;
   }
 }
 
 :root[data-theme="dark"] {
-  --background: #17181c;
-  --foreground: #ededed;
-  --surface: #212328;
-  --muted: #9a9ca3;
-  --rail: #0f1012;
-  --rail-item: #2a2c32;
-  --rail-divider: #30333a;
+  --background: #1c1d1b;
+  --surface: #252623;
+  --rail: #151613;
+  --rail-item: #353630;
+  --divider: #42433c;
+  --foreground: #f1ede3;
+  --muted: #aca99e;
+  --accent: #f07357;
+  --accent-foreground: #211c18;
+  --accent-soft: #403029;
+  --danger: #f58276;
+  --online: #83ac83;
+  --offline: #777970;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 @utility focus-ring {
@@ -76,10 +101,19 @@ body {
 }
 
 @utility icon-button {
-  @apply focus-ring flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-black/5 hover:text-foreground dark:hover:bg-white/10;
+  @apply focus-ring flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-rail-item hover:text-foreground;
 }
 
 @layer components {
+  .ant-form-item-label > label {
+    font-weight: 600;
+  }
+
+  .ant-form-item-extra {
+    font-size: 11px;
+    margin-top: 6px;
+  }
+
   .rich-text {
     overflow-wrap: anywhere;
     line-height: 1.6;
@@ -106,7 +140,7 @@ body {
   }
 
   .rich-text code {
-    font-family: var(--font-geist-mono), monospace;
+    font-family: var(--font-mono);
     font-size: 0.875em;
     padding: 0.1em 0.35em;
     border-radius: 0.25rem;

@@ -1,7 +1,6 @@
 "use client";
 
-import { Popconfirm, Switch } from "antd";
-import { Trash2 } from "lucide-react";
+import { Switch } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
@@ -18,18 +17,23 @@ import { useCommunityStore } from "@/stores/community-store";
 
 function Section({
   title,
+  aside,
   description,
   children,
 }: {
   title: string;
+  aside?: string;
   description?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="flex flex-col gap-4 rounded-xl border border-black/10 bg-surface p-6 dark:border-white/10">
-      <div className="flex flex-col gap-1">
-        <h2 className="text-base font-semibold">{title}</h2>
-        {description && <p className="text-sm text-muted">{description}</p>}
+    <section className="flex flex-col gap-6 border-t border-divider pt-8">
+      <div className="flex flex-col gap-3">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="font-display text-2xl font-bold">{title}</h3>
+          {aside && <span className="text-xs text-muted uppercase">{aside}</span>}
+        </div>
+        {description && <p className="text-xs text-muted">{description}</p>}
       </div>
       {children}
     </section>
@@ -73,6 +77,7 @@ function GeneralSettings({ community }: { community: Community }) {
         <Molecule.FormField
           label="Community name"
           name="name"
+          size="large"
           required
           maxLength={100}
           pattern=".*\S.*"
@@ -85,10 +90,12 @@ function GeneralSettings({ community }: { community: Community }) {
           }}
         />
         <label className="flex items-start justify-between gap-4">
-          <span className="flex flex-col">
-            <span className="text-sm font-medium">Public community</span>
+          <span className="flex flex-col gap-1">
+            <span className="text-[13px] font-semibold">Public community</span>
             <span className="text-xs text-muted">
-              Anyone can find it in Explore and join.
+              Anyone can find it in Explore and join. Turn this off to make the
+              community private; only existing members can see its posts and
+              threads.
             </span>
           </span>
           <Switch
@@ -100,11 +107,11 @@ function GeneralSettings({ community }: { community: Community }) {
           />
         </label>
         {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-        <div className="flex items-center justify-end gap-3">
-          {message && <span className="text-sm text-muted">{message}</span>}
+        <div className="flex items-center gap-3">
           <Atom.Button type="submit" loading={pending} disabled={!changed}>
             Save changes
           </Atom.Button>
+          {message && <span className="text-xs text-muted">{message}</span>}
         </div>
       </form>
     </Section>
@@ -144,10 +151,11 @@ function AdminSettings({ community }: { community: Community }) {
   return (
     <Section
       title="Admins"
+      aside="Owner only"
       description={
         isOwner
-          ? "Admins can change these settings. Only you can delete the community or change who is an admin."
-          : "Admins can change these settings. Only the owner can change who is an admin."
+          ? "Admins can manage community details. Only you, the owner, can add or remove admins and delete this community."
+          : "Admins can manage community details. Only the owner can add or remove admins and delete this community."
       }
     >
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
@@ -156,33 +164,29 @@ function AdminSettings({ community }: { community: Community }) {
           <Atom.Loader />
         </div>
       ) : (
-        <ul className="flex flex-col gap-1">
+        <ul className="flex flex-col gap-2">
           {members.map((member) => {
             const label = member.nickname ?? displayName(member);
             return (
-              <li
-                key={member.userId}
-                className="flex items-center gap-3 rounded-md py-1.5"
-              >
-                <Atom.Avatar label={label} seed={member.userId} />
+              <li key={member.userId} className="flex items-center gap-3 py-1">
+                <Atom.Avatar size="sm" label={label} seed={member.userId} />
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium">{label}</span>
-                  {member.isOwner && (
-                    <span className="text-xs text-accent">Owner</span>
-                  )}
+                  <span className="truncate text-[13px] font-semibold">
+                    {label}
+                    {(member.isOwner || member.isAdmin) &&
+                      ` · ${member.isOwner ? "Owner" : "Admin"}`}
+                  </span>
+                  <span className="truncate text-xs text-muted">
+                    @{member.username}
+                  </span>
                 </div>
-                {!member.isOwner && (
-                  <label className="flex items-center gap-2 text-sm text-muted">
-                    Admin
-                    <Switch
-                      size="small"
-                      checked={member.isAdmin}
-                      disabled={!isOwner}
-                      loading={updating === member.userId}
-                      onChange={(checked) => handleToggle(member, checked)}
-                    />
-                  </label>
-                )}
+                <Switch
+                  aria-label={`${label} is an admin`}
+                  checked={member.isOwner || member.isAdmin}
+                  disabled={!isOwner || member.isOwner}
+                  loading={updating === member.userId}
+                  onChange={(checked) => handleToggle(member, checked)}
+                />
               </li>
             );
           })}
@@ -196,43 +200,78 @@ function DangerZone({ community }: { community: Community }) {
   const router = useRouter();
   const deleteCommunity = useCommunityStore((state) => state.deleteCommunity);
   const [error, setError] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState(false);
+  const [pending, setPending] = useState(false);
 
   async function handleDelete() {
     setError(null);
+    setPending(true);
     try {
       await deleteCommunity(community.id);
       router.push("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
+      setPending(false);
     }
   }
+
+  const members = community.memberCount ?? 0;
 
   return (
     <Section
       title="Delete community"
-      description="Deletes the community with all of its posts and memberships for everyone. This can't be undone."
+      description="This permanently removes every post, thread, and membership. There’s no undo — please be sure."
     >
-      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      <div className="flex justify-end">
-        <Popconfirm
-          title={`Delete ${community.name}?`}
-          description="All posts and memberships will be lost."
-          okText="Delete"
-          okButtonProps={{ danger: true }}
-          onConfirm={handleDelete}
+      <Atom.Button
+        danger
+        className="w-fit"
+        aria-expanded={confirming}
+        onClick={() => setConfirming(true)}
+      >
+        Delete community
+      </Atom.Button>
+      {confirming && (
+        <div
+          role="alertdialog"
+          aria-labelledby="delete-community-title"
+          className="flex flex-col gap-4 rounded-lg border border-danger bg-surface p-4 sm:p-6"
         >
-          <Atom.Button danger variant="secondary" icon={<Trash2 size={16} />}>
-            Delete community
-          </Atom.Button>
-        </Popconfirm>
-      </div>
+          <h4 id="delete-community-title" className="text-xl font-bold">
+            Delete {community.name}?
+          </h4>
+          <p className="text-xs text-muted">
+            {members > 1
+              ? `${members.toLocaleString()} members will lose their clubhouse. `
+              : ""}
+            All discussions will be permanently deleted.
+          </p>
+          {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+          <div className="flex flex-wrap gap-2">
+            <Atom.Button
+              variant="secondary"
+              autoFocus
+              onClick={() => setConfirming(false)}
+            >
+              Keep community
+            </Atom.Button>
+            <Atom.Button danger loading={pending} onClick={handleDelete}>
+              Yes, delete
+            </Atom.Button>
+          </div>
+        </div>
+      )}
     </Section>
   );
 }
 
 export function CommunitySettings({ community }: { community: Community }) {
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-8">
+      <Molecule.PageIntro
+        eyebrow={`${community.name} / ${community.role === "owner" ? "Owner" : "Admin"}`}
+        title="Keep your clubhouse in shape."
+        description="A few good rules. A little care. A place people want to return to."
+      />
       <GeneralSettings community={community} />
       <AdminSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}

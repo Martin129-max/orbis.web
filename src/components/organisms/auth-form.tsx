@@ -12,20 +12,22 @@ type Mode = "login" | "signup";
 
 const content = {
   login: {
-    title: "Welcome back",
-    subtitle: "Log in to get back to your communities.",
+    title: "Welcome home.",
+    subtitle: "Your communities have been busy. Let’s catch up.",
     submit: "Log in",
     switchText: "New to Orbis?",
     switchLabel: "Create an account",
     switchHref: "/register",
+    footnote: "A little corner of the internet, just for your people.",
   },
   signup: {
-    title: "Create your account",
-    subtitle: "Join communities and share what's happening.",
+    title: "Find your people.",
+    subtitle: "One account for every corner of your fandom.",
     submit: "Create account",
-    switchText: "Already have an account?",
+    switchText: "Already have a home here?",
     switchLabel: "Log in",
     switchHref: "/login",
+    footnote: "By signing up, you agree to our Terms and Community Guidelines.",
   },
 };
 
@@ -35,7 +37,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
   const signup = useAuthStore((state) => state.signup);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const { title, subtitle, submit, switchText, switchLabel, switchHref } =
+  const { title, subtitle, submit, switchText, switchLabel, switchHref, footnote } =
     content[mode];
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -63,73 +65,93 @@ export function AuthForm({ mode }: { mode: Mode }) {
   }
 
   return (
-    <div className="flex w-full max-w-sm flex-col gap-10">
-      <div className="flex flex-col gap-8">
-        <Link
-          href="/"
-          className="focus-ring inline-flex w-fit items-center gap-1.5 rounded-sm text-sm text-muted transition-colors hover:text-foreground"
-        >
-          <ArrowLeft size={16} />
-          Back to homepage
-        </Link>
-        <Atom.Brand />
-      </div>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5">
-        <div className="flex flex-col gap-1">
-          <Atom.Heading>{title}</Atom.Heading>
+    <div className="flex w-full max-w-[400px] flex-col gap-10 sm:gap-16">
+      <Link
+        href="/"
+        className="focus-ring inline-flex w-fit items-center gap-2 rounded-sm text-[13px] transition-colors hover:text-accent"
+      >
+        <ArrowLeft size={16} />
+        Back to homepage
+      </Link>
+      <div className="flex flex-col gap-6">
+        <Atom.Brand className="text-5xl" />
+        <div className="flex flex-col gap-3">
+          <h1 className="font-display text-5xl leading-[1.04] font-bold">
+            {title}
+          </h1>
           <p className="text-sm text-muted">{subtitle}</p>
         </div>
-        {mode === "login" ? (
-          <Molecule.FormField
-            label="Email or username"
-            name="identifier"
-            size="large"
-            required
-            autoCapitalize="none"
-            autoComplete="username"
-          />
-        ) : (
-          <>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {mode === "login" ? (
             <Molecule.FormField
-              label="Email"
-              name="email"
-              type="email"
+              label="Email or username"
+              name="identifier"
               size="large"
               required
-              autoComplete="email"
-            />
-            <Molecule.FormField
-              label="Username"
-              name="username"
-              size="large"
-              required
-              minLength={3}
-              maxLength={20}
-              pattern="[A-Za-z0-9_]+"
-              title="3–20 characters: letters, numbers, or underscores"
               autoCapitalize="none"
               autoComplete="username"
             />
-          </>
-        )}
-        <Molecule.FormField
-          label="Password"
-          name="password"
-          type="password"
-          size="large"
-          required
-          minLength={6}
-          autoComplete={mode === "login" ? "current-password" : "new-password"}
-        />
-        {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-        <Atom.Button type="submit" size="large" block loading={pending}>
-          {submit}
-        </Atom.Button>
-        <p className="text-center text-sm text-muted">
+          ) : (
+            <>
+              <Molecule.FormField
+                label="Email"
+                name="email"
+                type="email"
+                size="large"
+                required
+                autoComplete="email"
+              />
+              <Molecule.FormField
+                label="Username"
+                name="username"
+                size="large"
+                required
+                minLength={3}
+                maxLength={20}
+                pattern="[A-Za-z0-9_]+"
+                title="3–20 characters: letters, numbers, or underscores"
+                extra="Use 3–20 letters, numbers, or underscores. No spaces or symbols."
+                autoCapitalize="none"
+                autoComplete="username"
+              />
+            </>
+          )}
+          <Molecule.FormField
+            label="Password"
+            name="password"
+            type="password"
+            size="large"
+            required
+            minLength={6}
+            autoComplete={mode === "login" ? "current-password" : "new-password"}
+            extra={
+              mode === "signup"
+                ? "At least 6 characters. Make it a good one."
+                : undefined
+            }
+          />
+          {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+          <Atom.Button
+            type="submit"
+            size="large"
+            loading={pending}
+            className="w-fit"
+          >
+            {submit}
+          </Atom.Button>
+        </form>
+        <hr className="border-divider" />
+        <p className="text-[13px] text-muted">
           {switchText}{" "}
-          <Atom.TextLink href={switchHref}>{switchLabel}</Atom.TextLink>
+          <Link
+            href={switchHref}
+            className="focus-ring rounded-sm text-accent hover:underline"
+          >
+            {switchLabel}
+          </Link>
         </p>
-      </form>
+        <p className="text-[11px] text-muted">{footnote}</p>
+      </div>
     </div>
   );
 }

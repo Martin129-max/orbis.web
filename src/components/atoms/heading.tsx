@@ -1,6 +1,3 @@
-"use client";
-
-import { Typography } from "antd";
 import type { ReactNode } from "react";
 
 export function Heading({
@@ -11,8 +8,10 @@ export function Heading({
   className?: string;
 }) {
   return (
-    <Typography.Title level={1} className={`m-0 text-2xl ${className}`}>
+    <h1
+      className={`m-0 font-display text-2xl leading-tight font-bold sm:text-[28px] ${className}`}
+    >
       {children}
-    </Typography.Title>
+    </h1>
   );
 }

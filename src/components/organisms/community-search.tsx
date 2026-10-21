@@ -60,80 +60,105 @@ export function CommunitySearch() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <Atom.Input
-        size="large"
-        allowClear
-        autoFocus
-        prefix={<Search size={18} />}
-        placeholder="Search public communities"
-        aria-label="Search public communities"
-        value={query}
-        onChange={(event) => setQuery(event.target.value)}
+    <div className="flex flex-col gap-8">
+      <Molecule.PageIntro
+        eyebrow="Find your next obsession"
+        title="There’s a club for that."
+        description="Find a familiar world. Or fall into a completely new one."
       />
+      <div className="flex flex-col gap-2">
+        <label htmlFor="community-search" className="text-[13px] font-semibold">
+          Search communities
+        </label>
+        <Atom.Input
+          id="community-search"
+          size="large"
+          allowClear
+          autoFocus
+          prefix={<Search size={16} className="text-muted" />}
+          placeholder="Anime, manga, a very specific theory…"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+        />
+      </div>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      {failed && !results ? (
-        <div className="py-16">
-          <Molecule.ConnectionError
-            onRetry={() => {
-              setFailed(false);
-              setAttempt((count) => count + 1);
-            }}
-          />
+      <section className="flex flex-col gap-2">
+        <div className="flex items-baseline justify-between gap-3">
+          <h3 className="font-display text-2xl font-bold">
+            {query.trim() ? "Results" : "Public communities"}
+          </h3>
+          {results && results.length > 0 && (
+            <span className="text-xs text-muted">
+              {results.length} {results.length === 1 ? "club" : "clubs"}
+              {query.trim() ? "" : " to get you started"}
+            </span>
+          )}
         </div>
-      ) : !results ? (
-        <div className="flex py-16">
-          <Atom.Loader />
-        </div>
-      ) : results.length === 0 ? (
-        <div className="flex flex-col items-center gap-1 py-16 text-center">
-          <p className="font-medium">No communities found</p>
-          <p className="text-sm text-muted">
+        {failed && !results ? (
+          <div className="py-16">
+            <Molecule.ConnectionError
+              onRetry={() => {
+                setFailed(false);
+                setAttempt((count) => count + 1);
+              }}
+            />
+          </div>
+        ) : !results ? (
+          <div className="flex py-16">
+            <Atom.Loader />
+          </div>
+        ) : results.length === 0 ? (
+          <p className="py-8 text-sm text-muted">
             {query.trim()
-              ? "Try a different name."
+              ? "No clubs match that yet. Try a different name."
               : "No one has made a public community yet."}
           </p>
-        </div>
-      ) : (
-        <ul className="flex flex-col gap-3">
-          {results.map((community) => (
-            <li
-              key={community.id}
-              className="flex items-center gap-4 rounded-xl border border-black/10 bg-surface p-4 dark:border-white/10"
-            >
-              <span
-                aria-hidden
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-accent font-semibold text-white"
+        ) : (
+          <ul className="flex flex-col">
+            {results.map((community) => (
+              <li
+                key={community.id}
+                className="flex items-center gap-4 border-b border-divider py-4"
               >
-                {initials(community.name)}
-              </span>
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate font-semibold">{community.name}</span>
-                <span className="text-sm text-muted">
-                  {community.memberCount}{" "}
-                  {community.memberCount === 1 ? "member" : "members"}
+                <span
+                  aria-hidden
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[22px] leading-none font-bold"
+                >
+                  {initials(community.name)}
                 </span>
-              </div>
-              {community.joined ? (
-                <Atom.ButtonLink
-                  href={`/communities/${community.id}`}
-                  variant="secondary"
-                >
-                  Open
-                </Atom.ButtonLink>
-              ) : (
-                <Atom.Button
-                  loading={joining === community.id}
-                  disabled={joining !== null && joining !== community.id}
-                  onClick={() => handleJoin(community.id)}
-                >
-                  Join
-                </Atom.Button>
-              )}
-            </li>
-          ))}
-        </ul>
-      )}
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate">{community.name}</span>
+                  <span className="text-xs text-muted">
+                    {community.memberCount.toLocaleString()}{" "}
+                    {community.memberCount === 1 ? "member" : "members"}
+                  </span>
+                </div>
+                {community.joined ? (
+                  <Atom.ButtonLink
+                    href={`/communities/${community.id}`}
+                    variant="secondary"
+                    size="small"
+                  >
+                    Open
+                  </Atom.ButtonLink>
+                ) : (
+                  <Atom.Button
+                    size="small"
+                    loading={joining === community.id}
+                    disabled={joining !== null && joining !== community.id}
+                    onClick={() => handleJoin(community.id)}
+                  >
+                    Join
+                  </Atom.Button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+      <p className="text-xs text-muted">
+        Missing your niche? Create the community you wish existed.
+      </p>
     </div>
   );
 }

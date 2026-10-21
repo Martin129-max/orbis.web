@@ -4,9 +4,9 @@ import * as Template from "@template";
 export default function LoginPage() {
   return (
     <Organism.GuestGate>
-      <Template.CenteredTemplate>
+      <Template.AuthTemplate illustration="/images/login-illustration.jpg">
         <Organism.AuthForm mode="login" />
-      </Template.CenteredTemplate>
+      </Template.AuthTemplate>
     </Organism.GuestGate>
   );
 }

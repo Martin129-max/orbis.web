@@ -9,6 +9,7 @@ export default function Home() {
         <Template.AppTemplate>
           <main className="flex min-h-0 flex-1 flex-col">
             <Template.PageHeader
+              tagline="Your little corner of the internet"
               actions={<Organism.SidePanelToggle label="Friends" />}
             >
               <Atom.Heading>Home</Atom.Heading>
@@ -30,8 +31,11 @@ export default function Home() {
         <main className="flex-1">
           <Organism.LandingHero />
         </main>
-        <footer className="mx-auto w-full max-w-5xl px-4 py-6 text-sm text-muted sm:px-6">
-          © {new Date().getFullYear()} Orbis
+        <footer className="mx-auto w-full max-w-[1280px] px-4 pb-8 sm:px-8">
+          <div className="flex flex-wrap justify-between gap-2 border-t border-divider pt-6 text-xs text-muted">
+            <p>© {new Date().getFullYear()} Orbis · A home for your worlds.</p>
+            <p>Community guidelines / Privacy / Terms</p>
+          </div>
         </footer>
       </div>
     </Organism.GuestGate>
