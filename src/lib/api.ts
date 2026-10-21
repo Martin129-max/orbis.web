@@ -73,14 +73,54 @@ export async function getProfile(token: string): Promise<Profile | null> {
 
 export type Author = { id: number; email: string; name: string | null };
 
+export type CommunitySummary = Pick<Community, "id" | "name">;
+
 export type Post = {
+  type: "post";
   id: number;
   communityId: number;
   content: string;
+  commentCount: number;
   createdAt: string;
   author: Author;
-  community?: Pick<Community, "id" | "name">;
+  community: CommunitySummary;
 };
+
+export type Thread = {
+  type: "thread";
+  id: number;
+  communityId: number;
+  title: string;
+  content: string;
+  score: number;
+  commentCount: number;
+  myVote: number;
+  createdAt: string;
+  author: Author;
+  community: CommunitySummary;
+};
+
+export type FeedItem = Post | Thread;
+
+export type Page<T> = { items: T[]; nextCursor: string | null };
+
+export type ThreadSort = "hot" | "new" | "top";
+
+export type Comment = {
+  id: number;
+  parentId: number | null;
+  content: string;
+  score: number;
+  myVote: number;
+  createdAt: string;
+  author: Author;
+};
+
+export type Commentable = { type: FeedItem["type"]; id: number };
+
+export type Votable = { type: "thread" | "comment"; id: number };
+
+export type VoteResult = { score: number; myVote: number };
 
 export type Member = {
   userId: number;
@@ -241,16 +281,21 @@ export async function joinCommunity(
   return res.json();
 }
 
-function withCursor(path: string, cursor?: number) {
-  return cursor === undefined ? path : `${path}?cursor=${cursor}`;
+function withQuery(path: string, query: Record<string, string | undefined>) {
+  const params = new URLSearchParams(
+    Object.entries(query).filter(
+      (entry): entry is [string, string] => entry[1] !== undefined,
+    ),
+  );
+  return params.size ? `${path}?${params}` : path;
 }
 
 export async function getPosts(
   token: string,
   communityId: number,
-  cursor?: number,
-): Promise<Post[]> {
-  const res = await api(withCursor(`/communities/${communityId}/posts`, cursor), {
+  cursor?: string,
+): Promise<Page<Post>> {
+  const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor }), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -258,8 +303,11 @@ export async function getPosts(
   return res.json();
 }
 
-export async function getFeed(token: string, cursor?: number): Promise<Post[]> {
-  const res = await api(withCursor("/feed", cursor), {
+export async function getFeed(
+  token: string,
+  cursor?: string,
+): Promise<Page<FeedItem>> {
+  const res = await api(withQuery("/feed", { cursor }), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -349,4 +397,88 @@ export async function removeFriend(token: string, userId: number): Promise<void>
   if (!res.ok && res.status !== 404) {
     throw new Error("Could not update your friends. Please try again.");
   }
+}
+
+export async function getThreads(
+  token: string,
+  communityId: number,
+  sort: ThreadSort,
+  cursor?: string,
+): Promise<Page<Thread>> {
+  const res = await api(
+    withQuery(`/communities/${communityId}/threads`, { sort, cursor }),
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+
+  if (!res.ok) throw new Error("Could not load threads.");
+  return res.json();
+}
+
+export async function createThread(
+  token: string,
+  communityId: number,
+  thread: { title: string; content: string },
+): Promise<Thread> {
+  const res = await api(`/communities/${communityId}/threads`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(thread),
+  });
+
+  if (res.status === 400) throw new Error("Add a title for your thread.");
+  if (!res.ok) throw new Error("Could not post the thread. Please try again.");
+  return res.json();
+}
+
+export async function getComments(
+  token: string,
+  { type, id }: Commentable,
+): Promise<Comment[]> {
+  const res = await api(withQuery("/comments", { type, id: String(id) }), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load comments.");
+  return res.json();
+}
+
+export async function createComment(
+  token: string,
+  { type, id }: Commentable,
+  content: string,
+  parentId?: number,
+): Promise<Comment> {
+  const res = await api("/comments", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type, id, parentId, content }),
+  });
+
+  if (res.status === 400) throw new Error("Write something before commenting.");
+  if (!res.ok) throw new Error("Could not post the comment. Please try again.");
+  return res.json();
+}
+
+export async function vote(
+  token: string,
+  { type, id }: Votable,
+  value: number,
+): Promise<VoteResult> {
+  const res = await api("/votes", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type, id, value }),
+  });
+
+  if (!res.ok) throw new Error("Could not save your vote.");
+  return res.json();
 }

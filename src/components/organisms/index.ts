@@ -1,9 +1,12 @@
 export * from "./auth-form";
+export * from "./comment-section";
 export * from "./community-feed";
+export * from "./community-forum";
 export * from "./community-rail";
 export * from "./community-search";
 export * from "./community-settings";
 export * from "./create-community-modal";
+export * from "./discussion-modal";
 export * from "./friends-panel";
 export * from "./guest-gate";
 export * from "./home-feed";
@@ -15,3 +18,4 @@ export * from "./post-list";
 export * from "./profile-card";
 export * from "./site-header";
 export * from "./theme-toggle";
+export * from "./thread-card";

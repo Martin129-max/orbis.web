@@ -2,15 +2,15 @@
 
 import { Select } from "antd";
 import { useState } from "react";
-import { createPost } from "@/lib/api";
-import { usePagedPosts } from "@/lib/use-paged-posts";
+import { createPost, getFeed } from "@/lib/api";
+import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 
 export function HomeFeed() {
-  const feed = usePagedPosts();
+  const feed = usePaged(getFeed);
   const communities = useCommunityStore((state) => state.communities);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const target =
@@ -23,7 +23,7 @@ export function HomeFeed() {
     if (!target) throw new Error("Choose a community to post in.");
 
     const post = await createPost(token, target.id, content);
-    feed.prepend({ ...post, community: { id: target.id, name: target.name } });
+    feed.prepend(post);
   }
 
   return (
@@ -47,6 +47,7 @@ export function HomeFeed() {
         />
       )}
       <PostList
+        showCommunity
         feed={feed}
         empty="Posts from your communities will show up here."
       />

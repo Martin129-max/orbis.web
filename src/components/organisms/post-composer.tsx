@@ -10,14 +10,30 @@ import * as Atom from "@atom";
 type PostComposerProps = {
   onPost: (content: string) => Promise<void>;
   target?: ReactNode;
+  placeholder?: string;
+  submitLabel?: string;
+  allowEmpty?: boolean;
+  autoFocus?: boolean;
+  onCancel?: () => void;
+  onPosted?: () => void;
 };
 
-export function PostComposer({ onPost, target }: PostComposerProps) {
+export function PostComposer({
+  onPost,
+  target,
+  placeholder = "Share something with the community…",
+  submitLabel = "Post",
+  allowEmpty = false,
+  autoFocus = false,
+  onCancel,
+  onPosted,
+}: PostComposerProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   const editor = useEditor({
     immediatelyRender: false,
+    autofocus: autoFocus,
     extensions: [
       StarterKit.configure({
         heading: false,
@@ -57,16 +73,17 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
   });
 
   async function submit() {
-    if (!editor || editor.isEmpty || pending) return;
+    if (!editor || (editor.isEmpty && !allowEmpty) || pending) return;
     setError(null);
     setPending(true);
 
     try {
       await onPost(editor.getHTML());
       editor.commands.clearContent(true);
+      setPending(false);
+      onPosted?.();
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
       setPending(false);
     }
   }
@@ -126,7 +143,7 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
         <div className="relative">
           {state?.empty && (
             <p className="pointer-events-none absolute top-3 left-4 text-muted">
-              Share something with the community…
+              {placeholder}
             </p>
           )}
           <EditorContent editor={editor} />
@@ -138,8 +155,17 @@ export function PostComposer({ onPost, target }: PostComposerProps) {
         <span className="hidden text-xs text-muted sm:inline">
           ⌘/Ctrl + Enter to post
         </span>
-        <Atom.Button onClick={submit} loading={pending} disabled={state?.empty}>
-          Post
+        {onCancel && (
+          <Atom.Button variant="secondary" onClick={onCancel}>
+            Cancel
+          </Atom.Button>
+        )}
+        <Atom.Button
+          onClick={submit}
+          loading={pending}
+          disabled={state?.empty && !allowEmpty}
+        >
+          {submitLabel}
         </Atom.Button>
       </div>
     </div>

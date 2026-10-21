@@ -1,13 +1,19 @@
 "use client";
 
-import { createPost } from "@/lib/api";
-import { usePagedPosts } from "@/lib/use-paged-posts";
+import { useCallback } from "react";
+import { createPost, getPosts } from "@/lib/api";
+import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 
 export function CommunityFeed({ communityId }: { communityId: number }) {
-  const feed = usePagedPosts(communityId);
+  const feed = usePaged(
+    useCallback(
+      (token: string, cursor?: string) => getPosts(token, communityId, cursor),
+      [communityId],
+    ),
+  );
 
   async function handlePost(content: string) {
     const { token } = useAuthStore.getState();

@@ -1,9 +1,15 @@
 "use client";
 
-import { Globe, Lock, Settings } from "lucide-react";
+import {
+  Globe,
+  Lock,
+  MessagesSquare,
+  Newspaper,
+  Settings,
+} from "lucide-react";
 import Link from "next/link";
 import { Tooltip } from "antd";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -14,10 +20,16 @@ import { useAuthStore } from "@/stores/auth-store";
 
 type Loaded = { id: string; community: Community | null; failed?: boolean };
 
+const tabs = [
+  { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
+  { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
+] as const;
+
 export default function CommunityPage() {
   const { communityId } = useParams<{ communityId: string }>();
   const router = useRouter();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const tab = useSearchParams().get("tab") === "forum" ? "forum" : "feed";
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
@@ -93,13 +105,42 @@ export default function CommunityPage() {
               </Tooltip>
             )}
           </header>
+          <nav
+            aria-label="Community sections"
+            className="flex shrink-0 gap-1 border-b border-black/10 px-6 dark:border-white/10"
+          >
+            {tabs.map(({ value, label, icon }) => (
+              <Link
+                key={value}
+                href={`/communities/${current.community!.id}${
+                  value === "forum" ? "?tab=forum" : ""
+                }`}
+                aria-current={tab === value ? "page" : undefined}
+                className={`-mb-px flex items-center gap-2 border-b-2 px-3 py-2.5 text-sm font-medium transition-colors ${
+                  tab === value
+                    ? "border-accent text-foreground"
+                    : "border-transparent text-muted hover:text-foreground"
+                }`}
+              >
+                {icon}
+                {label}
+              </Link>
+            ))}
+          </nav>
           <div className="flex min-h-0 flex-1">
             <div className="min-w-0 flex-1 overflow-y-auto">
               <div className="mx-auto w-full max-w-2xl px-6 py-6">
-                <Organism.CommunityFeed
-                  key={current.community.id}
-                  communityId={current.community.id}
-                />
+                {tab === "forum" ? (
+                  <Organism.CommunityForum
+                    key={current.community.id}
+                    communityId={current.community.id}
+                  />
+                ) : (
+                  <Organism.CommunityFeed
+                    key={current.community.id}
+                    communityId={current.community.id}
+                  />
+                )}
               </div>
             </div>
             <Organism.MemberList
