@@ -255,7 +255,7 @@ export function CommunityRail() {
   return (
     <nav
       aria-label="Communities"
-      className="flex w-14 shrink-0 flex-col items-center gap-4 overflow-y-auto bg-rail px-2 py-5 sm:w-20 sm:px-4"
+      className="flex h-dvh w-14 shrink-0 flex-col items-center gap-4 bg-rail px-2 py-5 sm:w-20 sm:px-4"
       onClickCapture={(event) => {
         if (!suppressClick.current) return;
         event.preventDefault();
@@ -269,7 +269,7 @@ export function CommunityRail() {
       >
         o.
       </Link>
-      <ul className="flex w-full flex-col items-center gap-4">
+      <ul className="flex w-full shrink-0 flex-col items-center gap-4">
         <RailSlot label="Home">
           <Link
             href="/"
@@ -281,6 +281,8 @@ export function CommunityRail() {
           </Link>
         </RailSlot>
         <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
+      </ul>
+      <ul className="-mx-2 flex min-h-0 w-[calc(100%+1rem)] flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-1 [scrollbar-width:none] sm:-mx-4 sm:w-[calc(100%+2rem)] sm:px-4">
         <DndContext
           id="community-rail"
           sensors={sensors}
@@ -324,7 +326,7 @@ export function CommunityRail() {
           </Link>
         </RailSlot>
       </ul>
-      <div className="mt-auto pt-4">
+      <div className="shrink-0">
         <UserButton />
       </div>
       <CreateCommunityModal open={creating} onClose={() => setCreating(false)} />

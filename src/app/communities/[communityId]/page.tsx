@@ -83,48 +83,43 @@ export default function CommunityPage() {
               {current.community.name}
             </Atom.Heading>
           </Template.PageHeader>
+          <nav
+            aria-label="Community sections"
+            className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+          >
+            {tabs.map(({ value, label }) => (
+              <Link
+                key={value}
+                href={`/communities/${current.community!.id}${
+                  value === "forum" ? "?tab=forum" : ""
+                }`}
+                aria-current={tab === value ? "page" : undefined}
+                className={`focus-ring -mb-px rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+                  tab === value
+                    ? "border-accent text-accent"
+                    : "border-transparent font-semibold text-foreground hover:text-accent"
+                }`}
+              >
+                {label}
+              </Link>
+            ))}
+            <p className="ml-auto hidden items-center gap-2 self-center text-xs text-muted sm:flex">
+              {current.community.isPublic ? (
+                <Globe size={14} aria-hidden />
+              ) : (
+                <Lock size={14} aria-hidden />
+              )}
+              {current.community.isPublic
+                ? "Public community"
+                : "Private community"}
+              {current.community.memberCount !== undefined &&
+                ` · ${current.community.memberCount.toLocaleString()} ${
+                  current.community.memberCount === 1 ? "member" : "members"
+                }`}
+            </p>
+          </nav>
           <div className="flex min-h-0 flex-1">
             <Template.PageColumn>
-              <div className="flex flex-col gap-2">
-                <h2 className="font-display text-4xl leading-[1.04] font-bold">
-                  {current.community.name}
-                </h2>
-                <p className="flex items-center gap-2 text-xs text-muted">
-                  {current.community.isPublic ? (
-                    <Globe size={14} aria-hidden />
-                  ) : (
-                    <Lock size={14} aria-hidden />
-                  )}
-                  {current.community.isPublic
-                    ? "Public community"
-                    : "Private community"}
-                  {current.community.memberCount !== undefined &&
-                    ` · ${current.community.memberCount.toLocaleString()} ${
-                      current.community.memberCount === 1 ? "member" : "members"
-                    }`}
-                </p>
-              </div>
-              <nav
-                aria-label="Community sections"
-                className="mt-6 mb-6 flex gap-2 border-b border-divider"
-              >
-                {tabs.map(({ value, label }) => (
-                  <Link
-                    key={value}
-                    href={`/communities/${current.community!.id}${
-                      value === "forum" ? "?tab=forum" : ""
-                    }`}
-                    aria-current={tab === value ? "page" : undefined}
-                    className={`focus-ring -mb-px rounded-t-sm border-b-2 px-1 pb-2 text-sm transition-colors ${
-                      tab === value
-                        ? "border-accent text-accent"
-                        : "border-transparent font-semibold text-foreground hover:text-accent"
-                    } ${value === "forum" ? "ml-6" : ""}`}
-                  >
-                    {label}
-                  </Link>
-                ))}
-              </nav>
               {tab === "forum" ? (
                 <Organism.CommunityForum
                   key={current.community.id}

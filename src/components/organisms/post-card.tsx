@@ -15,7 +15,7 @@ export function PostCard({
   onOpenComments,
 }: PostCardProps) {
   return (
-    <article className="flex flex-col gap-4 border-b border-divider py-6">
+    <article className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
       <header className="flex items-center gap-3">
         <Molecule.AuthorAvatar
           author={post.author}

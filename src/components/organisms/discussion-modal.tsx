@@ -80,9 +80,7 @@ export function DiscussionModal({
           {item.type === "thread" ? (
             <ThreadDetail thread={item} onChange={onChange} />
           ) : (
-            <div className="-mt-6">
-              <PostCard post={item} showCommunity />
-            </div>
+            <PostCard post={item} showCommunity />
           )}
           <CommentSection
             key={`${item.type}-${item.id}`}

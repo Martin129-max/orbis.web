@@ -63,7 +63,7 @@ export function PostList<T extends FeedItem>({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-3">
       {items.map((item) =>
         item.type === "thread" ? (
           <ThreadCard

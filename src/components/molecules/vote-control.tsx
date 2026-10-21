@@ -22,10 +22,10 @@ export function VoteControl({
 
   return (
     <div
-      className={`flex shrink-0 items-center rounded-lg bg-background ${
+      className={`flex shrink-0 items-center ${
         orientation === "vertical"
           ? "w-10 flex-col gap-1 py-2"
-          : "flex-row gap-2 p-2"
+          : "flex-row gap-2 py-1"
       }`}
       onClick={(event) => event.stopPropagation()}
     >

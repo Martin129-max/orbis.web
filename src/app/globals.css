@@ -85,6 +85,11 @@
   --offline: #777970;
 }
 
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--rail-item) transparent;
+}
+
 body {
   background: var(--background);
   color: var(--foreground);
