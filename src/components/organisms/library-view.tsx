@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Template from "@template";
@@ -521,16 +521,75 @@ function LibraryShelf({
   );
 }
 
-export function LibraryView() {
+function LibrarySearch({
+  entries,
+  onAdded,
+}: {
+  entries: LibraryEntry[];
+  onAdded: (entry: LibraryEntry) => void;
+}) {
   const [query, setQuery] = useState("");
   const [search, setSearch] = useState("");
-  const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [open, setOpen] = useState(false);
+  const container = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setSearch(query.trim()), 350);
     return () => clearTimeout(timer);
   }, [query]);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointer(event: PointerEvent) {
+      const target = event.target as Element;
+      if (container.current?.contains(target)) return;
+      if (target.closest(".ant-modal-root, .ant-message")) return;
+      setOpen(false);
+    }
+
+    document.addEventListener("pointerdown", handlePointer);
+    return () => document.removeEventListener("pointerdown", handlePointer);
+  }, [open]);
+
+  const expanded = open && search.length >= 2;
+
+  return (
+    <div
+      ref={container}
+      className="relative"
+      onKeyDown={(event) => {
+        if (event.key === "Escape") setOpen(false);
+      }}
+    >
+      <Atom.Input
+        aria-label="Search anime, manga, and games"
+        aria-expanded={expanded}
+        className={expanded ? "relative z-[51]" : undefined}
+        allowClear
+        prefix={<Search size={16} className="text-muted" />}
+        placeholder="Search anime, manga, and games…"
+        value={query}
+        onFocus={() => setOpen(true)}
+        onChange={(event) => {
+          setQuery(event.target.value);
+          setOpen(true);
+        }}
+      />
+      {expanded && (
+        <div className="absolute -inset-x-2 -top-2 z-50 flex max-h-[min(75vh,600px)] flex-col rounded-xl border border-divider bg-surface pt-[52px] shadow-lg">
+          <div className="min-h-0 overflow-y-auto border-t border-divider p-3">
+            <SearchResults query={search} entries={entries} onAdded={onAdded} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function LibraryView() {
+  const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     useLibraryPreferencesStore.persist.rehydrate();
@@ -551,13 +610,9 @@ export function LibraryView() {
     <>
       <Template.PageHeader
         center={
-          <Atom.Input
-            aria-label="Search anime, manga, and games"
-            allowClear
-            prefix={<Search size={16} className="text-muted" />}
-            placeholder="Search anime, manga, and games…"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
+          <LibrarySearch
+            entries={entries ?? []}
+            onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
           />
         }
         actions={<SidePanelToggle label="Friends" />}
@@ -568,15 +623,6 @@ export function LibraryView() {
       <div className="flex min-h-0 flex-1">
         <Template.PageColumn>
           <div className="flex flex-col gap-6">
-            {search.length >= 2 && (
-              <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-4">
-                <SearchResults
-                  query={search}
-                  entries={entries ?? []}
-                  onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
-                />
-              </section>
-            )}
             {failed ? (
               <Atom.ErrorMessage>Could not load your library.</Atom.ErrorMessage>
             ) : !entries ? (
