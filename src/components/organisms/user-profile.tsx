@@ -165,7 +165,11 @@ function ProfileHeader({
             <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
               <span>@{profile.username}</span>
               <span>· {online ? "Online" : "Offline"}</span>
-              {profile.isAdmin && <Atom.RoleBadge role="site-admin" />}
+              {profile.isHeadAdmin ? (
+                <Atom.RoleBadge role="head-admin" />
+              ) : (
+                profile.isAdmin && <Atom.RoleBadge role="site-admin" />
+              )}
             </p>
           )}
         </div>

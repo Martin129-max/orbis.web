@@ -1019,6 +1019,7 @@ export type PublicProfile = {
   coverUrl: string | null;
   backgroundUrl: string | null;
   isAdmin: boolean;
+  isHeadAdmin: boolean;
   createdAt: string;
   online: boolean;
   friendCount: number;
