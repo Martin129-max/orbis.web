@@ -2,13 +2,20 @@
 
 import { ChevronDown, Globe, Lock, MoreHorizontal, SearchX, Star } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState, type UIEvent } from "react";
+import { useCallback, useEffect, useState, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Template from "@template";
-import { getMediaProfile, type LibraryEntry, type MediaProfile as Profile } from "@/lib/api";
+import {
+  createMediaPost,
+  getMediaPosts,
+  getMediaProfile,
+  type LibraryEntry,
+  type MediaProfile as Profile,
+} from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { statusLabel } from "@/lib/library";
+import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { mediaTypes } from "./activity-card";
 import { AddToLibraryButton, EntryMenu } from "./library-controls";
@@ -18,6 +25,8 @@ import {
   StatusBadge,
   StatusSelect,
 } from "./library-view";
+import { PostComposer } from "./post-composer";
+import { PostList } from "./post-list";
 import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
 
 const detailLabels: Record<string, string> = {
@@ -276,6 +285,47 @@ function YourLibrary({
   );
 }
 
+function MediaWall({ profile }: { profile: Profile }) {
+  const feed = usePaged(
+    useCallback(
+      (token: string, cursor?: string) =>
+        getMediaPosts(token, profile.type, profile.sourceId, cursor),
+      [profile.type, profile.sourceId],
+    ),
+  );
+
+  async function handlePost(content: string) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    feed.prepend(await createMediaPost(token, profile.type, profile.sourceId, content));
+  }
+
+  return (
+    <section className="flex min-w-0 flex-col gap-4 md:col-start-1">
+      <PostComposer
+        onPost={handlePost}
+        placeholder={`Share your thoughts on ${profile.title}…`}
+        target={
+          <div className="flex items-center gap-3">
+            <MediaCover src={profile.coverImage} className="w-8" />
+            <div className="flex min-w-0 flex-col">
+              <span className="text-xs text-muted uppercase">Post to</span>
+              <span className="truncate text-sm font-semibold">{profile.title}</span>
+            </div>
+          </div>
+        }
+      />
+      <PostList
+        feed={feed}
+        empty={{
+          title: "No posts yet.",
+          description: `Be the first to share your thoughts on ${profile.title}.`,
+        }}
+      />
+    </section>
+  );
+}
+
 function People({ profile }: { profile: Profile }) {
   return (
     <>
@@ -382,7 +432,7 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
                 </p>
               )}
             </section>
-            <section className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-5">
+            <section className="flex flex-col gap-3 self-start rounded-lg border border-divider bg-surface p-5 md:col-start-2 md:row-span-2 md:row-start-1">
               <h3 className="font-display text-xl font-bold">Details</h3>
               <dl className="flex flex-col gap-2.5">
                 {details.map(([label, value]) => (
@@ -393,6 +443,7 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
                 ))}
               </dl>
             </section>
+            <MediaWall profile={profile} />
           </div>
           </div>
         </Template.PageColumn>

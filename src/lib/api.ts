@@ -625,6 +625,41 @@ export async function getUserPosts(
   return res.json();
 }
 
+export async function getMediaPosts(
+  token: string,
+  type: MediaType,
+  sourceId: string,
+  cursor?: string,
+): Promise<Page<FeedEntry>> {
+  const res = await api(
+    withQuery(`/library/media/${type}/${encodeURIComponent(sourceId)}/posts`, { cursor }),
+    { headers: { Authorization: `Bearer ${token}` } },
+  );
+
+  if (!res.ok) throw new Error("Could not load these posts.");
+  return res.json();
+}
+
+export async function createMediaPost(
+  token: string,
+  type: MediaType,
+  sourceId: string,
+  content: string,
+): Promise<Post> {
+  const res = await api(`/library/media/${type}/${encodeURIComponent(sourceId)}/posts`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (res.status === 400) throw new Error("Write something before posting.");
+  if (!res.ok) throw new Error("Could not post. Please try again.");
+  return res.json();
+}
+
 export async function createPost(
   token: string,
   communityId: number,
