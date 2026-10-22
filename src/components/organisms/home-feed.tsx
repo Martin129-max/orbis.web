@@ -14,7 +14,7 @@ import { PostList } from "./post-list";
 import { OnboardingChecklist, OnboardingTour } from "./onboarding";
 
 export function HomeFeed() {
-  const feed = usePaged(getFeed);
+  const feed = usePaged(getFeed, { live: true });
   const profile = useAuthStore((state) => state.profile);
   const communities = useCommunityStore((state) => state.communities);
   const [selectedId, setSelectedId] = useState<number | null>(null);

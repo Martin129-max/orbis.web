@@ -292,6 +292,7 @@ function MediaWall({ profile }: { profile: Profile }) {
         getMediaPosts(token, profile.type, profile.sourceId, cursor),
       [profile.type, profile.sourceId],
     ),
+    { live: true },
   );
 
   async function handlePost(content: string) {

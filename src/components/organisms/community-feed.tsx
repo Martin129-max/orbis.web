@@ -13,6 +13,7 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
       (token: string, cursor?: string) => getPosts(token, communityId, cursor),
       [communityId],
     ),
+    { live: true },
   );
 
   async function handlePost(content: string) {

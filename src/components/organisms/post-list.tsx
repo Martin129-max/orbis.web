@@ -1,6 +1,6 @@
 "use client";
 
-import { CloudOff, NotebookPen } from "lucide-react";
+import { ArrowUp, CloudOff, NotebookPen } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -47,20 +47,35 @@ export function PostList<T extends FeedEntry>({
     return <Molecule.FeedSkeleton label="Loading posts…" />;
   }
 
+  const newPosts = feed.newCount > 0 && (
+    <button
+      type="button"
+      onClick={feed.showNew}
+      className="focus-ring mx-auto flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-[13px] font-semibold text-accent-foreground shadow-sm transition-colors hover:bg-accent/90"
+    >
+      <ArrowUp size={14} aria-hidden />
+      Show {feed.newCount} new {feed.newCount === 1 ? "post" : "posts"}
+    </button>
+  );
+
   if (items.length === 0) {
     return (
-      <Molecule.FeedState
-        eyebrow="Empty"
-        icon={<NotebookPen size={24} strokeWidth={1.5} />}
-        title={empty.title}
-        description={empty.description}
-        action={empty.action}
-      />
+      <div className="flex flex-col gap-3">
+        {newPosts}
+        <Molecule.FeedState
+          eyebrow="Empty"
+          icon={<NotebookPen size={24} strokeWidth={1.5} />}
+          title={empty.title}
+          description={empty.description}
+          action={empty.action}
+        />
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-3">
+      {newPosts}
       {items.map((item) =>
         item.type === "activity" ? (
           <ActivityCard

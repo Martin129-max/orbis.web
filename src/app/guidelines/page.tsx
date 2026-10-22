@@ -3,7 +3,7 @@ import Link from "next/link";
 import * as Template from "@template";
 
 export const metadata: Metadata = {
-  title: "Community guidelines · Orbis",
+  title: "Community guidelines",
   description: "The rules every member agrees to follow on Orbis.",
 };
 

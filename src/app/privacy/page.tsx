@@ -3,7 +3,7 @@ import Link from "next/link";
 import * as Template from "@template";
 
 export const metadata: Metadata = {
-  title: "Privacy policy · Orbis",
+  title: "Privacy policy",
   description: "What information Orbis collects and how it is used.",
 };
 

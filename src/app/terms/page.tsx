@@ -3,7 +3,7 @@ import Link from "next/link";
 import * as Template from "@template";
 
 export const metadata: Metadata = {
-  title: "Terms of service · Orbis",
+  title: "Terms of service",
   description: "The terms that apply when you use Orbis.",
 };
 

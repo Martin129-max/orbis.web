@@ -245,6 +245,7 @@ function Wall({
       (token: string, cursor?: string) => getUserPosts(token, profile.username, cursor),
       [profile.username],
     ),
+    { live: true },
   );
   const name = displayName(profile);
 
