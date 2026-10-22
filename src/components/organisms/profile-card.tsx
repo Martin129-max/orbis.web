@@ -37,12 +37,7 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
           Your profile
         </p>
         <div className="flex items-center gap-6">
-          <Atom.Avatar
-            size="lg"
-            label={profile.username}
-            src={profile.avatarUrl}
-            seed={profile.userId}
-          />
+          <AvatarPicker profile={profile} />
           <div className="flex min-w-0 flex-col gap-1">
             <h2 className="truncate font-display text-4xl leading-[1.04] font-bold sm:text-5xl">
               {profile.username}
@@ -51,7 +46,6 @@ export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
             <p className="text-xs text-muted">Member since {memberSince}</p>
           </div>
         </div>
-        <AvatarPicker />
         <div className="flex flex-col gap-1 rounded-lg bg-surface p-4">
           <p className="text-[11px] font-bold text-muted uppercase">
             Email · Only you can see this

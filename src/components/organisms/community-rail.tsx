@@ -151,7 +151,7 @@ function UserButton() {
 
   const username = profile ? `@${profile.username}` : "Account";
   const menuRow =
-    "focus-ring -mx-2 flex w-[calc(100%+1rem)] items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-rail-item hover:text-foreground";
+    "focus-ring -mx-2 flex w-[calc(100%+1rem)] cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-rail-item hover:text-foreground";
 
   return (
     <Popover

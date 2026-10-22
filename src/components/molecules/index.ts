@@ -5,7 +5,7 @@ export * from "./feed-end";
 export * from "./feed-skeleton";
 export * from "./feed-state";
 export * from "./form-field";
-export * from "./image-picker";
+export * from "./image-menu";
 export * from "./load-more";
 export * from "./modal-header";
 export * from "./page-intro";

@@ -1,7 +1,6 @@
 "use client";
 
 import { Switch } from "antd";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
@@ -115,87 +114,6 @@ function GeneralSettings({ community }: { community: Community }) {
           {message && <span className="text-xs text-muted">{message}</span>}
         </div>
       </form>
-    </Section>
-  );
-}
-
-function IconSettings({ community }: { community: Community }) {
-  const setCommunityImage = useCommunityStore(
-    (state) => state.setCommunityImage,
-  );
-  const [iconUrl, setIconUrl] = useState(community.iconUrl);
-
-  async function save(file: File | null) {
-    const updated = await setCommunityImage(community.id, "icon", file);
-    setIconUrl(updated.iconUrl);
-  }
-
-  return (
-    <Section
-      title="Icon"
-      description="Shown in the sidebar, in Explore, and next to posts from this community."
-    >
-      <div className="flex items-center gap-6">
-        <span
-          aria-hidden
-          className="relative flex h-[88px] w-[88px] shrink-0 items-center justify-center rounded-full border border-divider bg-rail-item font-display text-[44px] leading-none font-bold"
-        >
-          <Atom.CommunityIcon name={community.name} src={iconUrl} />
-        </span>
-        <Molecule.ImagePicker
-          noun="icon"
-          hasImage={Boolean(iconUrl)}
-          onUpload={save}
-          onRemove={() => save(null)}
-        />
-      </div>
-    </Section>
-  );
-}
-
-function WideImageSettings({
-  community,
-  image,
-  title,
-  description,
-  aspect,
-}: {
-  community: Community;
-  image: "cover" | "background";
-  title: string;
-  description: string;
-  aspect: string;
-}) {
-  const setCommunityImage = useCommunityStore(
-    (state) => state.setCommunityImage,
-  );
-  const field = image === "cover" ? "coverUrl" : "backgroundUrl";
-  const [url, setUrl] = useState(community[field]);
-
-  async function save(file: File | null) {
-    const updated = await setCommunityImage(community.id, image, file);
-    setUrl(updated[field]);
-  }
-
-  return (
-    <Section title={title} description={description}>
-      <div
-        className={`relative overflow-hidden rounded-lg border border-divider bg-rail-item ${aspect}`}
-      >
-        {url ? (
-          <Image src={url} alt="" fill unoptimized className="object-cover" />
-        ) : (
-          <p className="absolute inset-0 flex items-center justify-center text-xs text-muted">
-            No {title.toLowerCase()} yet
-          </p>
-        )}
-      </div>
-      <Molecule.ImagePicker
-        noun={image}
-        hasImage={Boolean(url)}
-        onUpload={save}
-        onRemove={() => save(null)}
-      />
     </Section>
   );
 }
@@ -360,21 +278,6 @@ export function CommunitySettings({ community }: { community: Community }) {
         description="Manage this community’s details, admins, and visibility."
       />
       <GeneralSettings community={community} />
-      <IconSettings community={community} />
-      <WideImageSettings
-        community={community}
-        image="cover"
-        title="Cover photo"
-        description="Shown across the top of the community page. Wide images work best."
-        aspect="aspect-[3/1]"
-      />
-      <WideImageSettings
-        community={community}
-        image="background"
-        title="Background"
-        description="Shown softly behind the feed and forum. Patterns and calm scenes work best."
-        aspect="aspect-video"
-      />
       <AdminSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}
     </div>

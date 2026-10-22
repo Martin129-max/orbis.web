@@ -1,7 +1,7 @@
 "use client";
 
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { ConfigProvider, theme } from "antd";
+import { App, ConfigProvider, theme } from "antd";
 import { useEffect, useSyncExternalStore, type ReactNode } from "react";
 import { palette } from "@/lib/palette";
 import { useThemeStore } from "@/stores/theme-store";
@@ -93,7 +93,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
           },
         }}
       >
-        {children}
+        <App component={false}>{children}</App>
       </ConfigProvider>
     </AntdRegistry>
   );

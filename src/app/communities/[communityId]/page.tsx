@@ -2,10 +2,12 @@
 
 import {
   Globe,
+  LoaderCircle,
   Lock,
   MessagesSquare,
   Newspaper,
   Settings,
+  Wallpaper,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -16,8 +18,14 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Organism from "@organism";
 import * as Template from "@template";
-import { canManage, getCommunity, type Community } from "@/lib/api";
+import {
+  canManage,
+  getCommunity,
+  type Community,
+  type CommunityImage,
+} from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
+import { useCommunityStore } from "@/stores/community-store";
 
 type Loaded = { id: string; community: Community | null; failed?: boolean };
 
@@ -32,6 +40,14 @@ export default function CommunityPage() {
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const tab = useSearchParams().get("tab") === "forum" ? "forum" : "feed";
   const [collapsed, setCollapsed] = useState(false);
+  const setCommunityImage = useCommunityStore(
+    (state) => state.setCommunityImage,
+  );
+
+  async function handleImage(image: CommunityImage, file: File | null) {
+    const community = await setCommunityImage(Number(communityId), image, file);
+    setLoaded({ id: communityId, community });
+  }
 
   function handleScroll(event: UIEvent<HTMLDivElement>) {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
@@ -79,6 +95,7 @@ export default function CommunityPage() {
           <Organism.CommunityHeader
             community={current.community}
             collapsed={collapsed}
+            onImage={canManage(current.community) ? handleImage : undefined}
             actions={
               <>
                 {canManage(current.community) && (
@@ -144,6 +161,29 @@ export default function CommunityPage() {
                 />
                 <div className="absolute inset-0 bg-background/55" />
               </div>
+            )}
+            {canManage(current.community) && (
+              <Molecule.ImageMenu
+                noun="background"
+                hasImage={Boolean(current.community.backgroundUrl)}
+                onUpload={(file) => handleImage("background", file)}
+                onRemove={() => handleImage("background", null)}
+              >
+                {(busy) => (
+                  <button
+                    type="button"
+                    aria-label="Change background"
+                    title="Change background"
+                    className="focus-ring absolute bottom-4 left-4 z-10 flex cursor-pointer h-9 w-9 items-center justify-center rounded-full border border-divider bg-surface text-foreground shadow-sm transition-colors hover:bg-rail-item"
+                  >
+                    {busy ? (
+                      <LoaderCircle size={16} className="animate-spin" />
+                    ) : (
+                      <Wallpaper size={16} />
+                    )}
+                  </button>
+                )}
+              </Molecule.ImageMenu>
             )}
             <Template.PageColumn onScroll={handleScroll}>
               {tab === "forum" ? (
