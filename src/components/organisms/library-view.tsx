@@ -1,6 +1,6 @@
 "use client";
 
-import { App, InputNumber, Segmented, Select } from "antd";
+import { App, InputNumber, Select, Tooltip } from "antd";
 import {
   Bookmark,
   Check,
@@ -21,6 +21,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
+import * as Template from "@template";
 import {
   getLibrary,
   searchLibrary,
@@ -34,12 +35,13 @@ import { libraryStatuses, mediaPath, statusLabel } from "@/lib/library";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   useLibraryPreferencesStore,
-  type LibraryViewMode as View,
   type LibraryTypeFilter as TypeFilter,
   type LibraryStatusFilter as StatusFilter,
 } from "@/stores/library-preferences-store";
 import { mediaTypes } from "./activity-card";
+import { FriendsPanel } from "./friends-panel";
 import { AddToLibraryButton, EntryMenu } from "./library-controls";
+import { SidePanel, SidePanelToggle } from "./side-panel";
 
 export function ProgressControl({
   entry,
@@ -352,6 +354,92 @@ function SearchResults({
   );
 }
 
+function LibraryTabs({ entries }: { entries: LibraryEntry[] | null }) {
+  const status = useLibraryPreferencesStore((state) => state.status);
+  const type = useLibraryPreferencesStore((state) => state.type);
+  const view = useLibraryPreferencesStore((state) => state.view);
+  const setStatus = useLibraryPreferencesStore((state) => state.setStatus);
+  const setType = useLibraryPreferencesStore((state) => state.setType);
+  const setView = useLibraryPreferencesStore((state) => state.setView);
+
+  const ofType = (entries ?? []).filter((entry) => type === "all" || entry.mediaType === type);
+  const count = (value: StatusFilter) =>
+    value === "all" ? ofType.length : ofType.filter((entry) => entry.status === value).length;
+  const typeForLabels = type === "all" ? undefined : type;
+
+  return (
+    <nav
+      aria-label="Library sections"
+      className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+    >
+      <div className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
+        {(["all", ...libraryStatuses] as StatusFilter[]).map((value) => {
+          const Icon = statusIcons[value];
+          const active = status === value;
+          return (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={active}
+              onClick={() => setStatus(value)}
+              className={`focus-ring flex shrink-0 cursor-pointer items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm whitespace-nowrap transition-colors ${
+                active
+                  ? "border-accent text-accent"
+                  : "border-transparent font-semibold text-foreground hover:text-accent"
+              }`}
+            >
+              <Icon size={16} aria-hidden />
+              {value === "all" ? "All" : statusLabel(value, typeForLabels)}
+              {entries && <span className="text-xs font-normal text-muted">{count(value)}</span>}
+            </button>
+          );
+        })}
+      </div>
+      <div className="ml-auto flex shrink-0 items-center gap-2 self-center">
+        <Select<TypeFilter>
+          size="small"
+          aria-label="Media type"
+          value={type}
+          onChange={setType}
+          popupMatchSelectWidth={false}
+          className="w-32"
+          options={(["all", "anime", "manga", "game"] as const).map((value) => ({
+            value,
+            label: (
+              <span className="flex items-center gap-1.5">
+                {value === "all" ? <Library size={12} /> : mediaTypes[value].icon}
+                {value === "all" ? "All types" : value === "game" ? "Games" : mediaTypes[value].label}
+              </span>
+            ),
+          }))}
+        />
+        <div role="group" aria-label="Library view" className="flex items-center gap-0.5">
+          {(
+            [
+              { value: "cards", label: "Cards", icon: <LayoutGrid size={16} /> },
+              { value: "list", label: "List", icon: <List size={16} /> },
+            ] as const
+          ).map((option) => (
+            <Tooltip key={option.value} title={option.label}>
+              <button
+                type="button"
+                aria-label={option.label}
+                aria-pressed={view === option.value}
+                onClick={() => setView(option.value)}
+                className={`icon-button cursor-pointer ${
+                  view === option.value ? "bg-rail-item text-foreground" : ""
+                }`}
+              >
+                {option.icon}
+              </button>
+            </Tooltip>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 function LibraryShelf({
   entries,
   onChange,
@@ -364,75 +452,19 @@ function LibraryShelf({
   const status = useLibraryPreferencesStore((state) => state.status);
   const type = useLibraryPreferencesStore((state) => state.type);
   const view = useLibraryPreferencesStore((state) => state.view);
-  const setStatus = useLibraryPreferencesStore((state) => state.setStatus);
-  const setType = useLibraryPreferencesStore((state) => state.setType);
-  const setView = useLibraryPreferencesStore((state) => state.setView);
 
-  useEffect(() => {
-    useLibraryPreferencesStore.persist.rehydrate();
-  }, []);
+  const shown = entries.filter(
+    (entry) =>
+      (type === "all" || entry.mediaType === type) &&
+      (status === "all" || entry.status === status),
+  );
 
-  const ofType = entries.filter((entry) => type === "all" || entry.mediaType === type);
-  const shown = ofType.filter((entry) => status === "all" || entry.status === status);
-  const count = (value: StatusFilter) =>
-    value === "all" ? ofType.length : ofType.filter((entry) => entry.status === value).length;
-  const typeForLabels = type === "all" ? undefined : type;
+  const boxed = shown.length === 0 || view === "list";
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 font-display text-2xl font-bold">
-          <Library size={20} className="text-muted" />
-          Your library / {entries.length}
-        </h2>
-        <div className="ml-auto max-w-full overflow-x-auto">
-          <Segmented<TypeFilter>
-            size="small"
-            aria-label="Media type"
-            value={type}
-            onChange={setType}
-            options={(["all", "anime", "manga", "game"] as const).map((value) => ({
-              value,
-              label: value === "all" ? "All types" : value === "game" ? "Games" : mediaTypes[value].label,
-              icon: (
-                <span aria-hidden className="inline-flex items-center align-middle">
-                  {value === "all" ? <Library size={14} /> : mediaTypes[value].icon}
-                </span>
-              ),
-            }))}
-          />
-        </div>
-      </div>
-      <div className="flex min-w-0 items-center justify-between gap-3">
-        <div className="-mx-1 min-w-0 overflow-x-auto px-1">
-          <Segmented<StatusFilter>
-            size="small"
-            aria-label="Library status"
-            value={status}
-            onChange={setStatus}
-            options={(["all", ...libraryStatuses] as StatusFilter[]).map((value) => {
-              const Icon = statusIcons[value];
-              return {
-                value,
-                label: `${value === "all" ? "All" : statusLabel(value, typeForLabels)} · ${count(value)}`,
-                icon: <Icon size={14} aria-hidden className="inline-block align-middle" />,
-              };
-            })}
-          />
-        </div>
-        <div className="shrink-0">
-          <Segmented<View>
-            size="small"
-            aria-label="Library view"
-            value={view}
-            onChange={setView}
-            options={[
-              { value: "cards", icon: <LayoutGrid size={14} />, title: "Cards" },
-              { value: "list", icon: <List size={14} />, title: "List" },
-            ]}
-          />
-        </div>
-      </div>
+    <section
+      className={`flex flex-col gap-4 ${boxed ? "rounded-lg border border-divider bg-surface p-5" : ""}`}
+    >
       {shown.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">
           {entries.length === 0
@@ -501,6 +533,10 @@ export function LibraryView() {
   }, [query]);
 
   useEffect(() => {
+    useLibraryPreferencesStore.persist.rehydrate();
+  }, []);
+
+  useEffect(() => {
     const { token } = useAuthStore.getState();
     if (!token) return;
     getLibrary(token)
@@ -512,45 +548,54 @@ export function LibraryView() {
     setEntries((current) => current?.map((item) => (item.id === entry.id ? entry : item)) ?? null);
 
   return (
-    <div className="flex flex-col gap-6">
-      <Molecule.PageIntro
-        eyebrow="Library"
-        title="Your library."
-        description="Track what you’re watching, reading, and playing. Public entries and their updates show up in your communities’ feeds."
-      />
-      <div className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-4">
-        <Atom.Input
-          aria-label="Search anime, manga, and games"
-          size="large"
-          allowClear
-          prefix={<Search size={16} className="text-muted" />}
-          placeholder="Search anime, manga, and games…"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        {search.length >= 2 ? (
-          <SearchResults
-            query={search}
-            entries={entries ?? []}
-            onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
+    <>
+      <Template.PageHeader
+        center={
+          <Atom.Input
+            aria-label="Search anime, manga, and games"
+            allowClear
+            prefix={<Search size={16} className="text-muted" />}
+            placeholder="Search anime, manga, and games…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
           />
-        ) : (
-          <p className="text-xs text-muted">Type at least 2 characters to search.</p>
-        )}
+        }
+        actions={<SidePanelToggle label="Friends" />}
+      >
+        <Atom.Heading>Library</Atom.Heading>
+      </Template.PageHeader>
+      <LibraryTabs entries={entries} />
+      <div className="flex min-h-0 flex-1">
+        <Template.PageColumn>
+          <div className="flex flex-col gap-6">
+            {search.length >= 2 && (
+              <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-4">
+                <SearchResults
+                  query={search}
+                  entries={entries ?? []}
+                  onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
+                />
+              </section>
+            )}
+            {failed ? (
+              <Atom.ErrorMessage>Could not load your library.</Atom.ErrorMessage>
+            ) : !entries ? (
+              <Molecule.FeedSkeleton label="Loading your library…" />
+            ) : (
+              <LibraryShelf
+                entries={entries}
+                onChange={replace}
+                onRemove={(id) =>
+                  setEntries((current) => current?.filter((item) => item.id !== id) ?? null)
+                }
+              />
+            )}
+          </div>
+        </Template.PageColumn>
+        <SidePanel label="Friends">
+          <FriendsPanel />
+        </SidePanel>
       </div>
-      {failed ? (
-        <Atom.ErrorMessage>Could not load your library.</Atom.ErrorMessage>
-      ) : !entries ? (
-        <Molecule.FeedSkeleton label="Loading your library…" />
-      ) : (
-        <LibraryShelf
-          entries={entries}
-          onChange={replace}
-          onRemove={(id) =>
-            setEntries((current) => current?.filter((item) => item.id !== id) ?? null)
-          }
-        />
-      )}
-    </div>
+    </>
   );
 }
