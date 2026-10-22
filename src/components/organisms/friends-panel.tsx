@@ -4,6 +4,7 @@ import { X } from "lucide-react";
 import { Popconfirm, Tooltip } from "antd";
 import { Fragment, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import type { FriendUser } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useFriendsStore } from "@/stores/friends-store";
@@ -40,9 +41,12 @@ function FriendRow({
           presence={presence}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-[13px] font-semibold">
+          <Molecule.UserLink
+            username={user.username}
+            className="truncate text-[13px] font-semibold"
+          >
             {displayName(user)}
-          </span>
+          </Molecule.UserLink>
           <span className="truncate text-xs text-muted">@{user.username}</span>
         </div>
         {trailing}

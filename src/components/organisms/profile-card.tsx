@@ -1,12 +1,17 @@
 "use client";
 
+import { Camera, ImagePlus, LoaderCircle, LogOut, Mail, Moon, Users } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
-import type { Profile } from "@/lib/api";
+import * as Molecule from "@molecule";
+import { removeUserCover, uploadUserCover, type Profile } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
+import { useFriendsStore } from "@/stores/friends-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { AvatarPicker } from "./avatar-picker";
+import { ProfileHero, ProfileStat } from "./profile-hero";
 import { ThemeToggle } from "./theme-toggle";
 
 type ProfileCardProps = {
@@ -14,105 +19,159 @@ type ProfileCardProps = {
   onLogout: () => void;
 };
 
-function Section({ title, children }: { title: string; children: ReactNode }) {
+function Card({
+  title,
+  icon,
+  children,
+  className = "",
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="flex flex-col gap-6 border-t border-divider pt-8">
-      <h3 className="font-display text-2xl font-bold">{title}</h3>
+    <section
+      className={`flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5 ${className}`}
+    >
+      <h3 className="flex items-center gap-2 font-display text-xl font-bold">
+        <span className="text-muted">{icon}</span>
+        {title}
+      </h3>
       {children}
     </section>
   );
 }
 
+async function saveCover(request: (token: string) => Promise<Profile>) {
+  const { token } = useAuthStore.getState();
+  if (!token) throw new Error("Please log in again.");
+  useAuthStore.setState({ profile: await request(token) });
+}
+
+function CoverButton({ hasCover }: { hasCover: boolean }) {
+  return (
+    <Molecule.ImageMenu
+      noun="cover"
+      hasImage={hasCover}
+      onUpload={(file) => saveCover((token) => uploadUserCover(token, file))}
+      onRemove={() => saveCover(removeUserCover)}
+    >
+      {(busy) => (
+        <button
+          type="button"
+          className="focus-ring flex cursor-pointer items-center gap-1.5 rounded-full border border-divider bg-surface px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-rail-item"
+        >
+          {busy ? (
+            <LoaderCircle size={14} className="animate-spin" />
+          ) : hasCover ? (
+            <Camera size={14} />
+          ) : (
+            <ImagePlus size={14} />
+          )}
+          {hasCover ? "Edit cover" : "Add cover"}
+        </button>
+      )}
+    </Molecule.ImageMenu>
+  );
+}
+
 export function ProfileCard({ profile, onLogout }: ProfileCardProps) {
   const communities = useCommunityStore((state) => state.communities);
-  const memberSince = new Date(profile.createdAt).toLocaleDateString(
-    undefined,
-    { month: "long", year: "numeric" },
-  );
+  const friends = useFriendsStore((state) => state.friends);
 
   return (
-    <div className="flex flex-col gap-8">
-      <div className="flex flex-col gap-6">
-        <p className="text-xs font-bold text-accent uppercase">
-          Your profile
-        </p>
-        <div className="flex items-center gap-6">
-          <AvatarPicker profile={profile} />
-          <div className="flex min-w-0 flex-col gap-1">
-            <h2 className="truncate font-display text-4xl leading-[1.04] font-bold sm:text-5xl">
-              {profile.username}
-            </h2>
-            <p className="text-sm text-muted">@{profile.username}</p>
-            <p className="text-xs text-muted">Member since {memberSince}</p>
-          </div>
-        </div>
-        <div className="flex flex-col gap-1 rounded-lg bg-surface p-4">
-          <p className="text-[11px] font-bold text-muted uppercase">
-            Email · Only you can see this
-          </p>
-          <p className="truncate text-sm">{profile.email}</p>
-        </div>
-      </div>
+    <div className="flex flex-col gap-4">
+      <ProfileHero
+        username={profile.username}
+        avatar={<AvatarPicker profile={profile} />}
+        avatarUrl={profile.avatarUrl}
+        coverUrl={profile.coverUrl}
+        createdAt={profile.createdAt}
+        isAdmin={profile.isAdmin}
+        coverAction={<CoverButton hasCover={Boolean(profile.coverUrl)} />}
+        actions={
+          <Atom.ButtonLink
+            href={`/users/${profile.username}`}
+            variant="secondary"
+            size="small"
+          >
+            View public profile
+          </Atom.ButtonLink>
+        }
+        stats={
+          <>
+            <ProfileStat
+              value={communities.length}
+              label={communities.length === 1 ? "Community" : "Communities"}
+            />
+            <ProfileStat
+              value={friends.length}
+              label={friends.length === 1 ? "Friend" : "Friends"}
+            />
+          </>
+        }
+      />
 
-      <Section title="Preferences">
-        <div className="flex flex-col gap-3">
-          <p className="text-sm">Theme</p>
-          <p className="text-xs text-muted">
-            Choose how Orbis looks. System follows your device’s setting.
-          </p>
-          <ThemeToggle />
-        </div>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between gap-6">
-            <p className="text-sm">Appear offline</p>
-            <AppearOfflineSwitch />
-          </div>
-          <p className="text-xs text-muted">
-            Friends will see you as offline. You can still read, post, and
-            comment as usual.
-          </p>
-        </div>
-      </Section>
-
-      <Section title="Your communities">
+      <Card title="Your communities" icon={<Users size={18} />}>
         {communities.length === 0 ? (
           <p className="text-sm text-muted">
-            You haven’t joined any communities yet.
+            You haven’t joined any communities yet.{" "}
+            <Link
+              href="/explore"
+              className="focus-ring rounded-sm font-semibold text-accent hover:underline"
+            >
+              Explore communities
+            </Link>
           </p>
         ) : (
-          <ul className="flex flex-col gap-2">
+          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {communities.map((community) => (
               <li key={community.id}>
-                <Link
-                  href={`/communities/${community.id}`}
-                  className="focus-ring flex items-center gap-4 rounded-md py-2 hover:text-accent"
-                >
-                  <span
-                    aria-hidden
-                    className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[17.6px] leading-none font-bold text-foreground"
-                  >
-                    <Atom.CommunityIcon
-                      name={community.name}
-                      src={community.iconUrl}
-                    />
-                  </span>
-                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">
-                    {community.name}
-                  </span>
-                  <span className="text-xs text-muted">
-                    {community.ownerId === profile.userId ? "Owner" : "Member"}
-                  </span>
-                </Link>
+                <Molecule.CommunityTile
+                  id={community.id}
+                  name={community.name}
+                  iconUrl={community.iconUrl}
+                  role={community.ownerId === profile.userId ? "Owner" : "Member"}
+                />
               </li>
             ))}
           </ul>
         )}
-      </Section>
+      </Card>
 
-      <div className="border-t border-divider pt-6">
-        <Atom.Button variant="secondary" onClick={onLogout}>
-          Log out
-        </Atom.Button>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Card title="Preferences" icon={<Moon size={18} />}>
+          <div className="flex flex-col gap-2">
+            <p className="text-sm font-semibold">Theme</p>
+            <ThemeToggle block />
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-4">
+              <p className="text-sm font-semibold">Appear offline</p>
+              <AppearOfflineSwitch />
+            </div>
+            <p className="text-xs text-muted">
+              Friends see you as offline. You can still post as usual.
+            </p>
+          </div>
+        </Card>
+
+        <Card title="Account" icon={<Mail size={18} />}>
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-semibold">Email</p>
+            <p className="truncate text-sm">{profile.email}</p>
+            <p className="text-xs text-muted">Only you can see this.</p>
+          </div>
+          <Atom.Button
+            variant="secondary"
+            icon={<LogOut size={16} />}
+            onClick={onLogout}
+            className="mt-auto self-start"
+          >
+            Log out
+          </Atom.Button>
+        </Card>
       </div>
     </div>
   );

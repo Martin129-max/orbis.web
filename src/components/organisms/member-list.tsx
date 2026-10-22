@@ -1,13 +1,16 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import { getMembers, type Member } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
 
-function FriendAction({ userId, self }: { userId: number; self: boolean }) {
+export function FriendAction({ userId, self }: { userId: number; self: boolean }) {
   const status = useFriendsStore((state) =>
     self
       ? "self"
@@ -71,31 +74,52 @@ function MemberGroup({
           return (
             <li
               key={member.userId}
-              className="flex items-center gap-3 rounded-lg border border-transparent bg-background p-3 transition-colors hover:border-divider"
+              className="flex flex-col overflow-hidden rounded-lg border border-transparent bg-background transition-colors hover:border-divider"
             >
-              <Atom.Avatar
-                label={label}
-                src={member.avatarUrl}
-                seed={member.userId}
-              />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <span className="flex min-w-0 items-center gap-1.5">
-                  <span className="truncate text-[13px] font-semibold">
-                    {label}
-                  </span>
-                  {(member.isOwner || member.isAdmin) && (
-                    <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-px text-[10px] font-semibold text-accent">
-                      {member.isOwner ? "Owner" : "Admin"}
-                    </span>
-                  )}
-                </span>
-                <span className="truncate text-xs text-muted">
-                  @{member.username}
-                </span>
+              <div className="relative h-14 bg-gradient-to-br from-accent-soft to-rail-item">
+                {member.coverUrl && (
+                  <Image
+                    src={member.coverUrl}
+                    alt=""
+                    fill
+                    unoptimized
+                    className="object-cover"
+                  />
+                )}
               </div>
-              {myId !== undefined && (
-                <FriendAction userId={member.userId} self={member.userId === myId} />
-              )}
+              <div className="flex items-end gap-3 px-3 pb-3">
+                <Link
+                  href={`/users/${member.username}`}
+                  className="focus-ring -mt-5 shrink-0 rounded-full border-[3px] border-background bg-background"
+                >
+                  <Atom.Avatar
+                    label={label}
+                    src={member.avatarUrl}
+                    seed={member.userId}
+                  />
+                </Link>
+                <div className="flex min-w-0 flex-1 flex-col pt-2">
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <Molecule.UserLink
+                      username={member.username}
+                      className="truncate text-[13px] font-semibold"
+                    >
+                      {label}
+                    </Molecule.UserLink>
+                    {(member.isOwner || member.isAdmin) && (
+                      <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-px text-[10px] font-semibold text-accent">
+                        {member.isOwner ? "Owner" : "Admin"}
+                      </span>
+                    )}
+                  </span>
+                  <span className="truncate text-xs text-muted">
+                    @{member.username}
+                  </span>
+                </div>
+                {myId !== undefined && (
+                  <FriendAction userId={member.userId} self={member.userId === myId} />
+                )}
+              </div>
             </li>
           );
         })}

@@ -31,7 +31,7 @@ export function AvatarPicker({ profile }: { profile: Profile }) {
             src={profile.avatarUrl}
             seed={profile.userId}
           />
-          <Atom.EditOverlay busy={busy} />
+          <Atom.EditOverlay busy={busy} badge={false} />
         </button>
       )}
     </Molecule.ImageMenu>

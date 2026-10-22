@@ -13,6 +13,7 @@ export type Profile = {
   email: string;
   username: string;
   avatarUrl: string | null;
+  coverUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
   isAdmin: boolean;
@@ -160,6 +161,7 @@ export type Member = {
   username: string;
   name: string | null;
   avatarUrl: string | null;
+  coverUrl: string | null;
   online: boolean;
   nickname: string | null;
   joinedAt: string;
@@ -783,5 +785,65 @@ export async function updateOnboarding(
   });
 
   if (!res.ok) throw new Error("Could not save your checklist.");
+  return res.json();
+}
+
+export type PublicProfile = {
+  userId: number;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  isAdmin: boolean;
+  createdAt: string;
+  online: boolean;
+  friendCount: number;
+  postCount: number;
+  communityCount: number;
+  communities: {
+    id: number;
+    name: string;
+    iconUrl: string | null;
+    isOwner: boolean;
+  }[];
+};
+
+export async function getPublicProfile(
+  token: string,
+  username: string,
+): Promise<PublicProfile | null> {
+  const res = await api(`/users/${encodeURIComponent(username)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Could not load this profile.");
+  return res.json();
+}
+
+export async function uploadUserCover(token: string, file: File): Promise<Profile> {
+  const body = new FormData();
+  body.append("file", file);
+
+  const res = await api("/users/me/cover", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  });
+
+  if (res.status === 413) throw new Error("Covers must be 10 MB or smaller.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not upload your cover."));
+  }
+  return res.json();
+}
+
+export async function removeUserCover(token: string): Promise<Profile> {
+  const res = await api("/users/me/cover", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not remove your cover.");
   return res.json();
 }

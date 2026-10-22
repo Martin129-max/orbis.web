@@ -66,7 +66,9 @@ function CommentItem({
             src={node.author.avatarUrl}
             seed={node.author.id}
           />
-          <span className="text-foreground">{author}</span>
+          <Molecule.UserLink username={node.author.username} className="text-foreground">
+            {author}
+          </Molecule.UserLink>
           <time
             dateTime={node.createdAt}
             title={new Date(node.createdAt).toLocaleString()}

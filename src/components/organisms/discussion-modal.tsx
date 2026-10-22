@@ -37,7 +37,10 @@ function ThreadDetail({
             src={thread.author.avatarUrl}
             seed={thread.author.id}
           />
-          {displayName(thread.author)} · {timeAgo(thread.createdAt)}
+          <Molecule.UserLink username={thread.author.username}>
+            {displayName(thread.author)}
+          </Molecule.UserLink>
+          · {timeAgo(thread.createdAt)}
         </p>
         <h3 className="font-display text-3xl leading-[1.04] font-bold sm:text-4xl">
           {thread.title}

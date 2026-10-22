@@ -36,7 +36,10 @@ export function ThreadMeta({
         </Link>
       )}
       <p className="text-xs text-muted">
-        {displayName(thread.author)} ·{" "}
+        <Molecule.UserLink username={thread.author.username}>
+          {displayName(thread.author)}
+        </Molecule.UserLink>{" "}
+        ·{" "}
         <time
           dateTime={thread.createdAt}
           title={new Date(thread.createdAt).toLocaleString()}

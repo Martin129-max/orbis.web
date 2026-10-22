@@ -21,7 +21,7 @@ export const tourStops: TourStop[] = [
     placement: "right",
     title: "Your home feed",
     description:
-      "Posts and threads from every community you’re in, newest first. Come back here any time.",
+      "Posts and threads from every community you’re in, newest first. Click anyone’s name or picture to see their profile.",
   },
   {
     target: "communities",

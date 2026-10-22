@@ -24,6 +24,8 @@ export * from "./post-card";
 export * from "./post-composer";
 export * from "./post-list";
 export * from "./profile-card";
+export * from "./profile-hero";
+export * from "./public-profile";
 export * from "./my-reports";
 export * from "./report-board";
 export * from "./reports-view";

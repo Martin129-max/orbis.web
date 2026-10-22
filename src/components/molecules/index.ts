@@ -1,5 +1,6 @@
 export * from "./author-avatar";
 export * from "./comments-button";
+export * from "./community-tile";
 export * from "./connection-error";
 export * from "./feed-end";
 export * from "./feed-skeleton";
@@ -9,4 +10,5 @@ export * from "./image-menu";
 export * from "./load-more";
 export * from "./modal-header";
 export * from "./page-intro";
+export * from "./user-link";
 export * from "./vote-control";

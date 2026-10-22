@@ -15,11 +15,18 @@ export function AuthorAvatar({
 }) {
   return (
     <div className="relative h-fit shrink-0">
-      <Atom.Avatar
-        label={displayName(author)}
-        src={author.avatarUrl}
-        seed={author.id}
-      />
+      <Link
+        href={`/users/${author.username}`}
+        onClick={(event) => event.stopPropagation()}
+        aria-label={`${displayName(author)}’s profile`}
+        className="focus-ring block rounded-full"
+      >
+        <Atom.Avatar
+          label={displayName(author)}
+          src={author.avatarUrl}
+          seed={author.id}
+        />
+      </Link>
       {community && (
         <Tooltip title={community.name}>
           <Link

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import { getMembers, type Member } from "@/lib/api";
@@ -31,10 +32,11 @@ function PresenceGroup({
           {members.map((member) => {
             const label = member.nickname ?? displayName(member);
             return (
-              <li
-                key={member.userId}
-                className={`flex items-center gap-3 py-2 ${online ? "" : "opacity-60"}`}
-              >
+              <li key={member.userId}>
+                <Link
+                  href={`/users/${member.username}`}
+                  className={`focus-ring -mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-rail-item ${online ? "" : "opacity-60"}`}
+                >
                 <Atom.Avatar
                   size="sm"
                   label={label}
@@ -52,6 +54,7 @@ function PresenceGroup({
                     @{member.username}
                   </span>
                 </div>
+                </Link>
               </li>
             );
           })}

@@ -22,7 +22,9 @@ export function PostCard({
           community={showCommunity ? post.community : undefined}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm">{displayName(post.author)}</span>
+          <Molecule.UserLink username={post.author.username} className="w-fit max-w-full truncate text-sm">
+            {displayName(post.author)}
+          </Molecule.UserLink>
           <span className="truncate text-xs text-muted">
             {showCommunity && `${post.community.name} · `}
             <time
