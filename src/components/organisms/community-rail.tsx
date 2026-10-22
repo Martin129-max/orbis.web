@@ -372,7 +372,9 @@ export function CommunityRail() {
   const [creating, setCreating] = useState(false);
   const [openFolders, setOpenFolders] = useState(readOpenFolders);
   const [closingFolders, setClosingFolders] = useState<Set<number>>(new Set());
+  const [openingFolders, setOpeningFolders] = useState<Set<number>>(new Set());
   const closeTimers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
+  const openTimers = useRef(new Map<number, ReturnType<typeof setTimeout>>());
   const [dragging, setDragging] = useState<string | null>(null);
   const [drop, setDrop] = useState<{ overKey: string; drop: RailDrop } | null>(null);
   const [editing, setEditing] = useState<RailFolder | null>(null);
@@ -422,8 +424,12 @@ export function CommunityRail() {
   const activeId = Number(communityId);
 
   useEffect(() => {
-    const timers = closeTimers.current;
-    return () => timers.forEach(clearTimeout);
+    const closing = closeTimers.current;
+    const opening = openTimers.current;
+    return () => {
+      closing.forEach(clearTimeout);
+      opening.forEach(clearTimeout);
+    };
   }, []);
 
   function setFolderOpen(folderId: number, open: boolean) {
@@ -456,7 +462,20 @@ export function CommunityRail() {
       return;
     }
     if (!openFolders.has(folderId)) {
+      setOpeningFolders((current) => new Set(current).add(folderId));
       setFolderOpen(folderId, true);
+      clearTimeout(openTimers.current.get(folderId));
+      openTimers.current.set(
+        folderId,
+        setTimeout(() => {
+          openTimers.current.delete(folderId);
+          setOpeningFolders((current) => {
+            const next = new Set(current);
+            next.delete(folderId);
+            return next;
+          });
+        }, 250),
+      );
       return;
     }
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -637,6 +656,7 @@ export function CommunityRail() {
               const members = item.communityIds.flatMap((id) => byId.get(id) ?? []);
               const open = isOpen(item);
               const closing = closingFolders.has(item.id);
+              const opening = openingFolders.has(item.id);
               const folder = (
                 <SortableFolder
                   key={folderKey(item.id)}
@@ -659,13 +679,17 @@ export function CommunityRail() {
                 >
                   <ul
                     style={closing ? undefined : tint(item.color, "26")}
-                    className={`flex flex-col items-center rounded-[22px] py-1 transition-colors duration-200 starting:bg-transparent sm:rounded-[30px] sm:py-1.5 motion-reduce:transition-none ${
+                    className={`flex flex-col items-center rounded-[22px] py-1 transition-colors duration-200 sm:rounded-[30px] sm:py-1.5 motion-reduce:transition-none ${
+                      opening ? "starting:bg-transparent" : ""
+                    } ${
                       closing ? "bg-transparent" : item.color ? "" : "bg-rail-item/60"
                     }`}
                   >
                     {folder}
                     <li
-                      className={`grid w-full transition-[grid-template-rows,opacity] duration-200 ease-out starting:grid-rows-[0fr] starting:opacity-0 motion-reduce:transition-none ${
+                      className={`grid w-full transition-[grid-template-rows,opacity] duration-200 ease-out motion-reduce:transition-none ${
+                        opening ? "starting:grid-rows-[0fr] starting:opacity-0" : ""
+                      } ${
                         closing ? "grid-rows-[0fr] opacity-0" : "grid-rows-[1fr] opacity-100"
                       }`}
                     >

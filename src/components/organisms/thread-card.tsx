@@ -101,6 +101,15 @@ export function ThreadCard({
         <div onClick={(event) => event.stopPropagation()}>
           <Molecule.CommentsButton count={thread.commentCount} onClick={onOpen} />
         </div>
+        {thread.previewComments && (
+          <div onClick={(event) => event.stopPropagation()} className="cursor-auto">
+            <Molecule.CommentPreview
+              comments={thread.previewComments}
+              total={thread.commentCount}
+              onViewAll={onOpen}
+            />
+          </div>
+        )}
       </div>
     </article>
   );

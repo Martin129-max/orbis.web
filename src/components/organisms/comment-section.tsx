@@ -139,10 +139,10 @@ function CommentItem({
 
 export function CommentSection({
   target,
-  onCountChange,
+  onCommentsChange,
 }: {
   target: Commentable;
-  onCountChange: (count: number) => void;
+  onCommentsChange: (comments: Comment[]) => void;
 }) {
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [failed, setFailed] = useState(false);
@@ -168,7 +168,7 @@ export function CommentSection({
     const comment = await createComment(token, { type, id }, content, parentId);
     const next = [...(comments ?? []), comment];
     setComments(next);
-    onCountChange(next.length);
+    onCommentsChange(next);
   }
 
   function handleChange(comment: Comment) {
@@ -190,7 +190,7 @@ export function CommentSection({
         <span className="text-xs text-muted">Oldest first</span>
       </div>
       <div className="flex flex-col gap-2">
-        <p className="text-[13px] font-semibold">Join the discussion</p>
+        <p className="text-[13px] font-semibold">Add a comment</p>
         <PostComposer
           placeholder="Write a comment…"
           submitLabel="Comment"

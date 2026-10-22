@@ -9,6 +9,7 @@ import type { Activity, MediaType } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { activityText, mediaPath, progressText } from "@/lib/library";
 import { timeAgo } from "@/lib/time";
+import { toggleLike } from "@/lib/votes";
 
 export const mediaTypes: Record<MediaType, { label: string; icon: ReactNode }> = {
   anime: { label: "Anime", icon: <Tv size={12} /> },
@@ -16,7 +17,17 @@ export const mediaTypes: Record<MediaType, { label: string; icon: ReactNode }> =
   game: { label: "Game", icon: <Gamepad2 size={12} /> },
 };
 
-export function ActivityCard({ activity }: { activity: Activity }) {
+export function ActivityCard({
+  activity,
+  onOpenComments,
+  onChange,
+  preview = true,
+}: {
+  activity: Activity;
+  onOpenComments?: () => void;
+  onChange?: (activity: Activity) => void;
+  preview?: boolean;
+}) {
   const { author, media } = activity;
   const kind = mediaTypes[media.type];
   const [verb, suffix] = activity.progress
@@ -25,7 +36,8 @@ export function ActivityCard({ activity }: { activity: Activity }) {
   const href = mediaPath(media.type, media.sourceId);
 
   return (
-    <article className="flex items-center gap-4 rounded-lg border border-divider bg-surface p-4">
+    <article className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-4">
+      <div className="flex items-center gap-4">
       <Molecule.AuthorAvatar author={author} />
       <div className="flex min-w-0 flex-1 flex-col gap-1">
         <p className="text-sm">
@@ -65,6 +77,28 @@ export function ActivityCard({ activity }: { activity: Activity }) {
           <Image src={media.coverImage} alt="" fill unoptimized className="object-cover" />
         )}
       </Link>
+      </div>
+      <div className="flex items-center gap-4 pl-[52px]">
+        <Molecule.LikeButton
+          liked={activity.liked}
+          count={activity.likeCount}
+          onToggle={() =>
+            toggleLike({ type: "activity", id: activity.id }, activity, (result) =>
+              onChange?.({ ...activity, ...result }),
+            )
+          }
+        />
+        {onOpenComments && (
+          <Molecule.CommentsButton count={activity.commentCount} onClick={onOpenComments} />
+        )}
+      </div>
+      {preview && onOpenComments && (
+        <Molecule.CommentPreview
+          comments={activity.previewComments}
+          total={activity.commentCount}
+          onViewAll={onOpenComments}
+        />
+      )}
     </article>
   );
 }

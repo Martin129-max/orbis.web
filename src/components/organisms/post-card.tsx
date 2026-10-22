@@ -1,6 +1,7 @@
 import { ChevronRight } from "lucide-react";
 import * as Molecule from "@molecule";
 import type { Post } from "@/lib/api";
+import { toggleLike } from "@/lib/votes";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 
@@ -8,12 +9,16 @@ type PostCardProps = {
   post: Post;
   showCommunity?: boolean;
   onOpenComments?: () => void;
+  onChange?: (post: Post) => void;
+  preview?: boolean;
 };
 
 export function PostCard({
   post,
   showCommunity = false,
   onOpenComments,
+  onChange,
+  preview = true,
 }: PostCardProps) {
   const wallUser =
     post.wallUser && post.wallUser.id !== post.author.id ? post.wallUser : null;
@@ -24,6 +29,7 @@ export function PostCard({
         <Molecule.AuthorAvatar
           author={post.author}
           community={(showCommunity && post.community) || undefined}
+          wallUser={wallUser ?? undefined}
         />
         <div className="flex min-w-0 flex-1 flex-col">
           <span className="flex min-w-0 items-center gap-1 text-sm">
@@ -54,11 +60,25 @@ export function PostCard({
         className="rich-text"
         dangerouslySetInnerHTML={{ __html: post.content }}
       />
-      {onOpenComments && (
-        <Molecule.CommentsButton
-          invite
-          count={post.commentCount}
-          onClick={onOpenComments}
+      <div className="flex items-center gap-4">
+        <Molecule.LikeButton
+          liked={post.liked}
+          count={post.likeCount}
+          onToggle={() =>
+            toggleLike({ type: "post", id: post.id }, post, (result) =>
+              onChange?.({ ...post, ...result }),
+            )
+          }
+        />
+        {onOpenComments && (
+          <Molecule.CommentsButton count={post.commentCount} onClick={onOpenComments} />
+        )}
+      </div>
+      {preview && onOpenComments && (
+        <Molecule.CommentPreview
+          comments={post.previewComments}
+          total={post.commentCount}
+          onViewAll={onOpenComments}
         />
       )}
     </article>

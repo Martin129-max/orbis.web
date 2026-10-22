@@ -4,7 +4,7 @@ import { CloudOff, NotebookPen } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import type { FeedEntry, FeedItem } from "@/lib/api";
+import type { FeedEntry } from "@/lib/api";
 import { itemKey, type Paged } from "@/lib/use-paged";
 import { ActivityCard } from "./activity-card";
 import { DiscussionModal } from "./discussion-modal";
@@ -27,12 +27,8 @@ export function PostList<T extends FeedEntry>({
   const { items, failed, retry, hasMore, loadingMore, moreFailed, loadMore } =
     feed;
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const open =
-    items?.find(
-      (item): item is T & FeedItem =>
-        item.type !== "activity" && itemKey(item) === openKey,
-    ) ?? null;
-  const update = (item: FeedItem) => feed.update(item as T);
+  const open = items?.find((item) => itemKey(item) === openKey) ?? null;
+  const update = (item: FeedEntry) => feed.update(item as T);
 
   if (failed && !items) {
     return (
@@ -67,7 +63,12 @@ export function PostList<T extends FeedEntry>({
     <div className="flex flex-col gap-3">
       {items.map((item) =>
         item.type === "activity" ? (
-          <ActivityCard key={itemKey(item)} activity={item} />
+          <ActivityCard
+            key={itemKey(item)}
+            activity={item}
+            onOpenComments={() => setOpenKey(itemKey(item))}
+            onChange={update}
+          />
         ) : item.type === "thread" ? (
           <ThreadCard
             key={itemKey(item)}
@@ -82,6 +83,7 @@ export function PostList<T extends FeedEntry>({
             post={item}
             showCommunity={showCommunity}
             onOpenComments={() => setOpenKey(itemKey(item))}
+            onChange={update}
           />
         ),
       )}

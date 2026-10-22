@@ -3,10 +3,11 @@
 import { Modal } from "antd";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import type { FeedItem, Thread } from "@/lib/api";
+import type { FeedEntry, Thread } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
+import { ActivityCard } from "./activity-card";
 import { CommentSection } from "./comment-section";
 import { PostCard } from "./post-card";
 
@@ -61,9 +62,9 @@ export function DiscussionModal({
   onClose,
   onChange,
 }: {
-  item: FeedItem | null;
+  item: FeedEntry | null;
   onClose: () => void;
-  onChange: (item: FeedItem) => void;
+  onChange: (item: FeedEntry) => void;
 }) {
   return (
     <Modal
@@ -79,21 +80,33 @@ export function DiscussionModal({
         <div className="flex flex-col gap-6">
           <Molecule.ModalHeader
             eyebrow={
-              item.community
-                ? `${item.community.name} / ${item.type === "thread" ? "Forum" : "Feed"}`
-                : `${item.type === "post" && item.wallUser ? displayName(item.wallUser) : "Profile"} / Wall`
+              item.type === "activity"
+                ? `${displayName(item.author)} / Library`
+                : item.community
+                  ? `${item.community.name} / ${item.type === "thread" ? "Forum" : "Feed"}`
+                  : `${item.type === "post" && item.wallUser ? displayName(item.wallUser) : "Profile"} / Wall`
             }
             title="The discussion"
           />
           {item.type === "thread" ? (
             <ThreadDetail thread={item} onChange={onChange} />
+          ) : item.type === "activity" ? (
+            <ActivityCard activity={item} onChange={onChange} preview={false} />
           ) : (
-            <PostCard post={item} showCommunity />
+            <PostCard post={item} showCommunity onChange={onChange} preview={false} />
           )}
           <CommentSection
             key={`${item.type}-${item.id}`}
             target={{ type: item.type, id: item.id }}
-            onCountChange={(commentCount) => onChange({ ...item, commentCount })}
+            onCommentsChange={(comments) =>
+              onChange({
+                ...item,
+                commentCount: comments.length,
+                previewComments: comments
+                  .filter((comment) => comment.parentId === null)
+                  .slice(-3),
+              })
+            }
           />
         </div>
       )}

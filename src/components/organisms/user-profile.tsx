@@ -144,7 +144,7 @@ function ProfileHeader({
         >
           <ProfileAvatar profile={profile} name={name} editor={images?.avatar} />
           <span
-            className={`pointer-events-none absolute right-0 bottom-0 rounded-full border-2 border-white ${
+            className={`pointer-events-none absolute right-[14.6%] bottom-[14.6%] translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white ${
               online ? "bg-online" : "bg-offline"
             } ${collapsed ? "h-2.5 w-2.5" : "h-4 w-4"}`}
           />

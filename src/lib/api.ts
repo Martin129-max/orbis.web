@@ -110,12 +110,22 @@ export type Author = {
 
 export type CommunitySummary = Pick<Community, "id" | "name" | "iconUrl">;
 
+export type PreviewComment = {
+  id: number;
+  content: string;
+  createdAt: string;
+  author: Author;
+};
+
 export type Post = {
   type: "post";
   id: number;
   communityId: number | null;
   content: string;
   commentCount: number;
+  likeCount: number;
+  liked: boolean;
+  previewComments: PreviewComment[];
   createdAt: string;
   author: Author;
   community: CommunitySummary | null;
@@ -131,6 +141,7 @@ export type Thread = {
   score: number;
   commentCount: number;
   myVote: number;
+  previewComments?: PreviewComment[];
   createdAt: string;
   author: Author;
   community: CommunitySummary;
@@ -150,6 +161,10 @@ export type LibraryStatus =
 export type Activity = {
   type: "activity";
   id: number;
+  commentCount: number;
+  likeCount: number;
+  liked: boolean;
+  previewComments: PreviewComment[];
   createdAt: string;
   author: Author;
   status: LibraryStatus;
@@ -179,7 +194,11 @@ export type Comment = {
   author: Author;
 };
 
-export type Commentable = { type: FeedItem["type"]; id: number };
+export type Commentable = { type: FeedEntry["type"]; id: number };
+
+export type Likeable = { type: "post" | "activity"; id: number };
+
+export type LikeResult = { likeCount: number; liked: boolean };
 
 export type Votable = { type: "thread" | "comment"; id: number };
 
@@ -668,6 +687,24 @@ export async function createComment(
 
   if (res.status === 400) throw new Error("Write something before commenting.");
   if (!res.ok) throw new Error("Could not post the comment. Please try again.");
+  return res.json();
+}
+
+export async function setLike(
+  token: string,
+  { type, id }: Likeable,
+  liked: boolean,
+): Promise<LikeResult> {
+  const res = await api("/likes", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ type, id, liked }),
+  });
+
+  if (!res.ok) throw new Error("Could not save your like.");
   return res.json();
 }
 

@@ -1,4 +1,5 @@
 export * from "./author-avatar";
+export * from "./comment-preview";
 export * from "./comments-button";
 export * from "./community-card";
 export * from "./community-tile";
@@ -9,6 +10,7 @@ export * from "./feed-skeleton";
 export * from "./feed-state";
 export * from "./form-field";
 export * from "./image-menu";
+export * from "./like-button";
 export * from "./load-more";
 export * from "./modal-header";
 export * from "./page-intro";

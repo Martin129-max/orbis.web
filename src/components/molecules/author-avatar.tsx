@@ -1,6 +1,7 @@
 "use client";
 
 import { Tooltip } from "antd";
+import Image from "next/image";
 import Link from "next/link";
 import * as Atom from "@atom";
 import type { Author, CommunitySummary } from "@/lib/api";
@@ -9,9 +10,11 @@ import { displayName } from "@/lib/display-name";
 export function AuthorAvatar({
   author,
   community,
+  wallUser,
 }: {
   author: Author;
   community?: CommunitySummary;
+  wallUser?: Author;
 }) {
   return (
     <div className="relative h-fit shrink-0">
@@ -36,6 +39,22 @@ export function AuthorAvatar({
             className="focus-ring absolute -right-[5px] -bottom-[5px] flex h-4 w-4 items-center justify-center rounded-full border-2 border-surface bg-accent text-[8px] leading-none font-bold text-accent-foreground"
           >
             <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
+          </Link>
+        </Tooltip>
+      )}
+      {wallUser && (
+        <Tooltip title={`${displayName(wallUser)}’s wall`}>
+          <Link
+            href={`/users/${wallUser.username}`}
+            aria-label={`Posted on ${displayName(wallUser)}’s wall`}
+            onClick={(event) => event.stopPropagation()}
+            className="focus-ring absolute -right-[6px] -bottom-[6px] flex h-5 w-5 items-center justify-center overflow-hidden rounded-full border-2 border-surface bg-rail-item text-[8px] leading-none font-bold text-foreground"
+          >
+            {wallUser.avatarUrl ? (
+              <Image src={wallUser.avatarUrl} alt="" fill unoptimized className="object-cover" />
+            ) : (
+              Array.from(displayName(wallUser))[0]?.toUpperCase()
+            )}
           </Link>
         </Tooltip>
       )}
