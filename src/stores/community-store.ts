@@ -1,10 +1,11 @@
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import type { Community, CommunityImage } from "@/lib/api";
+import type { Community, CommunityImage, RailItem } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
 
 type CommunityState = {
   communities: Community[];
+  layout: RailItem[];
   fetchCommunities: () => Promise<void>;
   createCommunity: (name: string, isPublic: boolean) => Promise<Community>;
   joinCommunity: (communityId: number) => Promise<Community>;
@@ -18,27 +19,35 @@ type CommunityState = {
     file: File | null,
   ) => Promise<Community>;
   deleteCommunity: (communityId: number) => Promise<void>;
-  reorderCommunities: (communityIds: number[]) => Promise<void>;
+  updateLayout: (layout: RailItem[]) => Promise<void>;
 };
 
 export const useCommunityStore = create<CommunityState>()((set, get) => ({
   communities: [],
+  layout: [],
   fetchCommunities: async () => {
     const { token } = useAuthStore.getState();
     if (!token) {
-      set({ communities: [] });
+      set({ communities: [], layout: [] });
       return;
     }
 
-    const communities = await api.getCommunities(token).catch(() => null);
+    const [communities, layout] = await Promise.all([
+      api.getCommunities(token).catch(() => null),
+      api.getRailLayout(token).catch(() => null),
+    ]);
     if (communities) set({ communities });
+    if (layout) set({ layout });
   },
   createCommunity: async (name, isPublic) => {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
 
     const community = await api.createCommunity(token, name, isPublic);
-    set((state) => ({ communities: [...state.communities, community] }));
+    set((state) => ({
+      communities: [...state.communities, community],
+      layout: [...state.layout, { type: "community", communityId: community.id }],
+    }));
     return community;
   },
   joinCommunity: async (communityId) => {
@@ -46,11 +55,14 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     if (!token) throw new Error("Please log in again.");
 
     const community = await api.joinCommunity(token, communityId);
-    set((state) => ({
-      communities: state.communities.some(({ id }) => id === community.id)
-        ? state.communities
-        : [...state.communities, community],
-    }));
+    set((state) =>
+      state.communities.some(({ id }) => id === community.id)
+        ? state
+        : {
+            communities: [...state.communities, community],
+            layout: [...state.layout, { type: "community", communityId: community.id }],
+          },
+    );
     return community;
   },
   updateCommunity: async (communityId, changes) => {
@@ -95,17 +107,23 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     await api.deleteCommunity(token, communityId);
     set((state) => ({
       communities: state.communities.filter(({ id }) => id !== communityId),
+      layout: state.layout.flatMap((item): RailItem[] =>
+        item.type === "community"
+          ? item.communityId === communityId
+            ? []
+            : [item]
+          : [{ ...item, communityIds: item.communityIds.filter((id) => id !== communityId) }],
+      ),
     }));
   },
-  reorderCommunities: async (communityIds) => {
+  updateLayout: async (layout) => {
     const { token } = useAuthStore.getState();
     if (!token) return;
 
-    const byId = new Map(get().communities.map((community) => [community.id, community]));
-    set({ communities: communityIds.flatMap((id) => byId.get(id) ?? []) });
-
+    set({ layout });
     try {
-      await api.reorderCommunities(token, communityIds);
+      const saved = await api.updateRailLayout(token, layout);
+      if (get().layout === layout) set({ layout: saved });
     } catch {
       await get().fetchCommunities();
     }

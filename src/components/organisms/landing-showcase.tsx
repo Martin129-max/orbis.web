@@ -4,6 +4,7 @@ import {
   Bell,
   CircleCheck,
   Compass,
+  FolderOpen,
   Moon,
   Reply,
   ShieldCheck,
@@ -53,6 +54,7 @@ const library = [
 
 const extras: { icon: ReactNode; label: string }[] = [
   { icon: <Compass size={18} />, label: "Explore public communities" },
+  { icon: <FolderOpen size={18} />, label: "Folders for your communities" },
   { icon: <Moon size={18} />, label: "Light and dark themes" },
   { icon: <WifiOff size={18} />, label: "Appear offline anytime" },
   { icon: <Ticket size={18} />, label: "Feedback with ticket numbers" },

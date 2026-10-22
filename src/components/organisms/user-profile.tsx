@@ -37,6 +37,7 @@ import { FriendAction } from "./member-list";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { ProfileLibrary } from "./profile-library";
+import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
 
 const tabs = [
   { value: "posts", label: "Posts", icon: <Newspaper size={16} /> },
@@ -409,6 +410,87 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
   );
 }
 
+const PANEL_LABEL = "Friends & communities";
+
+function SeeAll({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} className="focus-ring w-fit rounded-sm text-xs font-semibold text-accent hover:underline">
+      {children}
+    </Link>
+  );
+}
+
+function ProfileSidePanel({ profile }: { profile: Profile }) {
+  const livePresence = useFriendsStore((state) => state.presence);
+  const friends = profile.friends
+    .map((friend) => ({ ...friend, online: livePresence[friend.userId] ?? friend.online }))
+    .sort((a, b) => Number(b.online) - Number(a.online));
+  const base = `/users/${profile.username}`;
+
+  return (
+    <>
+      <PanelHeading title={`Friends / ${profile.friendCount}`} label={PANEL_LABEL} />
+      {friends.length === 0 ? (
+        <p className="-mt-3 text-xs text-muted">No friends yet.</p>
+      ) : (
+        <div className="-mt-3 flex flex-col gap-2">
+          <ul className="flex flex-col">
+            {friends.slice(0, 8).map((friend) => (
+              <li key={friend.userId}>
+                <Link
+                  href={`/users/${friend.username}`}
+                  className={`focus-ring -mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-rail-item ${friend.online ? "" : "opacity-60"}`}
+                >
+                  <Atom.Avatar
+                    size="sm"
+                    label={displayName(friend)}
+                    src={friend.avatarUrl}
+                    seed={friend.userId}
+                    presence={friend.online ? "online" : "offline"}
+                  />
+                  <span className="flex min-w-0 flex-1 flex-col">
+                    <span className="truncate text-[13px] font-semibold">{displayName(friend)}</span>
+                    <span className="truncate text-xs text-muted">@{friend.username}</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+          {friends.length > 8 && <SeeAll href={`${base}?tab=friends`}>See all friends</SeeAll>}
+        </div>
+      )}
+      <div className="flex flex-col gap-3 border-t border-divider pt-6">
+        <h2 className="font-display text-2xl font-bold">Communities / {profile.communityCount}</h2>
+        {profile.communities.length === 0 ? (
+          <p className="text-xs text-muted">
+            {profile.communityCount > 0
+              ? "Only in private communities you’re not part of."
+              : "Hasn’t joined any communities yet."}
+          </p>
+        ) : (
+          <>
+            <ul className="flex flex-col gap-2">
+              {profile.communities.slice(0, 5).map((community) => (
+                <li key={community.id}>
+                  <Molecule.CommunityTile
+                    id={community.id}
+                    name={community.name}
+                    iconUrl={community.iconUrl}
+                    role={community.isOwner ? "Owner" : "Member"}
+                  />
+                </li>
+              ))}
+            </ul>
+            {profile.communities.length > 5 && (
+              <SeeAll href={`${base}?tab=communities`}>See all communities</SeeAll>
+            )}
+          </>
+        )}
+      </div>
+    </>
+  );
+}
+
 export function UserProfile({ username }: { username: string }) {
   const me = useAuthStore((state) => state.profile);
   const livePresence = useFriendsStore((state) => state.presence);
@@ -513,6 +595,7 @@ export function UserProfile({ username }: { username: string }) {
             ) : (
               me && <FriendAction userId={profile.userId} self={false} />
             )}
+            <SidePanelToggle label={PANEL_LABEL} />
           </>
         }
       />
@@ -551,6 +634,9 @@ export function UserProfile({ username }: { username: string }) {
             />
           )}
         </Template.PageColumn>
+        <SidePanel label={PANEL_LABEL}>
+          <ProfileSidePanel profile={profile} />
+        </SidePanel>
       </div>
     </main>
   );

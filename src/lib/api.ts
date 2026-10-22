@@ -268,20 +268,52 @@ export async function getCommunity(
   return res.ok ? res.json() : null;
 }
 
-export async function reorderCommunities(
+export type RailFolder = {
+  type: "folder";
+  id: number;
+  name: string | null;
+  color: string | null;
+  communityIds: number[];
+};
+
+export type RailItem = { type: "community"; communityId: number } | RailFolder;
+
+export async function getRailLayout(token: string): Promise<RailItem[]> {
+  const res = await api("/communities/layout", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your communities.");
+  return res.json();
+}
+
+export async function updateRailLayout(
   token: string,
-  communityIds: number[],
-): Promise<void> {
-  const res = await api("/communities/order", {
+  layout: RailItem[],
+): Promise<RailItem[]> {
+  const items = layout.map((item) =>
+    item.type === "community"
+      ? { communityId: item.communityId }
+      : {
+          folder: {
+            ...(item.id > 0 && { id: item.id }),
+            name: item.name ?? undefined,
+            color: item.color ?? undefined,
+            communityIds: item.communityIds,
+          },
+        },
+  );
+  const res = await api("/communities/layout", {
     method: "PUT",
     headers: {
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ communityIds }),
+    body: JSON.stringify({ items }),
   });
 
-  if (!res.ok) throw new Error("Could not save the new order.");
+  if (!res.ok) throw new Error("Could not save your communities.");
+  return res.json();
 }
 
 export async function createCommunity(

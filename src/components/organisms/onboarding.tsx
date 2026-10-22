@@ -35,7 +35,7 @@ export const tourStops: TourStop[] = [
     placement: "right",
     title: "Your communities",
     description:
-      "Every community you’ve joined lives in this rail. Drag them to reorder, and click one to open its feed, forum, and members.",
+      "Every community you’ve joined lives in this rail. Drag them to reorder, drop one onto another to make a folder, and click one to open its feed, forum, and members.",
   },
   {
     target: "create",

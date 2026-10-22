@@ -26,14 +26,20 @@ export function SidePanel({
   }, []);
 
   if (isDesktop) {
-    return collapsed ? null : (
+    return (
       <aside
         data-tour="side-panel"
         id="side-panel"
         aria-label={label}
-        className="hidden w-72 shrink-0 flex-col gap-6 overflow-y-auto border-l border-divider bg-surface p-6 lg:flex"
+        aria-hidden={collapsed}
+        inert={collapsed}
+        className={`hidden shrink-0 overflow-hidden border-divider bg-surface transition-[width] duration-300 ease-out motion-reduce:transition-none lg:flex ${
+          collapsed ? "w-0" : "w-72 border-l"
+        }`}
       >
-        {children}
+        <div className="flex w-72 shrink-0 flex-col gap-6 overflow-y-auto p-6">
+          {children}
+        </div>
       </aside>
     );
   }
