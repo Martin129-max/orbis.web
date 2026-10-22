@@ -33,7 +33,7 @@ import { AddToLibraryButton, EntryMenu } from "./library-controls";
 
 type View = "cards" | "list";
 
-function ProgressControl({
+export function ProgressControl({
   entry,
   onChange,
 }: {
@@ -111,7 +111,7 @@ function ProgressControl({
   );
 }
 
-function StatusSelect({
+export function StatusSelect({
   entry,
   onChange,
 }: {
@@ -349,7 +349,7 @@ function LibraryShelf({
   onChange: (entry: LibraryEntry) => void;
   onRemove: (id: number) => void;
 }) {
-  const [status, setStatus] = useState<StatusFilter>("all");
+  const [status, setStatus] = useState<StatusFilter>("current");
   const [type, setType] = useState<TypeFilter>("all");
   const [view, setView] = useState<View>("list");
   const ofType = entries.filter((entry) => type === "all" || entry.mediaType === type);

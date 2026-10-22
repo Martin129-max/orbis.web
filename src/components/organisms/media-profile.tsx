@@ -1,17 +1,24 @@
 "use client";
 
-import { ChevronDown, ExternalLink, Globe, Lock, SearchX, Star, Users } from "lucide-react";
+import { ChevronDown, Globe, Lock, MoreHorizontal, SearchX, Star } from "lucide-react";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
+import * as Template from "@template";
 import { getMediaProfile, type LibraryEntry, type MediaProfile as Profile } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { statusLabel } from "@/lib/library";
 import { useAuthStore } from "@/stores/auth-store";
 import { mediaTypes } from "./activity-card";
 import { AddToLibraryButton, EntryMenu } from "./library-controls";
-import { MediaCover, StatusBadge } from "./library-view";
+import {
+  MediaCover,
+  ProgressControl,
+  StatusBadge,
+  StatusSelect,
+} from "./library-view";
+import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
 
 const detailLabels: Record<string, string> = {
   format: "Format",
@@ -52,13 +59,6 @@ function formatDetail(value: unknown): string | null {
 const titleCase = (value: string) =>
   value.charAt(0) + value.slice(1).toLowerCase().replaceAll("_", " ");
 
-const providers: Record<string, string> = {
-  anilist: "AniList",
-  igdb: "IGDB",
-  myanimelist: "MyAnimeList",
-  jikan: "MyAnimeList",
-};
-
 function Synopsis({ text }: { text: string }) {
   const [expanded, setExpanded] = useState(false);
   const long = text.length > 600;
@@ -88,9 +88,233 @@ function Synopsis({ text }: { text: string }) {
 
 type Loaded = { key: string; profile: Profile | null; error?: string };
 
+function LibraryAction({
+  profile,
+  onChange,
+}: {
+  profile: Profile;
+  onChange: (entry: LibraryEntry | null) => void;
+}) {
+  if (!profile.entry) {
+    return <AddToLibraryButton media={profile} onAdded={onChange} />;
+  }
+
+  return (
+    <EntryMenu
+      entry={profile.entry}
+      onChange={onChange}
+      onRemove={() => onChange(null)}
+      trigger={
+        <span>
+          <Atom.Button size="small" variant="secondary">
+            {profile.entry.isPublic ? <Globe size={13} /> : <Lock size={13} />}
+            {statusLabel(profile.entry.status, profile.type)}
+          </Atom.Button>
+        </span>
+      }
+    />
+  );
+}
+
+function MediaHeader({
+  profile,
+  collapsed,
+  onChange,
+}: {
+  profile: Profile;
+  collapsed: boolean;
+  onChange: (entry: LibraryEntry | null) => void;
+}) {
+  const kind = mediaTypes[profile.type];
+  const backdrop = profile.bannerImage ?? profile.coverImage;
+
+  return (
+    <header
+      className={`relative shrink-0 overflow-hidden border-b border-divider bg-rail-item transition-[height] duration-300 ease-out motion-reduce:transition-none ${
+        collapsed ? "h-14 sm:h-[72px]" : "h-56 sm:h-72"
+      }`}
+    >
+      {backdrop && (
+        <Image
+          src={backdrop}
+          alt=""
+          fill
+          unoptimized
+          priority
+          className={`object-cover ${profile.bannerImage ? "" : "scale-110 blur-2xl"}`}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/30 to-black/10" />
+      <div
+        className={`absolute inset-0 flex gap-4 px-4 pr-40 sm:gap-5 sm:px-8 sm:pr-56 ${
+          collapsed ? "items-center" : "items-end pb-5 sm:pb-6"
+        }`}
+      >
+        <MediaCover
+          src={profile.coverImage}
+          className={`border-2 border-white/80 shadow-lg transition-[width] duration-300 motion-reduce:transition-none ${
+            collapsed ? "w-7 sm:w-9" : "w-20 sm:w-28"
+          }`}
+        />
+        <div className="flex min-w-0 flex-col gap-1.5">
+          {!collapsed && (
+            <p className="flex flex-wrap items-center gap-2 text-xs font-semibold text-white/85">
+              <span className="flex items-center gap-1">
+                {kind.icon}
+                {kind.label}
+              </span>
+              {profile.year && <span>· {profile.year}</span>}
+            </p>
+          )}
+          <Atom.Heading
+            className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+              collapsed ? "" : "sm:text-4xl"
+            }`}
+          >
+            {profile.title}
+          </Atom.Heading>
+        </div>
+      </div>
+      <div className="absolute top-2.5 right-4 flex items-center gap-1.5 rounded-lg bg-surface/85 p-1 backdrop-blur sm:top-4 sm:right-8">
+        <LibraryAction profile={profile} onChange={onChange} />
+        <SidePanelToggle label="People" />
+      </div>
+    </header>
+  );
+}
+
+function MetaBar({ profile }: { profile: Profile }) {
+  const entry = profile.entry;
+  const unit = profile.type === "manga" ? "ch" : "ep";
+
+  return (
+    <div className="flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-b border-divider px-4 py-3 text-xs sm:px-8">
+      {profile.score !== null && (
+        <span className="flex items-center gap-1 font-semibold">
+          <Star size={13} className="fill-current text-accent" />
+          {profile.score.toFixed(1)}
+        </span>
+      )}
+      {profile.releaseStatus && (
+        <span className="text-muted">{titleCase(profile.releaseStatus)}</span>
+      )}
+      {profile.genres.length > 0 && (
+        <ul className="flex flex-wrap gap-1.5">
+          {profile.genres.map((genre) => (
+            <li key={genre} className="rounded-full bg-rail-item px-2 py-0.5 font-semibold">
+              {genre}
+            </li>
+          ))}
+        </ul>
+      )}
+      {entry && (
+        <span className="ml-auto flex items-center gap-2 text-muted">
+          <StatusBadge status={entry.status} type={profile.type} />
+          {profile.type !== "game" && (
+            <span>
+              {entry.progress} / {entry.total ?? "?"} {unit}
+            </span>
+          )}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function YourLibrary({
+  profile,
+  onChange,
+}: {
+  profile: Profile;
+  onChange: (entry: LibraryEntry | null) => void;
+}) {
+  const entry = profile.entry;
+
+  return (
+    <section className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border border-divider bg-surface p-5">
+      <div className="flex min-w-0 flex-1 basis-48 flex-col gap-0.5">
+        <h3 className="font-display text-xl font-bold">Your library</h3>
+        <p className="flex items-center gap-1.5 text-xs text-muted">
+          {!entry ? (
+            "Not in your library yet."
+          ) : entry.isPublic ? (
+            <>
+              <Globe size={12} />
+              Public. Your communities see your updates.
+            </>
+          ) : (
+            <>
+              <Lock size={12} />
+              Private. Only you can see it.
+            </>
+          )}
+        </p>
+      </div>
+      {entry ? (
+        <>
+          <StatusSelect entry={entry} onChange={onChange} />
+          <ProgressControl entry={entry} onChange={onChange} />
+          <EntryMenu
+            entry={entry}
+            onChange={onChange}
+            onRemove={() => onChange(null)}
+            trigger={
+              <button
+                type="button"
+                aria-label={`Options for ${entry.title}`}
+                className="icon-button cursor-pointer"
+              >
+                <MoreHorizontal size={16} />
+              </button>
+            }
+          />
+        </>
+      ) : (
+        <AddToLibraryButton media={profile} onAdded={onChange} size="middle" />
+      )}
+    </section>
+  );
+}
+
+function People({ profile }: { profile: Profile }) {
+  return (
+    <>
+      <PanelHeading
+        title={`In your communities / ${profile.members.length}`}
+        label="People"
+      />
+      {profile.members.length === 0 ? (
+        <p className="text-xs text-muted">
+          No one in your communities has added this publicly yet.
+        </p>
+      ) : (
+        <ul className="flex flex-col">
+          {profile.members.map(({ user, status }) => (
+            <li key={user.id} className="flex items-center gap-3 py-2">
+              <Molecule.AuthorAvatar author={user} />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <Molecule.UserLink
+                  username={user.username}
+                  className="w-fit truncate text-[13px] font-semibold"
+                >
+                  {displayName(user)}
+                </Molecule.UserLink>
+                <span className="text-xs text-muted">
+                  {statusLabel(status, profile.type)}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
+  );
+}
+
 export function MediaProfile({ type, sourceId }: { type: string; sourceId: string }) {
   const key = `${type}/${sourceId}`;
   const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
@@ -100,180 +324,82 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
       .catch((e: Error) => setLoaded({ key, profile: null, error: e.message }));
   }, [key, type, sourceId]);
 
-  const current = loaded?.key === key ? loaded : null;
-  if (!current) return <Atom.Loader />;
+  function handleScroll(event: UIEvent<HTMLDivElement>) {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const room = scrollHeight - clientHeight;
+    setCollapsed((current) =>
+      current ? scrollTop > 0 : scrollTop > 32 && room > 240,
+    );
+  }
 
-  if (!current.profile) {
+  const current = loaded?.key === key ? loaded : null;
+
+  if (!current || !current.profile) {
     return (
-      <Molecule.FeedState
-        role={current.error ? "alert" : undefined}
-        eyebrow={current.error ? "Connection error" : "Not found"}
-        icon={<SearchX size={24} strokeWidth={1.5} />}
-        title={current.error ? "This title couldn’t be loaded." : "We couldn’t find this title."}
-        description={current.error ?? "It may have been removed from the source."}
-      />
+      <Template.CenteredTemplate>
+        {!current ? (
+          <Atom.Loader />
+        ) : (
+          <Molecule.FeedState
+            role={current.error ? "alert" : undefined}
+            eyebrow={current.error ? "Connection error" : "Not found"}
+            icon={<SearchX size={24} strokeWidth={1.5} />}
+            title={current.error ? "This title couldn’t be loaded." : "We couldn’t find this title."}
+            description={current.error ?? "It may have been removed from the source."}
+          />
+        )}
+      </Template.CenteredTemplate>
     );
   }
 
   const profile = current.profile;
   const setEntry = (entry: LibraryEntry | null) =>
     setLoaded({ key, profile: { ...profile, entry } });
-  const kind = mediaTypes[profile.type];
   const details = Object.entries(profile.details)
     .filter(([name]) => detailLabels[name])
     .map(([name, value]) => [detailLabels[name], formatDetail(value)] as const)
     .filter((pair): pair is readonly [string, string] => pair[1] !== null);
 
   return (
-    <div className="flex flex-col gap-4">
-      <section className="overflow-hidden rounded-lg border border-divider bg-surface">
-        <div className="relative h-32 bg-gradient-to-br from-accent-soft to-rail-item sm:h-44">
-          {(profile.bannerImage ?? profile.coverImage) && (
-            <Image
-              src={(profile.bannerImage ?? profile.coverImage)!}
-              alt=""
-              fill
-              unoptimized
-              priority
-              className={`object-cover ${profile.bannerImage ? "" : "scale-110 opacity-70 blur-2xl"}`}
-            />
-          )}
-        </div>
-        <div className="flex flex-col gap-4 px-5 pb-5 sm:flex-row sm:items-end">
-          <MediaCover
-            src={profile.coverImage}
-            className="-mt-16 w-28 border-4 border-surface shadow-md sm:w-32"
-          />
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-2 text-xs text-muted">
-              <span className="flex items-center gap-1 rounded-full bg-rail-item px-2 py-0.5 font-semibold text-foreground">
-                {kind.icon}
-                {kind.label}
-              </span>
-              {profile.year && <span>{profile.year}</span>}
-              {profile.releaseStatus && <span>· {titleCase(profile.releaseStatus)}</span>}
-              {profile.score !== null && (
-                <span className="flex items-center gap-1 font-semibold text-foreground">
-                  <Star size={12} className="fill-current text-accent" />
-                  {profile.score.toFixed(1)}
-                </span>
+    <main className="flex min-h-0 flex-1 flex-col">
+      <MediaHeader profile={profile} collapsed={collapsed} onChange={setEntry} />
+      <MetaBar profile={profile} />
+      <div className="flex min-h-0 flex-1">
+        <Template.PageColumn onScroll={handleScroll}>
+          <div className="flex flex-col gap-4">
+          <YourLibrary profile={profile} onChange={setEntry} />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_240px]">
+            <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
+              <h3 className="font-display text-xl font-bold">About</h3>
+              {profile.synopsis ? (
+                <Synopsis text={profile.synopsis} />
+              ) : (
+                <p className="text-sm text-muted">No synopsis yet.</p>
               )}
-            </div>
-            <h2 className="font-display text-3xl leading-[1.04] font-bold sm:text-4xl">
-              {profile.title}
-            </h2>
-            {profile.altTitles.length > 0 && (
-              <p className="line-clamp-1 text-xs text-muted">
-                {profile.altTitles.slice(0, 3).join(" · ")}
-              </p>
-            )}
+              {profile.altTitles.length > 0 && (
+                <p className="text-xs text-muted">
+                  Also known as {profile.altTitles.slice(0, 4).join(" · ")}
+                </p>
+              )}
+            </section>
+            <section className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-5">
+              <h3 className="font-display text-xl font-bold">Details</h3>
+              <dl className="flex flex-col gap-2.5">
+                {details.map(([label, value]) => (
+                  <div key={label} className="flex flex-col">
+                    <dt className="text-[11px] font-bold text-muted uppercase">{label}</dt>
+                    <dd className="text-sm">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
-            {profile.entry ? (
-              <>
-                <span className="flex items-center gap-1.5">
-                  <StatusBadge status={profile.entry.status} type={profile.type} />
-                  {profile.entry.isPublic ? (
-                    <Globe size={14} className="text-muted" aria-label="Public" />
-                  ) : (
-                    <Lock size={14} className="text-muted" aria-label="Private" />
-                  )}
-                </span>
-                <EntryMenu
-                  entry={profile.entry}
-                  onChange={setEntry}
-                  onRemove={() => setEntry(null)}
-                  trigger={
-                    <span>
-                      <Atom.Button size="small" variant="secondary">
-                        Edit
-                      </Atom.Button>
-                    </span>
-                  }
-                />
-              </>
-            ) : (
-              <AddToLibraryButton media={profile} onAdded={setEntry} size="middle" />
-            )}
           </div>
-        </div>
-      </section>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_240px]">
-        <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
-          <h3 className="font-display text-xl font-bold">About</h3>
-          {profile.synopsis ? (
-            <Synopsis text={profile.synopsis} />
-          ) : (
-            <p className="text-sm text-muted">No synopsis yet.</p>
-          )}
-          {profile.genres.length > 0 && (
-            <ul className="flex flex-wrap gap-2">
-              {profile.genres.map((genre) => (
-                <li key={genre} className="rounded-full bg-rail-item px-2.5 py-1 text-xs font-semibold">
-                  {genre}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-        <section className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-5">
-          <h3 className="font-display text-xl font-bold">Details</h3>
-          <dl className="flex flex-col gap-2.5">
-            {details.map(([label, value]) => (
-              <div key={label} className="flex flex-col">
-                <dt className="text-[11px] font-bold text-muted uppercase">{label}</dt>
-                <dd className="text-sm">{value}</dd>
-              </div>
-            ))}
-          </dl>
-          {profile.source && (
-            <a
-              href={profile.source.url}
-              target="_blank"
-              rel="noreferrer"
-              className="focus-ring mt-1 flex w-fit items-center gap-1 rounded-sm text-xs font-semibold text-accent hover:underline"
-            >
-              View on {providers[profile.source.provider] ?? titleCase(profile.source.provider)}
-              <ExternalLink size={12} />
-            </a>
-          )}
-        </section>
+        </Template.PageColumn>
+        <SidePanel label="People">
+          <People profile={profile} />
+        </SidePanel>
       </div>
-
-      <section className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-5">
-        <h3 className="flex items-center gap-2 font-display text-xl font-bold">
-          <Users size={18} className="text-muted" />
-          In your communities
-        </h3>
-        {profile.members.length === 0 ? (
-          <p className="text-sm text-muted">
-            No one in your communities has added this publicly yet.
-          </p>
-        ) : (
-          <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-            {profile.members.map(({ user, status }) => (
-              <li
-                key={user.id}
-                className="flex items-center gap-3 rounded-lg bg-background p-3"
-              >
-                <Molecule.AuthorAvatar author={user} />
-                <div className="flex min-w-0 flex-1 flex-col gap-1">
-                  <Molecule.UserLink
-                    username={user.username}
-                    className="w-fit truncate text-sm font-semibold"
-                  >
-                    {displayName(user)}
-                  </Molecule.UserLink>
-                  <span className="text-xs text-muted">
-                    {statusLabel(status, profile.type)}
-                  </span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
-    </div>
+    </main>
   );
 }

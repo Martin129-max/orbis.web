@@ -25,7 +25,7 @@ export function ReportsView() {
   }
 
   return (
-    <div className="mx-auto flex w-full max-w-[672px] flex-col gap-8">
+    <div className="mx-auto flex w-full max-w-[672px] flex-col gap-8 lg:max-w-[760px] xl:max-w-[880px] 2xl:max-w-[1040px]">
       <Molecule.PageIntro
         eyebrow="Feedback"
         title="My reports."
