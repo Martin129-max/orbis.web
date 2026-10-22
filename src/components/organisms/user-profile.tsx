@@ -301,7 +301,7 @@ function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
       <h3 className="font-display text-xl font-bold">Friends / {profile.friends.length}</h3>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {profile.friends.map((friend) => (
@@ -361,10 +361,10 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
   }
 
   return (
-    <section className="flex flex-col gap-4">
+    <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
       <h3 className="font-display text-xl font-bold">Communities / {profile.communityCount}</h3>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {profile.communities.map((community) => (
           <li key={community.id}>
             <Molecule.CommunityCard
