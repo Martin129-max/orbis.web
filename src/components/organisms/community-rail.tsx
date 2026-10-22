@@ -614,7 +614,7 @@ export function CommunityRail() {
         ref={scrollList}
         onScroll={measureOverflow}
         style={fadeMask(overflow)}
-        className="-mx-2 flex min-h-0 w-[calc(100%+1rem)] flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-1 [scrollbar-width:none] sm:-mx-4 sm:w-[calc(100%+2rem)] sm:px-4"
+        className="-mx-2 -my-1 flex min-h-0 w-[calc(100%+1rem)] flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-2 [scrollbar-width:none] sm:-mx-4 sm:w-[calc(100%+2rem)] sm:px-4"
       >
         {communities.length > 0 && (
         <li data-tour="communities" className="w-full">
