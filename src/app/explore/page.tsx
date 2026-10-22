@@ -7,6 +7,7 @@ export default function ExplorePage() {
     <Template.AppTemplate>
       <main className="flex min-h-0 flex-1 flex-col">
         <Template.PageHeader
+          center={<Organism.ExploreSearch />}
           actions={<Organism.SidePanelToggle label="Friends" />}
         >
           <Atom.Heading>Explore</Atom.Heading>

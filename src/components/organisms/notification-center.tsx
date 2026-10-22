@@ -1,21 +1,23 @@
 "use client";
 
-import { Segmented, Switch } from "antd";
+import { Switch } from "antd";
 import {
   Bell,
   CircleCheck,
+  Inbox,
   CloudOff,
   MessageSquare,
   PenLine,
   Reply,
-  Search,
   UserCheck,
   UserPlus,
+  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
+import * as Template from "@template";
 import {
   getNotifications,
   type Notification,
@@ -26,6 +28,8 @@ import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
+import { FriendsPanel } from "./friends-panel";
+import { SidePanel } from "./side-panel";
 
 const typeIcons: Record<NotificationType, ReactNode> = {
   post_comment: <MessageSquare size={12} />,
@@ -37,19 +41,21 @@ const typeIcons: Record<NotificationType, ReactNode> = {
   wall_post: <PenLine size={12} />,
 };
 
-const filters: { value: NotificationFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "comments", label: "Posts & comments" },
-  { value: "friends", label: "Friends" },
-  { value: "reports", label: "Reports" },
+const filters: { value: NotificationFilter; label: string; icon: ReactNode }[] = [
+  { value: "all", label: "All", icon: <Inbox size={16} /> },
+  { value: "comments", label: "Posts & comments", icon: <MessageSquare size={16} /> },
+  { value: "friends", label: "Friends", icon: <Users size={16} /> },
+  { value: "reports", label: "Reports", icon: <CircleCheck size={16} /> },
 ];
 
 function NotificationRow({
   notification,
   onOpen,
+  compact = false,
 }: {
   notification: Notification;
   onOpen: () => void;
+  compact?: boolean;
 }) {
   const { actor } = notification;
   const name = actor ? displayName(actor) : "Orbis";
@@ -61,9 +67,15 @@ function NotificationRow({
         href={notification.link}
         prefetch={false}
         onClick={onOpen}
-        className={`focus-ring flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-muted ${
-          unread ? "border-accent/40 bg-accent-soft" : "border-divider bg-surface"
-        }`}
+        className={
+          compact
+            ? `focus-ring flex items-start gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-rail-item/50 ${
+                unread ? "bg-accent-soft" : ""
+              }`
+            : `focus-ring flex items-start gap-3 rounded-lg border p-4 transition-colors hover:border-muted ${
+                unread ? "border-accent/40 bg-accent-soft" : "border-divider bg-surface"
+              }`
+        }
       >
         <span className="relative shrink-0">
           <Atom.Avatar label={name} src={actor?.avatarUrl} seed={actor?.id ?? 0} />
@@ -85,13 +97,88 @@ function NotificationRow({
   );
 }
 
-export function NotificationCenter() {
+function NotificationResults({ query }: { query: string }) {
+  const markRead = useNotificationsStore((state) => state.markRead);
+  const [results, setResults] = useState<{
+    query: string;
+    items: Notification[] | null;
+  } | null>(null);
+
+  useEffect(() => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    let ignore = false;
+    getNotifications(token, { q: query })
+      .then((page) => {
+        if (!ignore) setResults({ query, items: page.items });
+      })
+      .catch(() => {
+        if (!ignore) setResults({ query, items: null });
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [query]);
+
+  if (!results || results.query !== query) {
+    return (
+      <div className="flex justify-center py-4">
+        <Atom.Loader />
+      </div>
+    );
+  }
+  if (!results.items) {
+    return <Atom.ErrorMessage>Could not search notifications.</Atom.ErrorMessage>;
+  }
+  if (results.items.length === 0) {
+    return <p className="py-4 text-center text-sm text-muted">Nothing matches “{query}”.</p>;
+  }
+
+  return (
+    <ul className="flex flex-col gap-1">
+      {results.items.map((notification) => (
+        <NotificationRow
+          key={notification.id}
+          notification={notification}
+          compact
+          onOpen={() => {
+            if (!notification.readAt) markRead(notification.id);
+          }}
+        />
+      ))}
+    </ul>
+  );
+}
+
+export function NotificationSearch() {
+  return (
+    <Molecule.HeaderSearch
+      label="Search notifications"
+      placeholder="Search notifications by name or message…"
+      renderResults={(search) => <NotificationResults query={search} />}
+    />
+  );
+}
+
+export function MarkAllReadButton() {
   const unreadCount = useNotificationsStore((state) => state.unreadCount);
+  const markAllRead = useNotificationsStore((state) => state.markAllRead);
+
+  return (
+    <Atom.Button
+      size="small"
+      variant="secondary"
+      disabled={unreadCount === 0}
+      onClick={() => markAllRead()}
+    >
+      Mark all as read
+    </Atom.Button>
+  );
+}
+
+export function NotificationCenter() {
   const version = useNotificationsStore((state) => state.version);
   const markRead = useNotificationsStore((state) => state.markRead);
-  const markAllRead = useNotificationsStore((state) => state.markAllRead);
-  const [query, setQuery] = useState("");
-  const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<NotificationFilter>("all");
   const [unreadOnly, setUnreadOnly] = useState(false);
   const [items, setItems] = useState<Notification[] | null>(null);
@@ -102,16 +189,11 @@ export function NotificationCenter() {
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => setSearch(query.trim()), 250);
-    return () => clearTimeout(timer);
-  }, [query]);
-
-  useEffect(() => {
     const { token } = useAuthStore.getState();
     if (!token) return;
 
     let ignore = false;
-    getNotifications(token, { q: search, filter, unread: unreadOnly })
+    getNotifications(token, { filter, unread: unreadOnly })
       .then((page) => {
         if (ignore) return;
         setFailed(false);
@@ -125,7 +207,7 @@ export function NotificationCenter() {
     return () => {
       ignore = true;
     };
-  }, [search, filter, unreadOnly, version, attempt]);
+  }, [filter, unreadOnly, version, attempt]);
 
   function loadMore() {
     const { token } = useAuthStore.getState();
@@ -133,7 +215,7 @@ export function NotificationCenter() {
 
     setLoadingMore(true);
     setMoreFailed(false);
-    getNotifications(token, { cursor: nextCursor, q: search, filter, unread: unreadOnly })
+    getNotifications(token, { cursor: nextCursor, filter, unread: unreadOnly })
       .then((page) => {
         setItems((current) => {
           const seen = new Set(current?.map(({ id }) => id));
@@ -155,94 +237,86 @@ export function NotificationCenter() {
     );
   }
 
-  function readAll() {
-    markAllRead();
-    const now = new Date().toISOString();
-    setItems((current) =>
-      unreadOnly ? [] : (current?.map((item) => ({ ...item, readAt: item.readAt ?? now })) ?? null),
-    );
-  }
-
-  const filtered = Boolean(search) || filter !== "all" || unreadOnly;
+  const filtered = filter !== "all" || unreadOnly;
 
   return (
-    <div className="flex flex-col gap-6">
-      <Molecule.PageIntro
-        eyebrow="Inbox"
-        title="Notifications."
-        description="Wall posts, comments, replies, friend requests, and updates on your reports."
-      />
-      <div className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-4">
-        <Atom.Input
-          aria-label="Search notifications"
-          allowClear
-          prefix={<Search size={16} className="text-muted" />}
-          placeholder="Search by name or message…"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-        />
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <Segmented<NotificationFilter>
-            options={filters}
-            value={filter}
-            onChange={setFilter}
-          />
-          <div className="flex items-center gap-4">
-            <label className="flex items-center gap-2 text-xs">
-              <Switch size="small" checked={unreadOnly} onChange={setUnreadOnly} />
-              Unread only
-            </label>
-            <Atom.Button
-              size="small"
-              variant="secondary"
-              disabled={unreadCount === 0}
-              onClick={readAll}
+    <>
+      <nav
+        aria-label="Notification filters"
+        className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+      >
+        <div className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
+          {filters.map(({ value, label, icon }) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={filter === value}
+              onClick={() => setFilter(value)}
+              className={`focus-ring flex shrink-0 cursor-pointer items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm whitespace-nowrap transition-colors ${
+                filter === value
+                  ? "border-accent text-accent"
+                  : "border-transparent font-semibold text-foreground hover:text-accent"
+              }`}
             >
-              Mark all as read
-            </Atom.Button>
-          </div>
+              {icon}
+              {label}
+            </button>
+          ))}
         </div>
-      </div>
-      {failed && !items ? (
-        <Molecule.FeedState
-          role="alert"
-          eyebrow="Connection error"
-          icon={<CloudOff size={24} strokeWidth={1.5} />}
-          title="Notifications couldn’t be loaded."
-          description="Check your connection and try again."
-          action={<Atom.Button onClick={() => setAttempt((count) => count + 1)}>Try again</Atom.Button>}
-        />
-      ) : !items ? (
-        <Molecule.FeedSkeleton label="Loading notifications…" />
-      ) : items.length === 0 ? (
-        <Molecule.FeedState
-          eyebrow={filtered ? "No matches" : "Empty"}
-          icon={<Bell size={24} strokeWidth={1.5} />}
-          title={filtered ? "Nothing matches." : "No notifications yet."}
-          description={
-            filtered
-              ? "Try a different search or filter."
-              : "When someone comments, replies, or adds you, it’ll show up here."
-          }
-        />
-      ) : (
-        <div className="flex flex-col gap-2">
-          <ul className="flex flex-col gap-2">
-            {items.map((notification) => (
-              <NotificationRow
-                key={notification.id}
-                notification={notification}
-                onOpen={() => open(notification)}
+        <label className="ml-auto flex shrink-0 items-center gap-2 self-center text-xs whitespace-nowrap">
+          <Switch size="small" checked={unreadOnly} onChange={setUnreadOnly} />
+          Unread only
+        </label>
+      </nav>
+      <div className="flex min-h-0 flex-1">
+        <Template.PageColumn>
+          <div className="flex flex-col gap-6">
+            {failed && !items ? (
+              <Molecule.FeedState
+                role="alert"
+                eyebrow="Connection error"
+                icon={<CloudOff size={24} strokeWidth={1.5} />}
+                title="Notifications couldn’t be loaded."
+                description="Check your connection and try again."
+                action={<Atom.Button onClick={() => setAttempt((count) => count + 1)}>Try again</Atom.Button>}
               />
-            ))}
-          </ul>
-          {nextCursor ? (
-            <Molecule.LoadMore onLoadMore={loadMore} loading={loadingMore} failed={moreFailed} />
-          ) : (
-            <Molecule.FeedEnd label="That’s everything" />
-          )}
-        </div>
-      )}
-    </div>
+            ) : !items ? (
+              <Molecule.FeedSkeleton label="Loading notifications…" />
+            ) : items.length === 0 ? (
+              <Molecule.FeedState
+                eyebrow={filtered ? "No matches" : "Empty"}
+                icon={<Bell size={24} strokeWidth={1.5} />}
+                title={filtered ? "Nothing matches." : "No notifications yet."}
+                description={
+                  filtered
+                    ? "Try a different filter."
+                    : "When someone comments, replies, or adds you, it’ll show up here."
+                }
+              />
+            ) : (
+              <div className="flex flex-col gap-2">
+                <ul className="flex flex-col gap-2">
+                  {items.map((notification) => (
+                    <NotificationRow
+                      key={notification.id}
+                      notification={notification}
+                      onOpen={() => open(notification)}
+                    />
+                  ))}
+                </ul>
+                {nextCursor ? (
+                  <Molecule.LoadMore onLoadMore={loadMore} loading={loadingMore} failed={moreFailed} />
+                ) : (
+                  <Molecule.FeedEnd label="That’s everything" />
+                )}
+              </div>
+            )}
+          </div>
+        </Template.PageColumn>
+        <SidePanel label="Friends">
+          <FriendsPanel />
+        </SidePanel>
+      </div>
+    </>
   );
 }

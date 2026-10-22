@@ -2,12 +2,14 @@
 
 import { X } from "lucide-react";
 import { Popconfirm, Tooltip } from "antd";
-import { Fragment, useState, type ReactNode } from "react";
+import { Fragment, useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import type { FriendUser } from "@/lib/api";
+import { searchPeople, type FriendUser } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
+import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
+import { FriendAction } from "./member-list";
 import { PanelHeading } from "./side-panel";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -56,60 +58,69 @@ function FriendRow({
   );
 }
 
-function AddFriendForm() {
-  const addFriend = useFriendsStore((state) => state.addFriend);
-  const [error, setError] = useState<string | null>(null);
-  const [sent, setSent] = useState(false);
-  const [pending, setPending] = useState(false);
+function PeopleResults({ query }: { query: string }) {
+  const [results, setResults] = useState<{
+    query: string;
+    users: FriendUser[] | null;
+  } | null>(null);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = event.currentTarget;
-    const username = String(new FormData(form).get("username"))
-      .trim()
-      .replace(/^@/, "");
-    setError(null);
-    setSent(false);
-    setPending(true);
+  useEffect(() => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    let ignore = false;
+    searchPeople(token, query)
+      .then((users) => {
+        if (!ignore) setResults({ query, users });
+      })
+      .catch(() => {
+        if (!ignore) setResults({ query, users: null });
+      });
+    return () => {
+      ignore = true;
+    };
+  }, [query]);
 
-    try {
-      await addFriend({ username });
-      form.reset();
-      setSent(true);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setPending(false);
-    }
+  if (!results || results.query !== query) {
+    return (
+      <div className="flex justify-center py-4">
+        <Atom.Loader />
+      </div>
+    );
+  }
+  if (!results.users) {
+    return <Atom.ErrorMessage>Could not search people.</Atom.ErrorMessage>;
+  }
+  if (results.users.length === 0) {
+    return <p className="py-4 text-center text-sm text-muted">No one matches “{query}”.</p>;
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-2">
-      <label htmlFor="friend-username" className="text-[13px] font-semibold">
-        Add a friend
-      </label>
-      <Atom.Input
-        id="friend-username"
-        name="username"
-        size="large"
-        required
-        placeholder="Enter @username"
-        autoCapitalize="none"
-        autoComplete="off"
-        onChange={() => setSent(false)}
+    <ul className="flex flex-col">
+      {results.users.map((user) => (
+        <li key={user.userId} className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-rail-item/50">
+          <Atom.Avatar size="sm" label={displayName(user)} src={user.avatarUrl} seed={user.userId} />
+          <div className="flex min-w-0 flex-1 flex-col">
+            <Molecule.UserLink username={user.username} className="w-fit truncate text-[13px] font-semibold">
+              {displayName(user)}
+            </Molecule.UserLink>
+            <span className="truncate text-xs text-muted">@{user.username}</span>
+          </div>
+          <FriendAction userId={user.userId} self={false} addLabel="Connect" />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function PeopleSearch() {
+  return (
+    <div data-tour="add-friend">
+      <Molecule.HeaderSearch
+        label="Search people"
+        placeholder="Search people by name or @username…"
+        renderResults={(search) => <PeopleResults query={search.replace(/^@/, "")} />}
       />
-      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      {sent && <p className="text-xs text-muted">Friend request sent.</p>}
-      <Atom.Button
-        type="submit"
-        variant="secondary"
-        size="large"
-        loading={pending}
-        className="w-fit"
-      >
-        Send request
-      </Atom.Button>
-    </form>
+    </div>
   );
 }
 
@@ -220,15 +231,14 @@ export function FriendsPanel() {
   return (
     <>
       <PanelHeading title={`Friends / ${friends.length}`} label="Friends" />
-      <AddFriendForm />
       {!loaded ? (
         <div className="flex py-8">
           <Atom.Loader />
         </div>
       ) : sections.length === 0 ? (
         <p className="text-[13px] text-muted">
-          No friends yet. Add people by username, or from a community&apos;s
-          member list.
+          No friends yet. Search for people on the home page, or add them from
+          a community&apos;s member list.
         </p>
       ) : (
         <div className="flex flex-col gap-4">

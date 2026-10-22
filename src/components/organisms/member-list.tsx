@@ -9,7 +9,15 @@ import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
 
-export function FriendAction({ userId, self }: { userId: number; self: boolean }) {
+export function FriendAction({
+  userId,
+  self,
+  addLabel = "Add",
+}: {
+  userId: number;
+  self: boolean;
+  addLabel?: string;
+}) {
   const status = useFriendsStore((state) =>
     self
       ? "self"
@@ -52,7 +60,7 @@ export function FriendAction({ userId, self }: { userId: number; self: boolean }
       onClick={() => addFriend({ userId }).catch(() => null)}
       className="shrink-0"
     >
-      {status === "incoming" ? "Accept" : "Add"}
+      {status === "incoming" ? "Accept" : addLabel}
     </Atom.Button>
   );
 }

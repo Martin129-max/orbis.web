@@ -58,11 +58,17 @@ export const tourStops: TourStop[] = [
       "Write a post and pick which community it goes to. Use the forum tab inside a community for longer discussions with votes.",
   },
   {
+    target: "add-friend",
+    placement: "bottom",
+    title: "Find people",
+    description: "Search by name or username, then connect to send a friend request.",
+  },
+  {
     target: "side-panel",
     placement: "left",
     title: "Friends",
     description:
-      "Add friends by username, accept requests, and see who’s online. Inside a community, this panel shows who’s online there.",
+      "Accept friend requests and see who’s online. Inside a community, this panel shows who’s online there.",
   },
   {
     target: "notifications",
@@ -125,7 +131,7 @@ export const checklistItems: ChecklistItem[] = [
   {
     key: "friend",
     title: "Add a friend",
-    hint: "Type a username in the friends panel on the right.",
+    hint: "Search for someone at the top of the home page and connect.",
   },
   {
     key: "library",

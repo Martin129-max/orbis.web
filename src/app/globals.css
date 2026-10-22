@@ -146,6 +146,11 @@ body {
     padding: 16px;
   }
 
+  .ant-message {
+    top: auto !important;
+    bottom: 24px;
+  }
+
   .ant-form-item-label > label {
     font-weight: 600;
   }

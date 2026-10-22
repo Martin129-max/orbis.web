@@ -36,6 +36,7 @@ export const useNotificationsStore = create<NotificationsState>()((set) => ({
 
     set({ unreadCount: 0 });
     await api.markAllNotificationsRead(token).catch(() => null);
+    set((state) => ({ version: state.version + 1 }));
   },
 }));
 

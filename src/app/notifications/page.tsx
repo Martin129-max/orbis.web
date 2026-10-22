@@ -7,18 +7,17 @@ export default function NotificationsPage() {
     <Template.AppTemplate>
       <main className="flex min-h-0 flex-1 flex-col">
         <Template.PageHeader
-          actions={<Organism.SidePanelToggle label="Friends" />}
+          center={<Organism.NotificationSearch />}
+          actions={
+            <>
+              <Organism.MarkAllReadButton />
+              <Organism.SidePanelToggle label="Friends" />
+            </>
+          }
         >
           <Atom.Heading>Notifications</Atom.Heading>
         </Template.PageHeader>
-        <div className="flex min-h-0 flex-1">
-          <Template.PageColumn>
-            <Organism.NotificationCenter />
-          </Template.PageColumn>
-          <Organism.SidePanel label="Friends">
-            <Organism.FriendsPanel />
-          </Organism.SidePanel>
-        </div>
+        <Organism.NotificationCenter />
       </main>
     </Template.AppTemplate>
   );

@@ -707,6 +707,15 @@ export type FriendList = {
 
 export type FriendTarget = { userId: number } | { username: string };
 
+export async function searchPeople(token: string, query: string): Promise<FriendUser[]> {
+  const res = await api(`/friends/search?${new URLSearchParams({ q: query })}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not search people.");
+  return res.json();
+}
+
 export async function getFriends(token: string): Promise<FriendList> {
   const res = await api("/friends", {
     headers: { Authorization: `Bearer ${token}` },

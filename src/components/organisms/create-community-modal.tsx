@@ -19,11 +19,11 @@ export function CreateCommunityModal({ open, onClose }: CreateCommunityModalProp
   const createCommunity = useCommunityStore((state) => state.createCommunity);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [isPublic, setIsPublic] = useState(false);
+  const [isPublic, setIsPublic] = useState(true);
 
   function handleClose() {
     setError(null);
-    setIsPublic(false);
+    setIsPublic(true);
     onClose();
   }
 
