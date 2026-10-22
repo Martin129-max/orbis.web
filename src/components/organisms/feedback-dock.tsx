@@ -18,7 +18,7 @@ const categories: { value: ReportCategory; label: string }[] = [
 ];
 
 const dockButton =
-  "focus-ring flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-transparent shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-colors";
+  "focus-ring flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-colors";
 
 function FeedbackModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const pathname = usePathname();
@@ -151,7 +151,7 @@ export function FeedbackDock() {
             href="/reports"
             aria-label={reportsLabel}
             data-tour="reports"
-            className={`${dockButton} bg-info text-info-foreground hover:bg-info/90`}
+            className={`${dockButton} border-divider bg-surface text-foreground hover:bg-rail-item`}
           >
             <Inbox size={20} />
           </Link>
@@ -162,7 +162,7 @@ export function FeedbackDock() {
             aria-label="Send feedback"
             data-tour="feedback"
             onClick={() => setOpen(true)}
-            className={`${dockButton} bg-accent text-accent-foreground hover:bg-accent/90`}
+            className={`${dockButton} border-transparent bg-accent text-accent-foreground hover:bg-accent/90`}
           >
             <MessageSquareWarning size={20} />
           </button>
