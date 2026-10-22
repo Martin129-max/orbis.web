@@ -18,6 +18,7 @@ export type Profile = {
   theme: ThemeMode;
   appearOffline: boolean;
   isAdmin: boolean;
+  isHeadAdmin: boolean;
   createdAt: string;
 };
 
@@ -1062,6 +1063,23 @@ export async function getPublicProfile(
   if (res.status === 404) return null;
   if (!res.ok) throw new Error("Could not load this profile.");
   return res.json();
+}
+
+export async function setSiteAdmin(
+  token: string,
+  username: string,
+  isAdmin: boolean,
+): Promise<boolean> {
+  const res = await api(`/users/${encodeURIComponent(username)}/admin`, {
+    method: isAdmin ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the head admin can change site admins.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not update admin access. Please try again."));
+  }
+  return (await res.json()).isAdmin;
 }
 
 export async function uploadUserCover(token: string, file: File): Promise<Profile> {

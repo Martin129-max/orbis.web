@@ -715,7 +715,7 @@ export function CommunityRail() {
         </ul>
         </li>
         )}
-        <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
+        <li aria-hidden className="mt-auto h-px w-full shrink-0 bg-divider" />
         <RailSlot label="Create a community">
           <button
             type="button"

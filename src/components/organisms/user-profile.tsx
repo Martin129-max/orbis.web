@@ -5,9 +5,12 @@ import {
   CalendarDays,
   Library,
   Newspaper,
+  ShieldCheck,
+  ShieldOff,
   Users,
   UserX,
 } from "lucide-react";
+import { App } from "antd";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -22,6 +25,7 @@ import {
   removeAvatar,
   removeUserBackground,
   removeUserCover,
+  setSiteAdmin,
   uploadAvatar,
   uploadUserBackground,
   uploadUserCover,
@@ -487,6 +491,46 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
   );
 }
 
+function AdminToggle({
+  profile,
+  onChange,
+}: {
+  profile: Profile;
+  onChange: (isAdmin: boolean) => void;
+}) {
+  const { message } = App.useApp();
+  const [pending, setPending] = useState(false);
+  const label = profile.isAdmin ? "Remove admin" : "Make admin";
+
+  async function toggle() {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+
+    setPending(true);
+    try {
+      onChange(await setSiteAdmin(token, profile.username, !profile.isAdmin));
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Atom.Button
+      size="small"
+      variant="secondary"
+      danger={profile.isAdmin}
+      loading={pending}
+      icon={profile.isAdmin ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
+      onClick={toggle}
+      className="shrink-0"
+    >
+      {label}
+    </Atom.Button>
+  );
+}
+
 export function UserProfile({ username }: { username: string }) {
   const me = useAuthStore((state) => state.profile);
   const livePresence = useFriendsStore((state) => state.presence);
@@ -589,7 +633,23 @@ export function UserProfile({ username }: { username: string }) {
             {isSelf ? (
               <Molecule.SettingsLink href="/settings" label="Profile settings" />
             ) : (
-              me && <FriendAction userId={profile.userId} self={false} />
+              me && (
+                <>
+                  {me.isHeadAdmin && (
+                    <AdminToggle
+                      profile={profile}
+                      onChange={(isAdmin) =>
+                        setLoaded((current) =>
+                          current?.profile
+                            ? { ...current, profile: { ...current.profile, isAdmin } }
+                            : current,
+                        )
+                      }
+                    />
+                  )}
+                  <FriendAction userId={profile.userId} self={false} />
+                </>
+              )
             )}
             <SidePanelToggle label={PANEL_LABEL} />
           </>
