@@ -11,6 +11,7 @@ export * from "./community-settings";
 export * from "./create-community-modal";
 export * from "./feedback-dock";
 export * from "./discussion-modal";
+export * from "./directory-view";
 export * from "./friends-panel";
 export * from "./guest-gate";
 export * from "./invite-button";

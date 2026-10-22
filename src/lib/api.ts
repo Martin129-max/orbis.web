@@ -183,6 +183,56 @@ export type FeedEntry = FeedItem | Activity;
 
 export type Page<T> = { items: T[]; nextCursor: string | null };
 
+export type NumberedPage<T> = { items: T[]; total: number; page: number; pageSize: number };
+
+export type DirectoryUser = {
+  userId: number;
+  username: string;
+  name: string | null;
+  email: string;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  isAdmin: boolean;
+  isHeadAdmin: boolean;
+  communityCount: number;
+  createdAt: string;
+};
+
+export type DirectoryCommunity = {
+  id: number;
+  name: string;
+  iconUrl: string | null;
+  coverUrl: string | null;
+  isPublic: boolean;
+  memberCount: number;
+  owner: { id: number; username: string; name: string | null; avatarUrl: string | null };
+  createdAt: string;
+};
+
+export async function getDirectoryUsers(
+  token: string,
+  page: number,
+): Promise<NumberedPage<DirectoryUser>> {
+  const res = await api(`/admin/users?page=${page}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load users.");
+  return res.json();
+}
+
+export async function getDirectoryCommunities(
+  token: string,
+  page: number,
+): Promise<NumberedPage<DirectoryCommunity>> {
+  const res = await api(`/admin/communities?page=${page}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load communities.");
+  return res.json();
+}
+
 export type ThreadSort = "hot" | "new" | "top";
 
 export type Comment = {
