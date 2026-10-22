@@ -1,3 +1,4 @@
+import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
 import { authScript } from "@/stores/auth-store";
@@ -51,6 +52,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       </head>
       <body className="min-h-full flex flex-col">
         <AntdProvider>{children}</AntdProvider>
+        <Analytics />
       </body>
     </html>
   );
