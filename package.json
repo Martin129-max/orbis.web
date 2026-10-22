@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "deploy": "vercel deploy --prod"
+    "deploy": "bash ./deploy.sh"
   },
   "dependencies": {
     "@ant-design/nextjs-registry": "^1.3.0",
