@@ -6,12 +6,16 @@ import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
+  getInvites,
   getMembers,
+  revokeInvite,
   setCommunityAdmin,
   type Community,
+  type Invite,
   type Member,
 } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
+import { inviteExpiry, inviteUses } from "@/lib/invites";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 
@@ -177,6 +181,94 @@ function AdminSettings({ community }: { community: Community }) {
   );
 }
 
+function InviteSettings({ community }: { community: Community }) {
+  const [invites, setInvites] = useState<Invite[] | null>(null);
+  const [revoking, setRevoking] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+
+    getInvites(token, community.id)
+      .then(setInvites)
+      .catch((e) => {
+        setInvites([]);
+        setError(e instanceof Error ? e.message : "Something went wrong.");
+      });
+  }, [community.id]);
+
+  async function handleRevoke(code: string) {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+
+    setError(null);
+    setRevoking(code);
+    try {
+      await revokeInvite(token, community.id, code);
+      setInvites((current) =>
+        current ? current.filter((invite) => invite.code !== code) : current,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setRevoking(null);
+    }
+  }
+
+  return (
+    <Molecule.SettingsSection
+      title="Invites"
+      description="Active invite links for this community. Revoke a link to stop anyone else from joining with it."
+    >
+      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      {!invites ? (
+        <div className="flex py-6">
+          <Atom.Loader />
+        </div>
+      ) : invites.length === 0 ? (
+        <p className="text-xs text-muted">
+          No active invites. Create one with the invite button on the
+          community page.
+        </p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {invites.map((invite) => {
+            const label = displayName(invite.creator);
+            return (
+              <li key={invite.code} className="flex items-center gap-3 py-1">
+                <Atom.Avatar
+                  size="sm"
+                  label={label}
+                  src={invite.creator.avatarUrl}
+                  seed={invite.creator.id}
+                />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate font-mono text-[13px] font-semibold">
+                    {invite.code}
+                  </span>
+                  <span className="truncate text-xs text-muted">
+                    {label} · {inviteUses(invite)} · {inviteExpiry(invite)}
+                  </span>
+                </div>
+                <Atom.Button
+                  danger
+                  variant="text"
+                  size="small"
+                  loading={revoking === invite.code}
+                  onClick={() => handleRevoke(invite.code)}
+                >
+                  Revoke
+                </Atom.Button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Molecule.SettingsSection>
+  );
+}
+
 function DangerZone({ community }: { community: Community }) {
   const router = useRouter();
   const deleteCommunity = useCommunityStore((state) => state.deleteCommunity);
@@ -251,10 +343,11 @@ export function CommunitySettings({ community }: { community: Community }) {
       <Molecule.PageIntro
         eyebrow={`${community.name} / ${community.role === "owner" ? "Owner" : "Admin"}`}
         title="Community settings"
-        description="Manage this community’s details, admins, and visibility."
+        description="Manage this community’s details, admins, invites, and visibility."
       />
       <GeneralSettings community={community} />
       <AdminSettings community={community} />
+      <InviteSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}
     </div>
   );

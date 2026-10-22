@@ -13,6 +13,7 @@ export * from "./feedback-dock";
 export * from "./discussion-modal";
 export * from "./friends-panel";
 export * from "./guest-gate";
+export * from "./invite-button";
 export * from "./home-feed";
 export * from "./landing-hero";
 export * from "./library-controls";

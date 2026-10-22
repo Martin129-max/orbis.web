@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { useAuthStore } from "@/stores/auth-store";
@@ -41,7 +41,17 @@ const content = {
   },
 };
 
-export function AuthForm({ mode }: { mode: Mode }) {
+export function AuthForm({
+  mode,
+  intro,
+  onAuthenticated,
+  onSwitch,
+}: {
+  mode: Mode;
+  intro?: ReactNode;
+  onAuthenticated?: () => void;
+  onSwitch?: () => void;
+}) {
   const router = useRouter();
   const login = useAuthStore((state) => state.login);
   const signup = useAuthStore((state) => state.signup);
@@ -67,7 +77,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
           password,
         });
       }
-      router.push("/");
+      if (onAuthenticated) onAuthenticated();
+      else router.push("/");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setPending(false);
@@ -85,6 +96,7 @@ export function AuthForm({ mode }: { mode: Mode }) {
       </Link>
       <div className="flex flex-col gap-6">
         <Atom.Brand className="text-5xl" />
+        {intro}
         <h1 className="font-display text-5xl leading-[1.04] font-bold">
           {title}
         </h1>
@@ -150,12 +162,22 @@ export function AuthForm({ mode }: { mode: Mode }) {
         <hr className="border-divider" />
         <p className="text-[13px] text-muted">
           {switchText}{" "}
-          <Link
-            href={switchHref}
-            className="focus-ring rounded-sm text-accent hover:underline"
-          >
-            {switchLabel}
-          </Link>
+          {onSwitch ? (
+            <button
+              type="button"
+              onClick={onSwitch}
+              className="focus-ring cursor-pointer rounded-sm text-accent hover:underline"
+            >
+              {switchLabel}
+            </button>
+          ) : (
+            <Link
+              href={switchHref}
+              className="focus-ring rounded-sm text-accent hover:underline"
+            >
+              {switchLabel}
+            </Link>
+          )}
         </p>
         {footnote && <p className="text-[11px] text-muted">{footnote}</p>}
       </div>

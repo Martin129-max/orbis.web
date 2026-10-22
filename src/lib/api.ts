@@ -468,6 +468,95 @@ export async function joinCommunity(
   return res.json();
 }
 
+export type InviteCreator = {
+  id: number;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+};
+
+export type Invite = {
+  code: string;
+  maxUses: number | null;
+  uses: number;
+  expiresAt: string | null;
+  createdAt: string;
+  creator: InviteCreator;
+};
+
+export type InviteOptions = { maxAge: number | null; maxUses: number | null };
+
+export type InvitePreview = {
+  code: string;
+  expiresAt: string | null;
+  creator: InviteCreator;
+  community: Pick<Community, "id" | "name" | "iconUrl" | "coverUrl" | "isPublic"> & {
+    memberCount: number;
+  };
+};
+
+export async function createInvite(
+  token: string,
+  communityId: number,
+  options: InviteOptions,
+): Promise<Invite> {
+  const res = await api(`/communities/${communityId}/invites`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(options),
+  });
+
+  if (!res.ok) throw new Error("Could not create an invite link. Please try again.");
+  return res.json();
+}
+
+export async function getInvites(token: string, communityId: number): Promise<Invite[]> {
+  const res = await api(`/communities/${communityId}/invites`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load invites.");
+  return res.json();
+}
+
+export async function revokeInvite(
+  token: string,
+  communityId: number,
+  code: string,
+): Promise<void> {
+  const res = await api(
+    `/communities/${communityId}/invites/${encodeURIComponent(code)}`,
+    { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
+  );
+
+  if (res.status === 403) throw new Error("Only admins can revoke other people’s invites.");
+  if (!res.ok && res.status !== 404) {
+    throw new Error("Could not revoke the invite. Please try again.");
+  }
+}
+
+export async function getInvitePreview(code: string): Promise<InvitePreview | null> {
+  const res = await api(`/invites/${encodeURIComponent(code)}`);
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Could not load the invite.");
+  return res.json();
+}
+
+export async function acceptInvite(token: string, code: string): Promise<Community> {
+  const res = await api(`/invites/${encodeURIComponent(code)}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404) throw new Error("This invite is invalid or has expired.");
+  if (!res.ok) throw new Error("Could not join the community. Please try again.");
+  return res.json();
+}
+
 function withQuery(path: string, query: Record<string, string | undefined>) {
   const params = new URLSearchParams(
     Object.entries(query).filter(

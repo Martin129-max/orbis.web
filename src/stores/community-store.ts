@@ -9,6 +9,7 @@ type CommunityState = {
   fetchCommunities: () => Promise<void>;
   createCommunity: (name: string, isPublic: boolean) => Promise<Community>;
   joinCommunity: (communityId: number) => Promise<Community>;
+  acceptInvite: (code: string) => Promise<Community>;
   updateCommunity: (
     communityId: number,
     changes: Partial<Pick<Community, "name" | "isPublic">>,
@@ -21,6 +22,15 @@ type CommunityState = {
   deleteCommunity: (communityId: number) => Promise<void>;
   updateLayout: (layout: RailItem[]) => Promise<void>;
 };
+
+function withJoined(state: CommunityState, community: Community) {
+  return state.communities.some(({ id }) => id === community.id)
+    ? state
+    : {
+        communities: [...state.communities, community],
+        layout: [...state.layout, { type: "community" as const, communityId: community.id }],
+      };
+}
 
 export const useCommunityStore = create<CommunityState>()((set, get) => ({
   communities: [],
@@ -55,14 +65,15 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     if (!token) throw new Error("Please log in again.");
 
     const community = await api.joinCommunity(token, communityId);
-    set((state) =>
-      state.communities.some(({ id }) => id === community.id)
-        ? state
-        : {
-            communities: [...state.communities, community],
-            layout: [...state.layout, { type: "community", communityId: community.id }],
-          },
-    );
+    set((state) => withJoined(state, community));
+    return community;
+  },
+  acceptInvite: async (code) => {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const community = await api.acceptInvite(token, code);
+    set((state) => withJoined(state, community));
     return community;
   },
   updateCommunity: async (communityId, changes) => {

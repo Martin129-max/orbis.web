@@ -178,6 +178,10 @@ export default function CommunityPage() {
               )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
+              <Organism.InviteButton
+                key={`invite-${current.community.id}`}
+                community={current.community}
+              />
               <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}
