@@ -16,10 +16,25 @@ const barlowCondensed = Barlow_Condensed({
   weight: ["700", "800"],
 });
 
+const description =
+  "Orbis is a home for fan communities, with a feed for quick updates, a forum for the discussions worth keeping, and a library to track what you’re watching, reading, and playing.";
+
 export const metadata: Metadata = {
   title: "Orbis",
-  description:
-    "Orbis is a platform for online communities, with feeds for updates and forums for discussions.",
+  description,
+  applicationName: "Orbis",
+  openGraph: {
+    type: "website",
+    siteName: "Orbis",
+    title: "Orbis — Your fandom. Your people.",
+    description,
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Orbis — Your fandom. Your people.",
+    description,
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
