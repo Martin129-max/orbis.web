@@ -32,10 +32,14 @@ import {
 } from "@/lib/api";
 import { libraryStatuses, mediaPath, statusLabel } from "@/lib/library";
 import { useAuthStore } from "@/stores/auth-store";
+import {
+  useLibraryPreferencesStore,
+  type LibraryViewMode as View,
+  type LibraryTypeFilter as TypeFilter,
+  type LibraryStatusFilter as StatusFilter,
+} from "@/stores/library-preferences-store";
 import { mediaTypes } from "./activity-card";
 import { AddToLibraryButton, EntryMenu } from "./library-controls";
-
-type View = "cards" | "list";
 
 export function ProgressControl({
   entry,
@@ -211,9 +215,6 @@ function ListView({
   );
 }
 
-type TypeFilter = "all" | MediaType;
-type StatusFilter = "all" | LibraryStatus;
-
 const statusIcons = {
   all: Library,
   current: CirclePlay,
@@ -360,9 +361,17 @@ function LibraryShelf({
   onChange: (entry: LibraryEntry) => void;
   onRemove: (id: number) => void;
 }) {
-  const [status, setStatus] = useState<StatusFilter>("current");
-  const [type, setType] = useState<TypeFilter>("all");
-  const [view, setView] = useState<View>("list");
+  const status = useLibraryPreferencesStore((state) => state.status);
+  const type = useLibraryPreferencesStore((state) => state.type);
+  const view = useLibraryPreferencesStore((state) => state.view);
+  const setStatus = useLibraryPreferencesStore((state) => state.setStatus);
+  const setType = useLibraryPreferencesStore((state) => state.setType);
+  const setView = useLibraryPreferencesStore((state) => state.setView);
+
+  useEffect(() => {
+    useLibraryPreferencesStore.persist.rehydrate();
+  }, []);
+
   const ofType = entries.filter((entry) => type === "all" || entry.mediaType === type);
   const shown = ofType.filter((entry) => status === "all" || entry.status === status);
   const count = (value: StatusFilter) =>
