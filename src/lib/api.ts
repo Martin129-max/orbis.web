@@ -15,6 +15,7 @@ export type Profile = {
   avatarUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
+  isAdmin: boolean;
   createdAt: string;
 };
 
@@ -605,4 +606,142 @@ export async function getStats(): Promise<Stats> {
 
   if (!res.ok) throw new Error("Could not load statistics.");
   return res.json();
+}
+
+export type ReportCategory = "bug" | "idea" | "other";
+
+export type ReportStatus = "todo" | "in_progress" | "done";
+
+export type Report = {
+  id: number;
+  category: ReportCategory;
+  status: ReportStatus;
+  message: string;
+  pageUrl: string | null;
+  createdAt: string;
+  author: Author;
+};
+
+export async function submitReport(
+  token: string,
+  report: { category: ReportCategory; message: string; pageUrl: string },
+): Promise<{ id: number }> {
+  const res = await api("/reports", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(report),
+  });
+
+  if (!res.ok) throw new Error("Could not send your report. Please try again.");
+  return res.json();
+}
+
+export async function getMyReports(token: string): Promise<Report[]> {
+  const res = await api("/reports/mine", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your reports.");
+  return res.json();
+}
+
+export async function getReports(token: string): Promise<Report[]> {
+  const res = await api("/reports", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only site admins can see reports.");
+  if (!res.ok) throw new Error("Could not load reports.");
+  return res.json();
+}
+
+export async function updateReportStatus(
+  token: string,
+  reportId: number,
+  status: ReportStatus,
+): Promise<Report> {
+  const res = await api(`/reports/${reportId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ status }),
+  });
+
+  if (!res.ok) throw new Error("Could not move the report. Please try again.");
+  return res.json();
+}
+
+export type NotificationType =
+  | "post_comment"
+  | "thread_comment"
+  | "comment_reply"
+  | "friend_request"
+  | "friend_accepted"
+  | "report_status";
+
+export type Notification = {
+  id: number;
+  type: NotificationType;
+  message: string;
+  link: string;
+  readAt: string | null;
+  createdAt: string;
+  actor: Author | null;
+};
+
+export type NotificationFilter = "all" | "comments" | "friends" | "reports";
+
+export type NotificationQuery = {
+  cursor?: string;
+  q?: string;
+  filter?: NotificationFilter;
+  unread?: boolean;
+};
+
+export async function getNotifications(
+  token: string,
+  { cursor, q, filter, unread }: NotificationQuery = {},
+): Promise<Page<Notification>> {
+  const params = new URLSearchParams();
+  if (cursor) params.set("cursor", cursor);
+  if (q) params.set("q", q);
+  if (filter && filter !== "all") params.set("filter", filter);
+  if (unread) params.set("unread", "true");
+  const query = params.toString();
+
+  const res = await api(`/notifications${query ? `?${query}` : ""}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load notifications.");
+  return res.json();
+}
+
+export async function getUnreadCount(token: string): Promise<number> {
+  const res = await api("/notifications/unread", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load notifications.");
+  const { unreadCount } = await res.json();
+  return unreadCount;
+}
+
+export async function markNotificationRead(token: string, id: number): Promise<void> {
+  await api(`/notifications/${id}/read`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function markAllNotificationsRead(token: string): Promise<void> {
+  await api("/notifications/read", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
 }

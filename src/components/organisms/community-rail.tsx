@@ -40,6 +40,7 @@ import { useFriendsStore } from "@/stores/friends-store";
 import { CreateCommunityModal } from "./create-community-modal";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
+import { NotificationBell } from "./notification-bell";
 
 function itemClass(active: boolean) {
   return `focus-ring relative flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
@@ -373,6 +374,9 @@ export function CommunityRail() {
         </RailSlot>
       </ul>
       <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
+      <div className="shrink-0">
+        <NotificationBell className={itemClass} />
+      </div>
       <div className="shrink-0">
         <UserButton />
       </div>

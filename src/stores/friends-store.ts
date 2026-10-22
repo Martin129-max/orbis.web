@@ -3,6 +3,7 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import type { Friend, FriendTarget, FriendUser } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
+import { useNotificationsStore } from "./notifications-store";
 
 type FriendsState = {
   friends: Friend[];
@@ -33,7 +34,13 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     if (!token || socket) return;
 
     socket = io(api.API_URL, { auth: { token } });
-    socket.on("connect", () => get().fetchFriends());
+    socket.on("connect", () => {
+      get().fetchFriends();
+      useNotificationsStore.getState().refresh();
+    });
+    socket.on("notifications:changed", () =>
+      useNotificationsStore.getState().refresh(),
+    );
     socket.on("friends:changed", () => get().fetchFriends());
     socket.on(
       "presence",
