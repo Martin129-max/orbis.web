@@ -16,12 +16,12 @@ function applyTheme(mode: ThemeMode) {
   else root.dataset.theme = mode;
 }
 
-export const themeScript = `try{var m=JSON.parse(localStorage.getItem("${storageKey}")).state.mode;if(m==="light"||m==="dark")document.documentElement.dataset.theme=m}catch(e){}`;
+export const themeScript = `var m="dark";try{m=JSON.parse(localStorage.getItem("${storageKey}")).state.mode}catch(e){}if(m==="light"||m==="dark")document.documentElement.dataset.theme=m;`;
 
 export const useThemeStore = create<ThemeState>()(
   persist(
     (set) => ({
-      mode: "system",
+      mode: "dark",
       setMode: (mode) => {
         applyTheme(mode);
         set({ mode });

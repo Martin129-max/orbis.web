@@ -7,9 +7,9 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useThemeStore, type ThemeMode } from "@/stores/theme-store";
 
 const options = [
-  { value: "system", label: "System", icon: <Monitor size={14} /> },
-  { value: "light", label: "Light", icon: <Sun size={14} /> },
   { value: "dark", label: "Dark", icon: <Moon size={14} /> },
+  { value: "light", label: "Light", icon: <Sun size={14} /> },
+  { value: "system", label: "System", icon: <Monitor size={14} /> },
 ] satisfies { value: ThemeMode; label: string; icon: React.ReactNode }[];
 
 export function ThemeToggle({ block = false }: { block?: boolean }) {
