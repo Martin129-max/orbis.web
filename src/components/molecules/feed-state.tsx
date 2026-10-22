@@ -16,7 +16,7 @@ export function FeedState({
   role?: "alert" | "status";
 }) {
   return (
-    <div role={role} className="flex flex-col items-start gap-4 py-10">
+    <div role={role} className="flex flex-col items-start gap-4 rounded-lg border border-divider bg-surface p-6 sm:p-8">
       {eyebrow && (
         <p className="text-xs font-bold text-accent uppercase">{eyebrow}</p>
       )}

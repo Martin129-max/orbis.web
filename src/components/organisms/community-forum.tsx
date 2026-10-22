@@ -45,11 +45,7 @@ function ForumThreads({
         description:
           "Start a thread to begin a discussion in this community.",
       }}
-      end={
-        <p className="pt-6 text-xs text-muted">
-          You’ve reached the end of the thread list.
-        </p>
-      }
+      end={<Molecule.FeedEnd label="That’s every thread" />}
     />
   );
 }

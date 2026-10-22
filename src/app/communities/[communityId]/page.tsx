@@ -142,7 +142,7 @@ export default function CommunityPage() {
                   unoptimized
                   className="object-cover"
                 />
-                <div className="absolute inset-0 bg-background/40" />
+                <div className="absolute inset-0 bg-background/55" />
               </div>
             )}
             <Template.PageColumn onScroll={handleScroll}>

@@ -64,7 +64,7 @@ export function ThreadCard({
   return (
     <article
       onClick={onOpen}
-      className="flex cursor-pointer gap-4 glass rounded-lg p-5 transition-colors hover:border-muted"
+      className="flex cursor-pointer gap-4 rounded-lg border border-divider bg-surface p-5 transition-colors hover:border-muted"
     >
       <Molecule.VoteControl
         score={thread.score}

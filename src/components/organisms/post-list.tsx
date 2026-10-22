@@ -20,11 +20,7 @@ type PostListProps<T extends FeedItem> = {
 export function PostList<T extends FeedItem>({
   feed,
   empty,
-  end = (
-    <p className="pt-6 text-xs text-muted">
-      You’re all caught up.
-    </p>
-  ),
+  end = <Molecule.FeedEnd label="You’re all caught up" />,
   showCommunity = false,
 }: PostListProps<T>) {
   const { items, failed, retry, hasMore, loadingMore, moreFailed, loadMore } =

@@ -1,6 +1,7 @@
 export * from "./author-avatar";
 export * from "./comments-button";
 export * from "./connection-error";
+export * from "./feed-end";
 export * from "./feed-skeleton";
 export * from "./feed-state";
 export * from "./form-field";

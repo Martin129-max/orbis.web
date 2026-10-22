@@ -117,7 +117,7 @@ export function PostComposer({
   return (
     <div className="flex flex-col gap-3">
       <div
-        className="flex flex-col gap-4 glass rounded-lg p-4 transition-colors focus-within:border-accent"
+        className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-4 transition-colors focus-within:border-accent"
         onKeyDown={(event) => {
           if (event.key === "Enter" && (event.metaKey || event.ctrlKey)) {
             event.preventDefault();
