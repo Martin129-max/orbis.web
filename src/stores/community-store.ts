@@ -77,7 +77,12 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     set((state) => ({
       communities: state.communities.map((community) =>
         community.id === communityId
-          ? { ...community, iconUrl: updated.iconUrl, coverUrl: updated.coverUrl }
+          ? {
+              ...community,
+              iconUrl: updated.iconUrl,
+              coverUrl: updated.coverUrl,
+              backgroundUrl: updated.backgroundUrl,
+            }
           : community,
       ),
     }));

@@ -25,6 +25,7 @@ export type Community = {
   name: string;
   iconUrl: string | null;
   coverUrl: string | null;
+  backgroundUrl: string | null;
   ownerId: number;
   isPublic: boolean;
   createdAt: string;
@@ -286,7 +287,7 @@ export async function updateCommunity(
   return res.json();
 }
 
-export type CommunityImage = "icon" | "cover";
+export type CommunityImage = "icon" | "cover" | "background";
 
 async function sendCommunityImage(
   token: string,

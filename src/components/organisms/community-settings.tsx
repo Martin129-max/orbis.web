@@ -153,34 +153,46 @@ function IconSettings({ community }: { community: Community }) {
   );
 }
 
-function CoverSettings({ community }: { community: Community }) {
+function WideImageSettings({
+  community,
+  image,
+  title,
+  description,
+  aspect,
+}: {
+  community: Community;
+  image: "cover" | "background";
+  title: string;
+  description: string;
+  aspect: string;
+}) {
   const setCommunityImage = useCommunityStore(
     (state) => state.setCommunityImage,
   );
-  const [coverUrl, setCoverUrl] = useState(community.coverUrl);
+  const field = image === "cover" ? "coverUrl" : "backgroundUrl";
+  const [url, setUrl] = useState(community[field]);
 
   async function save(file: File | null) {
-    const updated = await setCommunityImage(community.id, "cover", file);
-    setCoverUrl(updated.coverUrl);
+    const updated = await setCommunityImage(community.id, image, file);
+    setUrl(updated[field]);
   }
 
   return (
-    <Section
-      title="Cover photo"
-      description="Shown across the top of the community page. Wide images work best."
-    >
-      <div className="relative aspect-[3/1] overflow-hidden rounded-lg border border-divider bg-rail-item">
-        {coverUrl ? (
-          <Image src={coverUrl} alt="" fill unoptimized className="object-cover" />
+    <Section title={title} description={description}>
+      <div
+        className={`relative overflow-hidden rounded-lg border border-divider bg-rail-item ${aspect}`}
+      >
+        {url ? (
+          <Image src={url} alt="" fill unoptimized className="object-cover" />
         ) : (
           <p className="absolute inset-0 flex items-center justify-center text-xs text-muted">
-            No cover photo yet
+            No {title.toLowerCase()} yet
           </p>
         )}
       </div>
       <Molecule.ImagePicker
-        noun="cover"
-        hasImage={Boolean(coverUrl)}
+        noun={image}
+        hasImage={Boolean(url)}
         onUpload={save}
         onRemove={() => save(null)}
       />
@@ -349,7 +361,20 @@ export function CommunitySettings({ community }: { community: Community }) {
       />
       <GeneralSettings community={community} />
       <IconSettings community={community} />
-      <CoverSettings community={community} />
+      <WideImageSettings
+        community={community}
+        image="cover"
+        title="Cover photo"
+        description="Shown across the top of the community page. Wide images work best."
+        aspect="aspect-[3/1]"
+      />
+      <WideImageSettings
+        community={community}
+        image="background"
+        title="Background"
+        description="Shown softly behind the feed and forum. Patterns and calm scenes work best."
+        aspect="aspect-video"
+      />
       <AdminSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}
     </div>

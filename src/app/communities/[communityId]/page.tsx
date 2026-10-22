@@ -7,6 +7,7 @@ import {
   Newspaper,
   Settings,
 } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { Tooltip } from "antd";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
@@ -131,7 +132,19 @@ export default function CommunityPage() {
                 }`}
             </p>
           </nav>
-          <div className="flex min-h-0 flex-1">
+          <div className="relative isolate flex min-h-0 flex-1">
+            {current.community.backgroundUrl && (
+              <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
+                <Image
+                  src={current.community.backgroundUrl}
+                  alt=""
+                  fill
+                  unoptimized
+                  className="object-cover"
+                />
+                <div className="absolute inset-0 bg-background/40" />
+              </div>
+            )}
             <Template.PageColumn onScroll={handleScroll}>
               {tab === "forum" ? (
                 <Organism.CommunityForum
