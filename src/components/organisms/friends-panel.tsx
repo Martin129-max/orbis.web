@@ -250,7 +250,6 @@ export function FriendsPanel() {
           ))}
         </div>
       )}
-      <p className="text-xs text-muted">Friends can see when you’re online.</p>
     </>
   );
 }

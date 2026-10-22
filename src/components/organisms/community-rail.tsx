@@ -57,7 +57,7 @@ import { ThemeToggle } from "./theme-toggle";
 import { NotificationBell } from "./notification-bell";
 
 function itemClass(active: boolean) {
-  return `focus-ring relative flex h-9 w-9 items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
+  return `focus-ring relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
     active
       ? "bg-accent text-accent-foreground"
       : "bg-rail-item text-foreground hover:bg-accent-soft"

@@ -15,7 +15,6 @@ import { OnboardingChecklist, OnboardingTour } from "./onboarding";
 
 export function HomeFeed() {
   const feed = usePaged(getFeed, { live: true });
-  const profile = useAuthStore((state) => state.profile);
   const communities = useCommunityStore((state) => state.communities);
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const target =
@@ -33,10 +32,6 @@ export function HomeFeed() {
 
   return (
     <div className="flex flex-col gap-6">
-      <Molecule.PageIntro
-        title={`Good to see you${profile ? `, ${profile.username}` : ""}.`}
-        description="The latest posts and discussions from your communities."
-      />
       <OnboardingChecklist />
       <OnboardingTour />
       {target && (
@@ -86,7 +81,6 @@ export function HomeFeed() {
         />
         </div>
       )}
-      <p className="text-xs uppercase">From your communities</p>
       <PostList
         showCommunity
         feed={feed}
