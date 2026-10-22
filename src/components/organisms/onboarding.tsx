@@ -76,7 +76,7 @@ export const tourStops: TourStop[] = [
     placement: "rightBottom",
     title: "Your account",
     description:
-      "Switch between light and dark, appear offline, open your profile to change your picture, or log out.",
+      "Switch between light and dark, appear offline, open your profile to change your picture and cover photo, or log out.",
   },
   {
     target: "feedback",

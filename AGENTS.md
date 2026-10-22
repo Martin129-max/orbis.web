@@ -29,10 +29,18 @@ Decide whether a new user needs to know about the feature. If so:
 
 ### Landing Page
 
-Logged-out visitors see the landing page (`src/components/organisms/landing-hero.tsx`, shown by `src/app/page.tsx`). Its `features` array is the list of what Orbis offers, and the hero's intro paragraph sums up the product.
+Logged-out visitors see the landing page, which should make them want to sign up at a glance. It's built in `src/components/organisms/landing-hero.tsx` (the hero) and `src/components/organisms/landing-showcase.tsx` (everything below it), and shown by `src/app/page.tsx`. Below the hero, in order:
+
+- `LandingCommunities`: a scrolling strip of example communities.
+- `LandingShowcase`: one `Showcase` section per major feature. Each has a short eyebrow, a punchy heading (for example "Track what you love."), one sentence, and a visual: a small mock of the real UI built from the app's own look and assets (the pixel avatars, community icons and covers in `public/images/`, and real media covers). Sections alternate sides with `flip`.
+- `LandingExtras`: one compact row of smaller extras, each an icon and a few words.
+- `SiteStats` and `LandingCallToAction`.
 
 Decide whether the feature is something a visitor would sign up for. If so:
 
-- Add an entry to `features` with a lucide icon, a short title, and one sentence on what it lets you do, written for someone who hasn't signed up yet.
-- Update the intro paragraph if the feature changes what Orbis is, not just what it can do.
-- Update or remove entries when the features they describe change or are removed.
+- **A major feature** gets its own `Showcase` section with a visual that shows the feature in use, not an icon and a paragraph. Keep the copy to a heading and one sentence, let the visual do the explaining, and keep sections alternating sides.
+- **A smaller feature** gets an entry in `extras` instead.
+- Update the hero's intro paragraph only if the feature changes what Orbis is, not just what it can do.
+- Update or remove sections and extras when the features they show change or are removed.
+
+Keep the page visual and easy to scan: no walls of text or long lists of features, mark the mock visuals `aria-hidden` so the heading and sentence carry the meaning, and check it at desktop and phone widths.
