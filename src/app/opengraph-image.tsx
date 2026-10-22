@@ -8,9 +8,10 @@ export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 export default async function OpengraphImage() {
-  const [illustration, regular, bold, extraBold] = await Promise.all([
+  const [illustration, regular, semiBold, bold, extraBold] = await Promise.all([
     readFile(join(process.cwd(), "public/images/landing-illustration.jpg"), "base64"),
     readFile(join(process.cwd(), "src/app/fonts/Inter-Regular.ttf")),
+    readFile(join(process.cwd(), "src/app/fonts/Inter-SemiBold.ttf")),
     readFile(join(process.cwd(), "src/app/fonts/BarlowCondensed-Bold.ttf")),
     readFile(join(process.cwd(), "src/app/fonts/BarlowCondensed-ExtraBold.ttf")),
   ]);
@@ -50,6 +51,19 @@ export default async function OpengraphImage() {
           <div
             style={{
               display: "flex",
+              gap: 6,
+              marginTop: -14,
+              fontSize: 20,
+              letterSpacing: 1.2,
+              color: muted,
+            }}
+          >
+            By
+            <span style={{ color: foreground, fontWeight: 600 }}>Polsar Studio</span>
+          </div>
+          <div
+            style={{
+              display: "flex",
               flexDirection: "column",
               fontFamily: "Barlow Condensed",
               fontSize: 88,
@@ -79,6 +93,7 @@ export default async function OpengraphImage() {
       ...size,
       fonts: [
         { name: "Inter", data: regular, weight: 400, style: "normal" },
+        { name: "Inter", data: semiBold, weight: 600, style: "normal" },
         { name: "Barlow Condensed", data: bold, weight: 700, style: "normal" },
         { name: "Barlow Condensed", data: extraBold, weight: 800, style: "normal" },
       ],

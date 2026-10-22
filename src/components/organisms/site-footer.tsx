@@ -10,7 +10,10 @@ export function SiteFooter() {
   return (
     <footer className="mx-auto w-full max-w-[1280px] px-4 pb-8 sm:px-8">
       <div className="flex flex-wrap justify-between gap-2 border-t border-divider pt-6 text-xs text-muted">
-        <p>© {new Date().getFullYear()} Orbis</p>
+        <p>
+          © {new Date().getFullYear()} Orbis · By{" "}
+          <span className="font-semibold text-foreground">Polsar Studio</span>
+        </p>
         <nav aria-label="Legal" className="flex flex-wrap gap-x-4 gap-y-1">
           {links.map((link) => (
             <Link
