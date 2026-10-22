@@ -4,20 +4,21 @@ import { CloudOff, NotebookPen } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import type { FeedItem } from "@/lib/api";
+import type { FeedEntry, FeedItem } from "@/lib/api";
 import { itemKey, type Paged } from "@/lib/use-paged";
+import { ActivityCard } from "./activity-card";
 import { DiscussionModal } from "./discussion-modal";
 import { PostCard } from "./post-card";
 import { ThreadCard } from "./thread-card";
 
-type PostListProps<T extends FeedItem> = {
+type PostListProps<T extends FeedEntry> = {
   feed: Paged<T>;
   empty: { title: ReactNode; description: ReactNode; action?: ReactNode };
   end?: ReactNode;
   showCommunity?: boolean;
 };
 
-export function PostList<T extends FeedItem>({
+export function PostList<T extends FeedEntry>({
   feed,
   empty,
   end = <Molecule.FeedEnd label="You’re all caught up" />,
@@ -26,7 +27,11 @@ export function PostList<T extends FeedItem>({
   const { items, failed, retry, hasMore, loadingMore, moreFailed, loadMore } =
     feed;
   const [openKey, setOpenKey] = useState<string | null>(null);
-  const open = items?.find((item) => itemKey(item) === openKey) ?? null;
+  const open =
+    items?.find(
+      (item): item is T & FeedItem =>
+        item.type !== "activity" && itemKey(item) === openKey,
+    ) ?? null;
   const update = (item: FeedItem) => feed.update(item as T);
 
   if (failed && !items) {
@@ -61,7 +66,9 @@ export function PostList<T extends FeedItem>({
   return (
     <div className="flex flex-col gap-3">
       {items.map((item) =>
-        item.type === "thread" ? (
+        item.type === "activity" ? (
+          <ActivityCard key={itemKey(item)} activity={item} />
+        ) : item.type === "thread" ? (
           <ThreadCard
             key={itemKey(item)}
             thread={item}

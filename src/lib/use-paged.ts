@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import type { FeedItem, Page } from "@/lib/api";
+import type { FeedEntry, Page } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
-export type FetchPage<T extends FeedItem> = (
+export type FetchPage<T extends FeedEntry> = (
   token: string,
   cursor?: string,
 ) => Promise<Page<T>>;
 
-export type Paged<T extends FeedItem> = {
+export type Paged<T extends FeedEntry> = {
   items: T[] | null;
   failed: boolean;
   retry: () => void;
@@ -21,11 +21,11 @@ export type Paged<T extends FeedItem> = {
   update: (item: T) => void;
 };
 
-export function itemKey({ type, id }: FeedItem) {
+export function itemKey({ type, id }: FeedEntry) {
   return `${type}-${id}`;
 }
 
-export function usePaged<T extends FeedItem>(
+export function usePaged<T extends FeedEntry>(
   fetchPage: FetchPage<T>,
 ): Paged<T> {
   const [items, setItems] = useState<T[] | null>(null);

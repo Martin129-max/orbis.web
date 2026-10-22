@@ -24,6 +24,13 @@ export const tourStops: TourStop[] = [
       "Posts and threads from every community you’re in, newest first. Click anyone’s name or picture to see their profile.",
   },
   {
+    target: "library",
+    placement: "right",
+    title: "Your library",
+    description:
+      "Track the anime, manga, and games you’re watching, reading, and playing. Open any title to read more, and public updates show up in your communities’ feeds.",
+  },
+  {
     target: "communities",
     placement: "right",
     title: "Your communities",
@@ -119,6 +126,15 @@ export const checklistItems: ChecklistItem[] = [
     key: "friend",
     title: "Add a friend",
     hint: "Type a username in the friends panel on the right.",
+  },
+  {
+    key: "library",
+    title: "Add something to your library",
+    hint: (
+      <>
+        Search your favourites in the <ChecklistLink href="/library">Library</ChecklistLink>.
+      </>
+    ),
   },
   {
     key: "feedback",

@@ -136,6 +136,33 @@ export type Thread = {
 
 export type FeedItem = Post | Thread;
 
+export type MediaType = "anime" | "manga" | "game";
+
+export type LibraryStatus =
+  | "current"
+  | "completed"
+  | "on_hold"
+  | "dropped"
+  | "planned";
+
+export type Activity = {
+  type: "activity";
+  id: number;
+  createdAt: string;
+  author: Author;
+  status: LibraryStatus;
+  progress: { from: number; to: number } | null;
+  media: {
+    type: MediaType;
+    sourceId: string;
+    title: string;
+    coverImage: string | null;
+    year: number | null;
+  };
+};
+
+export type FeedEntry = FeedItem | Activity;
+
 export type Page<T> = { items: T[]; nextCursor: string | null };
 
 export type ThreadSort = "hot" | "new" | "top";
@@ -401,7 +428,7 @@ export async function getPosts(
   token: string,
   communityId: number,
   cursor?: string,
-): Promise<Page<Post>> {
+): Promise<Page<Post | Activity>> {
   const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor }), {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -413,7 +440,7 @@ export async function getPosts(
 export async function getFeed(
   token: string,
   cursor?: string,
-): Promise<Page<FeedItem>> {
+): Promise<Page<FeedEntry>> {
   const res = await api(withQuery("/feed", { cursor }), {
     headers: { Authorization: `Bearer ${token}` },
   });
@@ -754,7 +781,8 @@ export type OnboardingStep =
   | "post"
   | "comment"
   | "friend"
-  | "feedback";
+  | "feedback"
+  | "library";
 
 export type Onboarding = {
   tourCompleted: boolean;
@@ -846,4 +874,127 @@ export async function removeUserCover(token: string): Promise<Profile> {
 
   if (!res.ok) throw new Error("Could not remove your cover.");
   return res.json();
+}
+
+export type MediaResult = {
+  id: string;
+  type: MediaType;
+  sourceId: string;
+  title: string;
+  coverImage: string | null;
+  year: number | null;
+  score: number | null;
+  inLibrary: boolean;
+};
+
+export type LibraryEntry = {
+  id: number;
+  mediaId: string;
+  mediaType: MediaType;
+  sourceId: string;
+  title: string;
+  coverImage: string | null;
+  year: number | null;
+  status: LibraryStatus;
+  progress: number;
+  total: number | null;
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function searchLibrary(
+  token: string,
+  q: string,
+): Promise<Record<MediaType, MediaResult[]>> {
+  const res = await api(withQuery("/library/search", { q }), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Search isn’t available right now."));
+  return res.json();
+}
+
+export async function getLibrary(token: string): Promise<LibraryEntry[]> {
+  const res = await api("/library", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your library.");
+  return res.json();
+}
+
+export async function addToLibrary(
+  token: string,
+  item: {
+    type: MediaType;
+    sourceId: string;
+    status: LibraryStatus;
+    isPublic: boolean;
+  },
+): Promise<LibraryEntry> {
+  const res = await api("/library", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(item),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not add it to your library."));
+  return res.json();
+}
+
+export async function updateLibraryEntry(
+  token: string,
+  id: number,
+  changes: { status?: LibraryStatus; isPublic?: boolean; progress?: number },
+): Promise<LibraryEntry> {
+  const res = await api(`/library/${id}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(changes),
+  });
+
+  if (!res.ok) throw new Error("Could not update your library.");
+  return res.json();
+}
+
+export type MediaProfile = Omit<MediaResult, "inLibrary"> & {
+  altTitles: string[];
+  synopsis: string | null;
+  bannerImage: string | null;
+  releaseStatus: string | null;
+  genres: string[];
+  source: { provider: string; url: string } | null;
+  details: Record<string, unknown>;
+  entry: LibraryEntry | null;
+  members: { status: LibraryStatus; user: Author }[];
+};
+
+export async function getMediaProfile(
+  token: string,
+  type: string,
+  sourceId: string,
+): Promise<MediaProfile | null> {
+  const res = await api(`/library/media/${encodeURIComponent(type)}/${encodeURIComponent(sourceId)}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404 || res.status === 400) return null;
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not load this title."));
+  return res.json();
+}
+
+export async function removeFromLibrary(token: string, id: number): Promise<void> {
+  const res = await api(`/library/${id}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not remove it from your library.");
 }

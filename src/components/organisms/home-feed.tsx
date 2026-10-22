@@ -64,7 +64,19 @@ export function HomeFeed() {
                   options={communities.map((community) => ({
                     value: community.id,
                     label: community.name,
+                    iconUrl: community.iconUrl,
                   }))}
+                  optionRender={({ data }) => (
+                    <span className="flex items-center gap-2">
+                      <span
+                        aria-hidden
+                        className="relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[13px] leading-none font-bold"
+                      >
+                        <Atom.CommunityIcon name={data.label} src={data.iconUrl} />
+                      </span>
+                      <span className="truncate">{data.label}</span>
+                    </span>
+                  )}
                   popupMatchSelectWidth={false}
                   className="-ml-[7px] w-fit max-w-full text-[13px] font-semibold"
                 />

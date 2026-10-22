@@ -1,4 +1,5 @@
 export * from "./appear-offline-switch";
+export * from "./activity-card";
 export * from "./auth-form";
 export * from "./avatar-picker";
 export * from "./comment-section";
@@ -15,6 +16,9 @@ export * from "./friends-panel";
 export * from "./guest-gate";
 export * from "./home-feed";
 export * from "./landing-hero";
+export * from "./library-controls";
+export * from "./library-view";
+export * from "./media-profile";
 export * from "./member-list";
 export * from "./member-presence";
 export * from "./notification-bell";

@@ -21,7 +21,14 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Compass, House, LogOut, Plus, User } from "lucide-react";
+import {
+  Compass,
+  House,
+  LibraryBig,
+  LogOut,
+  Plus,
+  User,
+} from "lucide-react";
 import { Popover, Tooltip } from "antd";
 import Link from "next/link";
 import { useParams, usePathname, useRouter } from "next/navigation";
@@ -322,6 +329,17 @@ export function CommunityRail() {
             className={itemClass(pathname === "/")}
           >
             <House size={20} />
+          </Link>
+        </RailSlot>
+        <RailSlot label="Library">
+          <Link
+            href="/library"
+            aria-label="Library"
+            aria-current={pathname === "/library" ? "page" : undefined}
+            data-tour="library"
+            className={itemClass(pathname === "/library")}
+          >
+            <LibraryBig size={20} />
           </Link>
         </RailSlot>
         <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
