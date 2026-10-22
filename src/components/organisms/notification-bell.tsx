@@ -23,6 +23,7 @@ export function NotificationBell({
         href="/notifications"
         aria-label={label}
         aria-current={active ? "page" : undefined}
+        data-tour="notifications"
         className={`relative ${className(active)}`}
       >
         <Bell size={20} />

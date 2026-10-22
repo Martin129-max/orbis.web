@@ -28,6 +28,7 @@ export function SidePanel({
   if (isDesktop) {
     return collapsed ? null : (
       <aside
+        data-tour="side-panel"
         id="side-panel"
         aria-label={label}
         className="hidden w-72 shrink-0 flex-col gap-6 overflow-y-auto border-l border-divider bg-surface p-6 lg:flex"

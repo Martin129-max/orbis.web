@@ -19,6 +19,7 @@ export * from "./member-list";
 export * from "./member-presence";
 export * from "./notification-bell";
 export * from "./notification-center";
+export * from "./onboarding";
 export * from "./post-card";
 export * from "./post-composer";
 export * from "./post-list";

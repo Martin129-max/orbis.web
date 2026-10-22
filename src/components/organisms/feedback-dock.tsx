@@ -147,7 +147,12 @@ export function FeedbackDock() {
     <>
       <div className="fixed right-4 bottom-4 z-40 flex flex-col items-center gap-3 sm:right-6 sm:bottom-6">
         <Tooltip title={reportsLabel} placement="left">
-          <Link href="/reports" aria-label={reportsLabel} className={dockButton}>
+          <Link
+            href="/reports"
+            aria-label={reportsLabel}
+            data-tour="reports"
+            className={dockButton}
+          >
             <Inbox size={20} />
           </Link>
         </Tooltip>
@@ -155,6 +160,7 @@ export function FeedbackDock() {
           <button
             type="button"
             aria-label="Send feedback"
+            data-tour="feedback"
             onClick={() => setOpen(true)}
             className={dockButton}
           >

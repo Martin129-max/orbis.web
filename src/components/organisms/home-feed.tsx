@@ -11,6 +11,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
+import { OnboardingChecklist, OnboardingTour } from "./onboarding";
 
 export function HomeFeed() {
   const feed = usePaged(getFeed);
@@ -36,7 +37,10 @@ export function HomeFeed() {
         title={`Good to see you${profile ? `, ${profile.username}` : ""}.`}
         description="The latest posts and discussions from your communities."
       />
+      <OnboardingChecklist />
+      <OnboardingTour />
       {target && (
+        <div data-tour="composer">
         <PostComposer
           onPost={handlePost}
           placeholder="Share an update with your community…"
@@ -68,6 +72,7 @@ export function HomeFeed() {
             </div>
           }
         />
+        </div>
       )}
       <p className="text-xs uppercase">From your communities</p>
       <PostList

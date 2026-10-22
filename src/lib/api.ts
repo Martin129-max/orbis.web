@@ -745,3 +745,43 @@ export async function markAllNotificationsRead(token: string): Promise<void> {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export type OnboardingStep =
+  | "avatar"
+  | "community"
+  | "post"
+  | "comment"
+  | "friend"
+  | "feedback";
+
+export type Onboarding = {
+  tourCompleted: boolean;
+  checklistDismissed: boolean;
+  steps: Record<OnboardingStep, boolean>;
+};
+
+export async function getOnboarding(token: string): Promise<Onboarding> {
+  const res = await api("/users/me/onboarding", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your checklist.");
+  return res.json();
+}
+
+export async function updateOnboarding(
+  token: string,
+  changes: { tourCompleted?: boolean; checklistDismissed?: boolean },
+): Promise<Onboarding> {
+  const res = await api("/users/me/onboarding", {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(changes),
+  });
+
+  if (!res.ok) throw new Error("Could not save your checklist.");
+  return res.json();
+}

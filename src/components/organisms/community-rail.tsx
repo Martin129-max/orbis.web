@@ -208,6 +208,7 @@ function UserButton() {
       <button
         type="button"
         aria-label={`Account: ${username}`}
+        data-tour="account"
         aria-expanded={open}
         className="focus-ring rounded-full"
       >
@@ -316,6 +317,7 @@ export function CommunityRail() {
           <Link
             href="/"
             aria-label="Home"
+            data-tour="home"
             aria-current={pathname === "/" ? "page" : undefined}
             className={itemClass(pathname === "/")}
           >
@@ -330,6 +332,9 @@ export function CommunityRail() {
         style={fadeMask(overflow)}
         className="-mx-2 flex min-h-0 w-[calc(100%+1rem)] flex-1 flex-col items-center gap-4 overflow-y-auto px-2 py-1 [scrollbar-width:none] sm:-mx-4 sm:w-[calc(100%+2rem)] sm:px-4"
       >
+        {communities.length > 0 && (
+        <li data-tour="communities" className="w-full">
+        <ul className="flex w-full flex-col items-center gap-4">
         <DndContext
           id="community-rail"
           sensors={sensors}
@@ -351,11 +356,15 @@ export function CommunityRail() {
             ))}
           </SortableContext>
         </DndContext>
+        </ul>
+        </li>
+        )}
         <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
         <RailSlot label="Create a community">
           <button
             type="button"
             aria-label="Create a community"
+            data-tour="create"
             onClick={() => setCreating(true)}
             className={itemClass(false)}
           >
@@ -366,6 +375,7 @@ export function CommunityRail() {
           <Link
             href="/explore"
             aria-label="Explore communities"
+            data-tour="explore"
             aria-current={pathname === "/explore" ? "page" : undefined}
             className={itemClass(pathname === "/explore")}
           >

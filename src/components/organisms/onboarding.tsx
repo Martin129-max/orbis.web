@@ -1,0 +1,330 @@
+"use client";
+
+import { Progress, Tour, type TourProps } from "antd";
+import { Check, Compass, X } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
+import * as Atom from "@atom";
+import type { OnboardingStep } from "@/lib/api";
+import { useOnboardingStore } from "@/stores/onboarding-store";
+
+type TourStop = {
+  target: string;
+  title: string;
+  description: string;
+  placement: NonNullable<TourProps["placement"]>;
+};
+
+export const tourStops: TourStop[] = [
+  {
+    target: "home",
+    placement: "right",
+    title: "Your home feed",
+    description:
+      "Posts and threads from every community you’re in, newest first. Come back here any time.",
+  },
+  {
+    target: "communities",
+    placement: "right",
+    title: "Your communities",
+    description:
+      "Every community you’ve joined lives in this rail. Drag them to reorder, and click one to open its feed, forum, and members.",
+  },
+  {
+    target: "create",
+    placement: "right",
+    title: "Start a community",
+    description:
+      "Make your own space, public or private. As the owner you can set its icon, cover, and background right on its page.",
+  },
+  {
+    target: "explore",
+    placement: "right",
+    title: "Explore",
+    description: "Search public communities and join the ones you like.",
+  },
+  {
+    target: "composer",
+    placement: "bottom",
+    title: "Share something",
+    description:
+      "Write a post and pick which community it goes to. Use the forum tab inside a community for longer discussions with votes.",
+  },
+  {
+    target: "side-panel",
+    placement: "left",
+    title: "Friends",
+    description:
+      "Add friends by username, accept requests, and see who’s online. Inside a community, this panel shows who’s online there.",
+  },
+  {
+    target: "notifications",
+    placement: "rightBottom",
+    title: "Notifications",
+    description:
+      "Comments on your posts, replies, friend requests, and report updates all land here. Search and filter them on the notifications page.",
+  },
+  {
+    target: "account",
+    placement: "rightBottom",
+    title: "Your account",
+    description:
+      "Switch between light and dark, appear offline, open your profile to change your picture, or log out.",
+  },
+  {
+    target: "feedback",
+    placement: "leftBottom",
+    title: "Send feedback",
+    description:
+      "Found a bug or have an idea? Send it from here and you’ll get a ticket number to track it.",
+  },
+  {
+    target: "reports",
+    placement: "leftBottom",
+    title: "Your reports",
+    description:
+      "See everything you’ve reported and its status. You’re notified whenever a report moves.",
+  },
+];
+
+type ChecklistItem = {
+  key: OnboardingStep | "tour";
+  title: string;
+  hint: ReactNode;
+};
+
+export const checklistItems: ChecklistItem[] = [
+  { key: "tour", title: "Take the tour", hint: "A quick look at everything Orbis can do." },
+  {
+    key: "avatar",
+    title: "Add a profile picture",
+    hint: (
+      <>
+        Click your picture on <ChecklistLink href="/profile">your profile</ChecklistLink>.
+      </>
+    ),
+  },
+  {
+    key: "community",
+    title: "Join or create a community",
+    hint: (
+      <>
+        Find one in <ChecklistLink href="/explore">Explore</ChecklistLink>, or press + in the rail.
+      </>
+    ),
+  },
+  { key: "post", title: "Share your first post", hint: "Use the box below or a community’s forum." },
+  { key: "comment", title: "Join a discussion", hint: "Open any post or thread and leave a comment." },
+  {
+    key: "friend",
+    title: "Add a friend",
+    hint: "Type a username in the friends panel on the right.",
+  },
+  {
+    key: "feedback",
+    title: "Send feedback",
+    hint: "Use the button in the bottom-right corner. You’ll get a ticket number.",
+  },
+];
+
+function ChecklistLink({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link href={href} className="focus-ring rounded-sm font-semibold text-accent hover:underline">
+      {children}
+    </Link>
+  );
+}
+
+function visibleTarget(name: string) {
+  const element = document.querySelector<HTMLElement>(`[data-tour="${name}"]`);
+  if (!element) return null;
+  const { width, height } = element.getBoundingClientRect();
+  return width > 0 && height > 0 ? element : null;
+}
+
+function scrollParent(element: HTMLElement) {
+  for (let node = element.parentElement; node; node = node.parentElement) {
+    if (/(auto|scroll)/.test(getComputedStyle(node).overflowY)) return node;
+  }
+  return null;
+}
+
+function visiblePart(element: HTMLElement) {
+  const parent = scrollParent(element);
+  if (!parent) return element;
+
+  const rect = element.getBoundingClientRect();
+  const bounds = parent.getBoundingClientRect();
+  const top = Math.max(rect.top, bounds.top);
+  const bottom = Math.min(rect.bottom, bounds.bottom);
+  if (top <= rect.top && bottom >= rect.bottom) return element;
+
+  let proxy = document.getElementById("tour-visible-part");
+  if (!proxy) {
+    proxy = document.createElement("div");
+    proxy.id = "tour-visible-part";
+    proxy.setAttribute("aria-hidden", "true");
+    proxy.style.cssText = "position:fixed;pointer-events:none;visibility:hidden";
+    document.body.appendChild(proxy);
+  }
+  Object.assign(proxy.style, {
+    left: `${rect.left}px`,
+    top: `${top}px`,
+    width: `${rect.width}px`,
+    height: `${Math.max(0, bottom - top)}px`,
+  });
+  return proxy;
+}
+
+function revealed(element: HTMLElement) {
+  element.scrollIntoView({ block: "nearest", inline: "nearest" });
+  return visiblePart(element);
+}
+
+export function OnboardingTour() {
+  const onboarding = useOnboardingStore((state) => state.onboarding);
+  const open = useOnboardingStore((state) => state.tourOpen);
+  const startTour = useOnboardingStore((state) => state.startTour);
+  const finishTour = useOnboardingStore((state) => state.finishTour);
+  const run = useOnboardingStore((state) => state.tourRun);
+  const [autoStarted, setAutoStarted] = useState(false);
+
+  useEffect(() => {
+    if (!onboarding || onboarding.tourCompleted || autoStarted) return;
+    const timer = setTimeout(() => {
+      setAutoStarted(true);
+      startTour();
+    }, 800);
+    return () => clearTimeout(timer);
+  }, [onboarding, autoStarted, startTour]);
+
+  function endTour() {
+    document.getElementById("tour-visible-part")?.remove();
+    finishTour();
+  }
+
+  const steps = useMemo<NonNullable<TourProps["steps"]>>(
+    () =>
+      open && run > 0
+        ? tourStops.flatMap(({ target, title, description, placement }) => {
+            const element = visibleTarget(target);
+            return element
+              ? [{ title, description, placement, target: () => revealed(element) }]
+              : [];
+          })
+        : [],
+    [open, run],
+  );
+
+  return (
+    <Tour
+      key={run}
+      open={open && steps.length > 0}
+      steps={steps}
+      arrow={false}
+      gap={{ radius: 12, offset: 0 }}
+      onClose={endTour}
+      onFinish={endTour}
+      indicatorsRender={(index, total) => (
+        <span className="text-xs text-muted">
+          {index + 1} / {total}
+        </span>
+      )}
+    />
+  );
+}
+
+export function OnboardingChecklist() {
+  const onboarding = useOnboardingStore((state) => state.onboarding);
+  const fetchOnboarding = useOnboardingStore((state) => state.fetchOnboarding);
+  const startTour = useOnboardingStore((state) => state.startTour);
+  const setChecklistDismissed = useOnboardingStore(
+    (state) => state.setChecklistDismissed,
+  );
+
+  useEffect(() => {
+    fetchOnboarding();
+    window.addEventListener("focus", fetchOnboarding);
+    return () => window.removeEventListener("focus", fetchOnboarding);
+  }, [fetchOnboarding]);
+
+  if (!onboarding || onboarding.checklistDismissed) return null;
+
+  const done = (key: ChecklistItem["key"]) =>
+    key === "tour" ? onboarding.tourCompleted : onboarding.steps[key];
+  const completed = checklistItems.filter(({ key }) => done(key)).length;
+  const finished = completed === checklistItems.length;
+
+  return (
+    <section
+      aria-label="Get started checklist"
+      className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5"
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <p className="text-xs font-bold text-accent uppercase">Get started</p>
+          <h2 className="font-display text-2xl leading-tight font-bold">
+            {finished ? "You’re all set." : "Make yourself at home."}
+          </h2>
+          <p className="text-xs text-muted">
+            {completed} of {checklistItems.length} done
+          </p>
+        </div>
+        <button
+          type="button"
+          aria-label="Hide checklist"
+          title="Hide checklist"
+          onClick={() => setChecklistDismissed(true)}
+          className="icon-button cursor-pointer"
+        >
+          <X size={18} />
+        </button>
+      </div>
+      <Progress
+        percent={Math.round((completed / checklistItems.length) * 100)}
+        showInfo={false}
+        size="small"
+        strokeColor="var(--accent)"
+        railColor="var(--rail-item)"
+      />
+      <ul className="flex flex-col gap-1">
+        {checklistItems.map((item) => {
+          const checked = done(item.key);
+          return (
+            <li key={item.key} className="flex items-start gap-3 rounded-md py-2">
+              <span
+                aria-hidden
+                className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                  checked
+                    ? "border-online bg-online text-white"
+                    : "border-divider bg-background"
+                }`}
+              >
+                {checked && <Check size={12} strokeWidth={3} />}
+              </span>
+              <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+                <span
+                  className={`text-sm font-semibold ${checked ? "text-muted line-through" : ""}`}
+                >
+                  <span className="sr-only">{checked ? "Done: " : "To do: "}</span>
+                  {item.title}
+                </span>
+                {!checked && <span className="text-xs text-muted">{item.hint}</span>}
+              </div>
+              {item.key === "tour" && (
+                <Atom.Button
+                  size="small"
+                  variant={checked ? "secondary" : "primary"}
+                  icon={<Compass size={14} />}
+                  onClick={startTour}
+                >
+                  {checked ? "Replay" : "Start tour"}
+                </Atom.Button>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
