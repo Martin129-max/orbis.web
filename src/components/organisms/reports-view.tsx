@@ -29,7 +29,7 @@ export function ReportsView() {
       <Molecule.PageIntro
         eyebrow="Feedback"
         title="My reports."
-        description="Everything you’ve reported, with its ticket number and status. You’ll get a notification when a report moves."
+        description="Everything you’ve reported, with its ticket number and status. You’ll get a notification when there’s an update."
       />
       <MyReports />
     </div>
