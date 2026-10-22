@@ -24,6 +24,7 @@ export type Community = {
   id: number;
   name: string;
   iconUrl: string | null;
+  coverUrl: string | null;
   ownerId: number;
   isPublic: boolean;
   createdAt: string;
@@ -285,39 +286,44 @@ export async function updateCommunity(
   return res.json();
 }
 
-async function sendCommunityIcon(
+export type CommunityImage = "icon" | "cover";
+
+async function sendCommunityImage(
   token: string,
   communityId: number,
+  image: CommunityImage,
   init: RequestInit,
 ): Promise<Community> {
-  const res = await api(`/communities/${communityId}/icon`, {
+  const res = await api(`/communities/${communityId}/${image}`, {
     ...init,
     headers: { Authorization: `Bearer ${token}` },
   });
 
-  if (res.status === 403) throw new Error("Only admins can change the icon.");
-  if (res.status === 413) throw new Error("Icons must be 10 MB or smaller.");
+  if (res.status === 403) throw new Error(`Only admins can change the ${image}.`);
+  if (res.status === 413) throw new Error("Images must be 10 MB or smaller.");
   if (!res.ok) {
-    throw new Error(await errorMessage(res, "Could not save the icon."));
+    throw new Error(await errorMessage(res, `Could not save the ${image}.`));
   }
   return res.json();
 }
 
-export function uploadCommunityIcon(
+export function uploadCommunityImage(
   token: string,
   communityId: number,
+  image: CommunityImage,
   file: File,
 ): Promise<Community> {
   const body = new FormData();
   body.append("file", file);
-  return sendCommunityIcon(token, communityId, { method: "POST", body });
+  return sendCommunityImage(token, communityId, image, { method: "POST", body });
 }
 
-export function removeCommunityIcon(
+export function removeCommunityImage(
   token: string,
   communityId: number,
+  image: CommunityImage,
 ): Promise<Community> {
-  return sendCommunityIcon(token, communityId, { method: "DELETE" });
+  return sendCommunityImage(token, communityId, image, { method: "DELETE" });
 }
 
 export async function deleteCommunity(

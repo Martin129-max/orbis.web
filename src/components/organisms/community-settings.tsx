@@ -1,6 +1,7 @@
 "use client";
 
 import { Switch } from "antd";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
@@ -119,11 +120,13 @@ function GeneralSettings({ community }: { community: Community }) {
 }
 
 function IconSettings({ community }: { community: Community }) {
-  const setCommunityIcon = useCommunityStore((state) => state.setCommunityIcon);
+  const setCommunityImage = useCommunityStore(
+    (state) => state.setCommunityImage,
+  );
   const [iconUrl, setIconUrl] = useState(community.iconUrl);
 
   async function save(file: File | null) {
-    const updated = await setCommunityIcon(community.id, file);
+    const updated = await setCommunityImage(community.id, "icon", file);
     setIconUrl(updated.iconUrl);
   }
 
@@ -146,6 +149,41 @@ function IconSettings({ community }: { community: Community }) {
           onRemove={() => save(null)}
         />
       </div>
+    </Section>
+  );
+}
+
+function CoverSettings({ community }: { community: Community }) {
+  const setCommunityImage = useCommunityStore(
+    (state) => state.setCommunityImage,
+  );
+  const [coverUrl, setCoverUrl] = useState(community.coverUrl);
+
+  async function save(file: File | null) {
+    const updated = await setCommunityImage(community.id, "cover", file);
+    setCoverUrl(updated.coverUrl);
+  }
+
+  return (
+    <Section
+      title="Cover photo"
+      description="Shown across the top of the community page. Wide images work best."
+    >
+      <div className="relative aspect-[3/1] overflow-hidden rounded-lg border border-divider bg-rail-item">
+        {coverUrl ? (
+          <Image src={coverUrl} alt="" fill unoptimized className="object-cover" />
+        ) : (
+          <p className="absolute inset-0 flex items-center justify-center text-xs text-muted">
+            No cover photo yet
+          </p>
+        )}
+      </div>
+      <Molecule.ImagePicker
+        noun="cover"
+        hasImage={Boolean(coverUrl)}
+        onUpload={save}
+        onRemove={() => save(null)}
+      />
     </Section>
   );
 }
@@ -311,6 +349,7 @@ export function CommunitySettings({ community }: { community: Community }) {
       />
       <GeneralSettings community={community} />
       <IconSettings community={community} />
+      <CoverSettings community={community} />
       <AdminSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}
     </div>

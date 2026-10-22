@@ -4,6 +4,7 @@ export * from "./avatar-picker";
 export * from "./comment-section";
 export * from "./community-feed";
 export * from "./community-forum";
+export * from "./community-header";
 export * from "./community-rail";
 export * from "./community-search";
 export * from "./community-settings";

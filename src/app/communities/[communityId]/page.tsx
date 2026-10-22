@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { Tooltip } from "antd";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Organism from "@organism";
@@ -30,6 +30,15 @@ export default function CommunityPage() {
   const router = useRouter();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const tab = useSearchParams().get("tab") === "forum" ? "forum" : "feed";
+  const [collapsed, setCollapsed] = useState(false);
+
+  function handleScroll(event: UIEvent<HTMLDivElement>) {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const room = scrollHeight - clientHeight;
+    setCollapsed((current) =>
+      current ? scrollTop > 0 : scrollTop > 32 && room > 240,
+    );
+  }
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
@@ -66,7 +75,9 @@ export default function CommunityPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <Template.PageHeader
+          <Organism.CommunityHeader
+            community={current.community}
+            collapsed={collapsed}
             actions={
               <>
                 {canManage(current.community) && (
@@ -83,11 +94,7 @@ export default function CommunityPage() {
                 <Organism.SidePanelToggle label="Members" />
               </>
             }
-          >
-            <Atom.Heading className="min-w-0 truncate">
-              {current.community.name}
-            </Atom.Heading>
-          </Template.PageHeader>
+          />
           <nav
             aria-label="Community sections"
             className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
@@ -125,7 +132,7 @@ export default function CommunityPage() {
             </p>
           </nav>
           <div className="flex min-h-0 flex-1">
-            <Template.PageColumn>
+            <Template.PageColumn onScroll={handleScroll}>
               {tab === "forum" ? (
                 <Organism.CommunityForum
                   key={current.community.id}

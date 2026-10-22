@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import type { Community } from "@/lib/api";
+import type { Community, CommunityImage } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
 
 type CommunityState = {
@@ -12,7 +12,11 @@ type CommunityState = {
     communityId: number,
     changes: Partial<Pick<Community, "name" | "isPublic">>,
   ) => Promise<Community>;
-  setCommunityIcon: (communityId: number, file: File | null) => Promise<Community>;
+  setCommunityImage: (
+    communityId: number,
+    image: CommunityImage,
+    file: File | null,
+  ) => Promise<Community>;
   deleteCommunity: (communityId: number) => Promise<void>;
   reorderCommunities: (communityIds: number[]) => Promise<void>;
 };
@@ -63,17 +67,17 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     }));
     return updated;
   },
-  setCommunityIcon: async (communityId, file) => {
+  setCommunityImage: async (communityId, image, file) => {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
 
     const updated = file
-      ? await api.uploadCommunityIcon(token, communityId, file)
-      : await api.removeCommunityIcon(token, communityId);
+      ? await api.uploadCommunityImage(token, communityId, image, file)
+      : await api.removeCommunityImage(token, communityId, image);
     set((state) => ({
       communities: state.communities.map((community) =>
         community.id === communityId
-          ? { ...community, iconUrl: updated.iconUrl }
+          ? { ...community, iconUrl: updated.iconUrl, coverUrl: updated.coverUrl }
           : community,
       ),
     }));
