@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -69,7 +69,10 @@ export function AuthForm({
     try {
       const password = String(form.get("password"));
       if (mode === "login") {
-        await login({ identifier: String(form.get("identifier")).trim(), password });
+        await login({
+          identifier: String(form.get("identifier")).trim(),
+          password,
+        });
       } else {
         await signup({
           email: String(form.get("email")),
@@ -86,7 +89,9 @@ export function AuthForm({
   }
 
   return (
-    <div className="flex w-full max-w-[400px] flex-col gap-10 sm:gap-16">
+    <div
+      className={`flex w-full flex-col ${compact ? "max-w-[400px] gap-10 sm:gap-16" : "max-w-[480px] gap-7"}`}
+    >
       {!compact && (
         <Link
           href="/"
@@ -96,13 +101,22 @@ export function AuthForm({
           Back to homepage
         </Link>
       )}
-      <div className="flex flex-col gap-6">
-        {!compact && <Atom.Brand className="text-5xl" />}
+      <div
+        className={`flex flex-col gap-6 ${compact ? "" : "rounded-2xl border border-divider bg-surface p-6 shadow-[0_16px_48px_-32px_rgb(0_0_0/0.2)] sm:p-8"}`}
+      >
+        {!compact && <Atom.Brand className="text-4xl" />}
         <h1
           className={`font-display leading-[1.04] font-bold ${compact ? "text-3xl" : "text-5xl"}`}
         >
           {title}
         </h1>
+        {!compact && (
+          <p className="-mt-3 text-sm leading-relaxed text-muted">
+            {mode === "login"
+              ? "Pick up where you left off. Your communities are waiting."
+              : "Make a little space for your interests, and find others who share them."}
+          </p>
+        )}
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">
           {mode === "login" ? (
             <Molecule.FormField
@@ -145,19 +159,19 @@ export function AuthForm({
             size="large"
             required
             minLength={6}
-            autoComplete={mode === "login" ? "current-password" : "new-password"}
-            extra={
-              mode === "signup"
-                ? "At least 6 characters."
-                : undefined
+            autoComplete={
+              mode === "login" ? "current-password" : "new-password"
             }
+            extra={mode === "signup" ? "At least 6 characters." : undefined}
           />
           {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
           <Atom.Button
             type="submit"
             size="large"
             loading={pending}
-            className="w-fit"
+            className={compact ? "w-fit" : "mt-1 w-full"}
+            icon={compact ? undefined : <ArrowRight size={17} />}
+            iconPlacement="end"
           >
             {submit}
           </Atom.Button>

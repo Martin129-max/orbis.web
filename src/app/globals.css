@@ -236,3 +236,13 @@ body {
     text-decoration: underline;
   }
 }
+
+html:not([data-auth]):has([data-landing-page]) {
+  scroll-padding-top: calc(var(--landing-header-height, 8rem) + 1.5rem);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html:not([data-auth]):has([data-landing-page]) {
+    scroll-behavior: smooth;
+  }
+}

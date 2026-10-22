@@ -27,11 +27,11 @@ export default function Home() {
       }
     >
       <div className="flex flex-1 flex-col font-sans">
-        <Organism.SiteHeader />
+        <Organism.SiteHeader sticky />
         <main className="flex-1">
           <Organism.LandingHero />
         </main>
-        <Organism.SiteFooter />
+        <Organism.SiteFooter bordered={false} />
       </div>
     </Organism.GuestGate>
   );

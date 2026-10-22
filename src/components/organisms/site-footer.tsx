@@ -6,10 +6,10 @@ const links = [
   { href: "/terms", label: "Terms" },
 ];
 
-export function SiteFooter() {
+export function SiteFooter({ bordered = true }: { bordered?: boolean }) {
   return (
     <footer className="mx-auto w-full max-w-[1280px] px-4 pb-8 sm:px-8">
-      <div className="flex flex-wrap justify-between gap-2 border-t border-divider pt-6 text-xs text-muted">
+      <div className={`flex flex-wrap justify-between gap-2 pt-6 text-xs text-muted ${bordered ? "border-t border-divider" : ""}`}>
         <p>
           © {new Date().getFullYear()} Orbis · By{" "}
           <a

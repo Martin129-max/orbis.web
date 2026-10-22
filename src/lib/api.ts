@@ -1356,3 +1356,11 @@ export async function removeFromLibrary(token: string, id: number): Promise<void
 
   if (!res.ok) throw new Error("Could not remove it from your library.");
 }
+
+export type PublicCommunity = Omit<CommunitySearchResult, "joined">;
+
+export async function getPublicCommunities(): Promise<PublicCommunity[]> {
+  const res = await api("/public/communities", { cache: "no-store" });
+  if (!res.ok) throw new Error("Could not load public communities.");
+  return res.json();
+}
