@@ -194,7 +194,7 @@ function UserButton() {
           </label>
           <hr className="border-divider" />
           <Link
-            href="/profile"
+            href={profile ? `/users/${profile.username}` : "/profile"}
             onClick={() => setOpen(false)}
             className={menuRow}
           >

@@ -2,17 +2,12 @@
 
 import {
   Globe,
-  LoaderCircle,
   Lock,
   MessagesSquare,
   Newspaper,
-  Settings,
   Users,
-  Wallpaper,
 } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
-import { Tooltip } from "antd";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type UIEvent } from "react";
 import * as Atom from "@atom";
@@ -105,15 +100,10 @@ export default function CommunityPage() {
             actions={
               <>
                 {canManage(current.community) && (
-                  <Tooltip title="Community settings">
-                    <Link
-                      href={`/communities/${current.community.id}/settings`}
-                      aria-label="Community settings"
-                      className="icon-button"
-                    >
-                      <Settings size={20} />
-                    </Link>
-                  </Tooltip>
+                  <Molecule.SettingsLink
+                    href={`/communities/${current.community.id}/settings`}
+                    label="Community settings"
+                  />
                 )}
                 <Organism.SidePanelToggle label="Members" />
               </>
@@ -156,41 +146,19 @@ export default function CommunityPage() {
             </p>
           </nav>
           <div className="relative isolate flex min-h-0 flex-1">
-            {current.community.backgroundUrl && (
-              <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-                <Image
-                  src={current.community.backgroundUrl}
-                  alt=""
-                  fill
-                  unoptimized
-                  className="object-cover"
-                />
-                <div className="absolute inset-0 bg-background/55" />
-              </div>
-            )}
-            {canManage(current.community) && (
-              <Molecule.ImageMenu
-                noun="background"
-                hasImage={Boolean(current.community.backgroundUrl)}
-                onUpload={(file) => handleImage("background", file)}
-                onRemove={() => handleImage("background", null)}
-              >
-                {(busy) => (
-                  <button
-                    type="button"
-                    aria-label="Change background"
-                    title="Change background"
-                    className="focus-ring absolute bottom-4 left-4 z-10 flex cursor-pointer h-9 w-9 items-center justify-center rounded-full border border-divider bg-surface text-foreground shadow-sm transition-colors hover:bg-rail-item"
-                  >
-                    {busy ? (
-                      <LoaderCircle size={16} className="animate-spin" />
-                    ) : (
-                      <Wallpaper size={16} />
-                    )}
-                  </button>
-                )}
-              </Molecule.ImageMenu>
-            )}
+            <Molecule.PageWallpaper
+              src={current.community.backgroundUrl}
+              onUpload={
+                canManage(current.community)
+                  ? (file) => handleImage("background", file)
+                  : undefined
+              }
+              onRemove={
+                canManage(current.community)
+                  ? () => handleImage("background", null)
+                  : undefined
+              }
+            />
             <Template.PageColumn onScroll={handleScroll}>
               {tab === "members" ? (
                 <Organism.MemberList

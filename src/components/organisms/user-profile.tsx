@@ -1,0 +1,557 @@
+"use client";
+
+import {
+  Boxes,
+  CalendarDays,
+  Library,
+  Newspaper,
+  Users,
+  UserX,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, type ReactNode, type UIEvent } from "react";
+import * as Atom from "@atom";
+import * as Molecule from "@molecule";
+import * as Template from "@template";
+import {
+  createWallPost,
+  getPublicProfile,
+  getUserPosts,
+  removeAvatar,
+  removeUserBackground,
+  removeUserCover,
+  uploadAvatar,
+  uploadUserBackground,
+  uploadUserCover,
+  type Profile as OwnProfile,
+  type PublicProfile as Profile,
+} from "@/lib/api";
+import { usePaged } from "@/lib/use-paged";
+import { displayName } from "@/lib/display-name";
+import { useAuthStore } from "@/stores/auth-store";
+import { useCommunityStore } from "@/stores/community-store";
+import { useFriendsStore } from "@/stores/friends-store";
+import { FriendAction } from "./member-list";
+import { PostComposer } from "./post-composer";
+import { PostList } from "./post-list";
+import { ProfileLibrary } from "./profile-library";
+
+const tabs = [
+  { value: "posts", label: "Posts", icon: <Newspaper size={16} /> },
+  { value: "library", label: "Library", icon: <Library size={16} /> },
+  { value: "friends", label: "Friends", icon: <Users size={16} /> },
+  { value: "communities", label: "Communities", icon: <Boxes size={16} /> },
+] as const;
+
+type Tab = (typeof tabs)[number]["value"];
+
+type Loaded = { username: string; profile: Profile | null; failed?: boolean };
+
+type ImageEditor = {
+  upload: (file: File) => Promise<unknown>;
+  remove: () => Promise<unknown>;
+};
+
+type ProfileImages = { avatar: ImageEditor; cover: ImageEditor; background: ImageEditor };
+
+function ProfileAvatar({
+  profile,
+  name,
+  editor,
+}: {
+  profile: Profile;
+  name: string;
+  editor?: ImageEditor;
+}) {
+  const picture = profile.avatarUrl ? (
+    <Image src={profile.avatarUrl} alt="" fill unoptimized className="rounded-full object-cover" />
+  ) : (
+    <span className="flex h-full w-full items-center justify-center rounded-full bg-rail-item font-display text-2xl font-bold">
+      {Array.from(name)[0]?.toUpperCase()}
+    </span>
+  );
+
+  if (!editor) return picture;
+
+  return (
+    <Molecule.ImageMenu
+      noun="picture"
+      hasImage={Boolean(profile.avatarUrl)}
+      onUpload={editor.upload}
+      onRemove={editor.remove}
+    >
+      {(busy) => (
+        <button
+          type="button"
+          aria-label="Change profile picture"
+          className="focus-ring group absolute inset-0 cursor-pointer rounded-full"
+        >
+          {picture}
+          <Atom.EditOverlay busy={busy} badge={false} />
+        </button>
+      )}
+    </Molecule.ImageMenu>
+  );
+}
+
+function ProfileHeader({
+  profile,
+  online,
+  collapsed,
+  actions,
+  images,
+}: {
+  profile: Profile;
+  online: boolean;
+  collapsed: boolean;
+  actions: React.ReactNode;
+  images?: ProfileImages;
+}) {
+  const name = profile.name || profile.username;
+  const backdrop = profile.coverUrl ?? profile.avatarUrl;
+
+  return (
+    <header
+      className={`relative shrink-0 overflow-hidden border-b border-divider bg-gradient-to-br from-accent-soft to-rail-item transition-[height] duration-300 ease-out motion-reduce:transition-none ${
+        collapsed ? "h-14 sm:h-[72px]" : "h-52 sm:h-64"
+      }`}
+    >
+      {backdrop && (
+        <Image
+          src={backdrop}
+          alt=""
+          fill
+          unoptimized
+          priority
+          className={`object-cover ${profile.coverUrl ? "" : "scale-125 blur-2xl"}`}
+        />
+      )}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/20 to-black/5" />
+      <div
+        className={`absolute inset-0 flex gap-3 px-4 sm:gap-4 sm:px-8 ${
+          images ? "pr-28 sm:pr-32" : "pr-44 sm:pr-60"
+        } ${
+          collapsed ? "items-center" : "items-end pb-4 sm:pb-6"
+        }`}
+      >
+        <span
+          className={`relative shrink-0 rounded-full border-2 border-white/80 transition-[width,height] duration-300 motion-reduce:transition-none ${
+            collapsed ? "h-8 w-8 sm:h-10 sm:w-10" : "h-16 w-16 sm:h-24 sm:w-24"
+          }`}
+        >
+          <ProfileAvatar profile={profile} name={name} editor={images?.avatar} />
+          <span
+            className={`pointer-events-none absolute right-0 bottom-0 rounded-full border-2 border-white ${
+              online ? "bg-online" : "bg-offline"
+            } ${collapsed ? "h-2.5 w-2.5" : "h-4 w-4"}`}
+          />
+        </span>
+        <div className="flex min-w-0 flex-col gap-0.5">
+          <Atom.Heading
+            className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+              collapsed ? "" : "sm:text-4xl"
+            }`}
+          >
+            {name}
+          </Atom.Heading>
+          {!collapsed && (
+            <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
+              <span>@{profile.username}</span>
+              <span>· {online ? "Online" : "Offline"}</span>
+              {profile.isAdmin && (
+                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold">
+                  Site admin
+                </span>
+              )}
+            </p>
+          )}
+        </div>
+      </div>
+      <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
+        {actions}
+      </div>
+      {images && !collapsed && (
+        <Molecule.CoverButton
+          hasImage={Boolean(profile.coverUrl)}
+          onUpload={images.cover.upload}
+          onRemove={images.cover.remove}
+          className="absolute right-4 bottom-4 sm:right-8 sm:bottom-6"
+        />
+      )}
+    </header>
+  );
+}
+
+function ProfileTabs({ profile, tab }: { profile: Profile; tab: Tab }) {
+  const joined = new Date(profile.createdAt).toLocaleDateString(undefined, {
+    month: "long",
+    year: "numeric",
+  });
+  const counts: Partial<Record<Tab, number>> = {
+    library: profile.library.length,
+    friends: profile.friendCount,
+    communities: profile.communityCount,
+  };
+
+  return (
+    <nav
+      aria-label="Profile sections"
+      className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
+    >
+      {tabs.map(({ value, label, icon }) => (
+        <Link
+          key={value}
+          href={`/users/${profile.username}${value === "posts" ? "" : `?tab=${value}`}`}
+          aria-current={tab === value ? "page" : undefined}
+          className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+            tab === value
+              ? "border-accent text-accent"
+              : "border-transparent font-semibold text-foreground hover:text-accent"
+          }`}
+        >
+          {icon}
+          {label}
+          {counts[value] !== undefined && (
+            <span className="text-xs font-normal text-muted">{counts[value]}</span>
+          )}
+        </Link>
+      ))}
+      <p className="ml-auto hidden shrink-0 items-center gap-1.5 self-center text-xs text-muted sm:flex">
+        <CalendarDays size={14} aria-hidden />
+        Joined {joined}
+      </p>
+    </nav>
+  );
+}
+
+function Wall({
+  profile,
+  isSelf,
+  canPost,
+}: {
+  profile: Profile;
+  isSelf: boolean;
+  canPost: boolean;
+}) {
+  const feed = usePaged(
+    useCallback(
+      (token: string, cursor?: string) => getUserPosts(token, profile.username, cursor),
+      [profile.username],
+    ),
+  );
+  const name = displayName(profile);
+
+  async function handlePost(content: string) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    feed.prepend(await createWallPost(token, profile.username, content));
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {canPost && (
+        <PostComposer
+          onPost={handlePost}
+          placeholder={isSelf ? "What’s on your mind?" : `Write something to ${name}…`}
+          target={
+            <div className="flex items-center gap-3">
+              <Atom.Avatar size="sm" label={name} src={profile.avatarUrl} seed={profile.userId} />
+              <div className="flex min-w-0 flex-col">
+                <span className="text-xs text-muted uppercase">Post to</span>
+                <span className="truncate text-sm font-semibold">
+                  {isSelf ? "Your wall" : `${name}’s wall`}
+                </span>
+              </div>
+            </div>
+          }
+        />
+      )}
+      <PostList
+        showCommunity
+        feed={feed}
+        empty={{
+          title: "Nothing here yet.",
+          description: isSelf
+            ? "Share an update, and your posts and activity will show up here."
+            : `Posts on ${name}’s wall and what they share in communities you can see show up here.`,
+        }}
+      />
+    </div>
+  );
+}
+
+function EmptyTab({ icon, title, description }: { icon: ReactNode; title: string; description: string }) {
+  return (
+    <div className="sm:pt-8">
+      <Molecule.FeedState icon={icon} title={title} description={description} />
+    </div>
+  );
+}
+
+function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
+  const livePresence = useFriendsStore((state) => state.presence);
+
+  if (profile.friends.length === 0) {
+    return (
+      <EmptyTab
+        icon={<Users size={24} strokeWidth={1.5} />}
+        title="No friends yet."
+        description={`${displayName(profile)} hasn’t added any friends yet.`}
+      />
+    );
+  }
+
+  return (
+    <section className="flex flex-col gap-4">
+      <h3 className="font-display text-xl font-bold">Friends / {profile.friends.length}</h3>
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+        {profile.friends.map((friend) => (
+          <li key={friend.userId}>
+            <Molecule.PersonCard
+              userId={friend.userId}
+              username={friend.username}
+              label={displayName(friend)}
+              avatarUrl={friend.avatarUrl}
+              coverUrl={friend.coverUrl}
+              presence={(livePresence[friend.userId] ?? friend.online) ? "online" : "offline"}
+              action={
+                myId !== undefined && (
+                  <FriendAction userId={friend.userId} self={friend.userId === myId} />
+                )
+              }
+            />
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function CommunitiesTab({ profile }: { profile: Profile }) {
+  const router = useRouter();
+  const joined = useCommunityStore((state) => state.communities);
+  const joinCommunity = useCommunityStore((state) => state.joinCommunity);
+  const [joining, setJoining] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const hidden = profile.communityCount - profile.communities.length;
+
+  async function handleJoin(communityId: number) {
+    setError(null);
+    setJoining(communityId);
+    try {
+      await joinCommunity(communityId);
+      router.push(`/communities/${communityId}`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setJoining(null);
+    }
+  }
+
+  if (profile.communities.length === 0) {
+    return (
+      <EmptyTab
+        icon={<Boxes size={24} strokeWidth={1.5} />}
+        title={hidden > 0 ? "Only private communities." : "No communities yet."}
+        description={
+          hidden > 0
+            ? `${displayName(profile)} is only in private communities you’re not part of.`
+            : `${displayName(profile)} hasn’t joined any communities yet.`
+        }
+      />
+    );
+  }
+
+  return (
+    <section className="flex flex-col gap-4">
+      <h3 className="font-display text-xl font-bold">Communities / {profile.communityCount}</h3>
+      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {profile.communities.map((community) => (
+          <li key={community.id}>
+            <Molecule.CommunityCard
+              name={community.name}
+              iconUrl={community.iconUrl}
+              coverUrl={community.coverUrl}
+              memberCount={community.memberCount}
+              badge={community.isOwner ? "Owner" : undefined}
+              action={
+                joined.some(({ id }) => id === community.id) ? (
+                  <Atom.ButtonLink
+                    href={`/communities/${community.id}`}
+                    variant="secondary"
+                    size="small"
+                  >
+                    Open
+                  </Atom.ButtonLink>
+                ) : (
+                  <Atom.Button
+                    size="small"
+                    loading={joining === community.id}
+                    disabled={joining !== null && joining !== community.id}
+                    onClick={() => handleJoin(community.id)}
+                  >
+                    Join
+                  </Atom.Button>
+                )
+              }
+            />
+          </li>
+        ))}
+      </ul>
+      {hidden > 0 && (
+        <p className="text-xs text-muted">
+          Plus {hidden} private {hidden === 1 ? "community" : "communities"} you’re not part of.
+        </p>
+      )}
+    </section>
+  );
+}
+
+export function UserProfile({ username }: { username: string }) {
+  const me = useAuthStore((state) => state.profile);
+  const livePresence = useFriendsStore((state) => state.presence);
+  const [loaded, setLoaded] = useState<Loaded | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const isSelf = me?.username === username.toLowerCase();
+  const requested = useSearchParams().get("tab");
+  const tab: Tab = tabs.find(({ value }) => value === requested)?.value ?? "posts";
+  const friendIds = useFriendsStore((state) => state.friends);
+
+  useEffect(() => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    getPublicProfile(token, username)
+      .then((profile) => setLoaded({ username, profile }))
+      .catch(() => setLoaded({ username, profile: null, failed: true }));
+  }, [username]);
+
+  function editor(
+    upload: (token: string, file: File) => Promise<OwnProfile>,
+    remove: (token: string) => Promise<OwnProfile>,
+  ): ImageEditor {
+    async function save(request: (token: string) => Promise<OwnProfile>) {
+      const { token } = useAuthStore.getState();
+      if (!token) throw new Error("Please log in again.");
+      const updated = await request(token);
+      useAuthStore.setState({ profile: updated });
+      setLoaded((current) =>
+        current?.profile
+          ? {
+              ...current,
+              profile: {
+                ...current.profile,
+                avatarUrl: updated.avatarUrl,
+                coverUrl: updated.coverUrl,
+                backgroundUrl: updated.backgroundUrl,
+              },
+            }
+          : current,
+      );
+    }
+
+    return {
+      upload: (file) => save((token) => upload(token, file)),
+      remove: () => save(remove),
+    };
+  }
+
+  function handleScroll(event: UIEvent<HTMLDivElement>) {
+    const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
+    const room = scrollHeight - clientHeight;
+    setCollapsed((current) => (current ? scrollTop > 0 : scrollTop > 32 && room > 240));
+  }
+
+  const current = loaded?.username === username ? loaded : null;
+
+  if (!current?.profile) {
+    return (
+      <Template.CenteredTemplate>
+        {!current ? (
+          <Atom.Loader />
+        ) : (
+          <Molecule.FeedState
+            role={current.failed ? "alert" : undefined}
+            eyebrow={current.failed ? "Connection error" : "Not found"}
+            icon={<UserX size={24} strokeWidth={1.5} />}
+            title={current.failed ? "This profile couldn’t be loaded." : "No one goes by that name."}
+            description={
+              current.failed
+                ? "Check your connection and try again."
+                : `There’s no user called @${username}.`
+            }
+          />
+        )}
+      </Template.CenteredTemplate>
+    );
+  }
+
+  const profile = current.profile;
+  const images: ProfileImages | undefined = isSelf
+    ? {
+        avatar: editor(uploadAvatar, removeAvatar),
+        cover: editor(uploadUserCover, removeUserCover),
+        background: editor(uploadUserBackground, removeUserBackground),
+      }
+    : undefined;
+  const online = isSelf
+    ? !me?.appearOffline
+    : (livePresence[profile.userId] ?? profile.online);
+
+  return (
+    <main className="flex min-h-0 flex-1 flex-col">
+      <ProfileHeader
+        profile={profile}
+        online={online}
+        collapsed={collapsed}
+        images={images}
+        actions={
+          <>
+            {isSelf ? (
+              <Molecule.SettingsLink href="/settings" label="Profile settings" />
+            ) : (
+              me && <FriendAction userId={profile.userId} self={false} />
+            )}
+          </>
+        }
+      />
+      <ProfileTabs profile={profile} tab={tab} />
+      <div className="relative isolate flex min-h-0 flex-1">
+        <Molecule.PageWallpaper
+          src={profile.backgroundUrl}
+          onUpload={images?.background.upload}
+          onRemove={images?.background.remove}
+        />
+        <Template.PageColumn onScroll={handleScroll}>
+          {tab === "library" ? (
+            profile.library.length > 0 ? (
+              <ProfileLibrary entries={profile.library} />
+            ) : (
+              <EmptyTab
+                icon={<Library size={24} strokeWidth={1.5} />}
+                title="Nothing on the shelf."
+                description={
+                  isSelf
+                    ? "Public titles in your library show up here."
+                    : `${displayName(profile)} hasn’t shared anything from their library yet.`
+                }
+              />
+            )
+          ) : tab === "friends" ? (
+            <FriendsTab profile={profile} myId={me?.userId} />
+          ) : tab === "communities" ? (
+            <CommunitiesTab profile={profile} />
+          ) : (
+            <Wall
+              key={profile.username}
+              profile={profile}
+              isSelf={isSelf}
+              canPost={isSelf || friendIds.some((friend) => friend.userId === profile.userId)}
+            />
+          )}
+        </Template.PageColumn>
+      </div>
+    </main>
+  );
+}

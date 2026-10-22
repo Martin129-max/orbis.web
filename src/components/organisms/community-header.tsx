@@ -1,4 +1,3 @@
-import { Camera, ImagePlus, LoaderCircle } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
@@ -47,45 +46,6 @@ function CommunityBadge({
   );
 }
 
-function CoverButton({
-  community,
-  onImage,
-  className = "",
-}: {
-  community: Community;
-  onImage: ImageChange;
-  className?: string;
-}) {
-  const hasCover = Boolean(community.coverUrl);
-
-  return (
-    <Molecule.ImageMenu
-      noun="cover"
-      hasImage={hasCover}
-      onUpload={(file) => onImage("cover", file)}
-      onRemove={() => onImage("cover", null)}
-    >
-      {(busy) => (
-        <button
-          type="button"
-          className={`focus-ring flex cursor-pointer items-center gap-1.5 rounded-full border border-divider bg-surface px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm transition-colors hover:bg-rail-item ${className}`}
-        >
-          {busy ? (
-            <LoaderCircle size={14} className="animate-spin" />
-          ) : hasCover ? (
-            <Camera size={14} />
-          ) : (
-            <ImagePlus size={14} />
-          )}
-          <span className="sr-only sm:not-sr-only">
-            {hasCover ? "Edit cover" : "Add cover"}
-          </span>
-        </button>
-      )}
-    </Molecule.ImageMenu>
-  );
-}
-
 export function CommunityHeader({
   community,
   collapsed,
@@ -110,7 +70,11 @@ export function CommunityHeader({
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {onImage && (
-            <CoverButton community={community} onImage={onImage} />
+            <Molecule.CoverButton
+              hasImage={false}
+              onUpload={(file) => onImage("cover", file)}
+              onRemove={() => onImage("cover", null)}
+            />
           )}
           <div className="flex items-center gap-1">{actions}</div>
         </div>
@@ -159,9 +123,10 @@ export function CommunityHeader({
         {actions}
       </div>
       {onImage && !collapsed && (
-        <CoverButton
-          community={community}
-          onImage={onImage}
+        <Molecule.CoverButton
+          hasImage
+          onUpload={(file) => onImage("cover", file)}
+          onRemove={() => onImage("cover", null)}
           className="absolute right-4 bottom-4 sm:right-8 sm:bottom-6"
         />
       )}

@@ -1,7 +1,6 @@
 "use client";
 
 import { Search } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -116,42 +115,14 @@ export function CommunitySearch() {
         ) : (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {results.map((community) => (
-              <li
-                key={community.id}
-                className="flex flex-col overflow-hidden rounded-lg border border-divider bg-surface"
-              >
-                <div className="relative aspect-[3/1] bg-rail-item">
-                  {community.coverUrl && (
-                    <Image
-                      src={community.coverUrl}
-                      alt=""
-                      fill
-                      unoptimized
-                      className="object-cover"
-                    />
-                  )}
-                </div>
-                <div className="flex flex-1 flex-col gap-3 px-4 pb-4">
-                  <span
-                    aria-hidden
-                    className="relative -mt-7 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-surface bg-rail-item font-display text-[26px] leading-none font-bold"
-                  >
-                    <Atom.CommunityIcon
-                      name={community.name}
-                      src={community.iconUrl}
-                    />
-                  </span>
-                  <div className="flex items-end justify-between gap-3">
-                    <div className="flex min-w-0 flex-col">
-                      <span className="truncate font-semibold">
-                        {community.name}
-                      </span>
-                      <span className="text-xs text-muted">
-                        {community.memberCount.toLocaleString()}{" "}
-                        {community.memberCount === 1 ? "member" : "members"}
-                      </span>
-                    </div>
-                    {community.joined ? (
+              <li key={community.id}>
+                <Molecule.CommunityCard
+                  name={community.name}
+                  iconUrl={community.iconUrl}
+                  coverUrl={community.coverUrl}
+                  memberCount={community.memberCount}
+                  action={
+                    community.joined ? (
                       <Atom.ButtonLink
                         href={`/communities/${community.id}`}
                         variant="secondary"
@@ -168,9 +139,9 @@ export function CommunitySearch() {
                       >
                         Join
                       </Atom.Button>
-                    )}
-                  </div>
-                </div>
+                    )
+                  }
+                />
               </li>
             ))}
           </ul>

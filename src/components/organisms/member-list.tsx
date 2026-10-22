@@ -1,7 +1,5 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -72,54 +70,20 @@ function MemberGroup({
         {members.map((member) => {
           const label = member.nickname ?? displayName(member);
           return (
-            <li
-              key={member.userId}
-              className="flex flex-col overflow-hidden rounded-lg border border-transparent bg-background transition-colors hover:border-divider"
-            >
-              <div className="relative h-14 bg-gradient-to-br from-accent-soft to-rail-item">
-                {member.coverUrl && (
-                  <Image
-                    src={member.coverUrl}
-                    alt=""
-                    fill
-                    unoptimized
-                    className="object-cover"
-                  />
-                )}
-              </div>
-              <div className="flex items-end gap-3 px-3 pb-3">
-                <Link
-                  href={`/users/${member.username}`}
-                  className="focus-ring -mt-5 shrink-0 rounded-full border-[3px] border-background bg-background"
-                >
-                  <Atom.Avatar
-                    label={label}
-                    src={member.avatarUrl}
-                    seed={member.userId}
-                  />
-                </Link>
-                <div className="flex min-w-0 flex-1 flex-col pt-2">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <Molecule.UserLink
-                      username={member.username}
-                      className="truncate text-[13px] font-semibold"
-                    >
-                      {label}
-                    </Molecule.UserLink>
-                    {(member.isOwner || member.isAdmin) && (
-                      <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-px text-[10px] font-semibold text-accent">
-                        {member.isOwner ? "Owner" : "Admin"}
-                      </span>
-                    )}
-                  </span>
-                  <span className="truncate text-xs text-muted">
-                    @{member.username}
-                  </span>
-                </div>
-                {myId !== undefined && (
-                  <FriendAction userId={member.userId} self={member.userId === myId} />
-                )}
-              </div>
+            <li key={member.userId}>
+              <Molecule.PersonCard
+                userId={member.userId}
+                username={member.username}
+                label={label}
+                avatarUrl={member.avatarUrl}
+                coverUrl={member.coverUrl}
+                badge={member.isOwner ? "Owner" : member.isAdmin ? "Admin" : undefined}
+                action={
+                  myId !== undefined && (
+                    <FriendAction userId={member.userId} self={member.userId === myId} />
+                  )
+                }
+              />
             </li>
           );
         })}

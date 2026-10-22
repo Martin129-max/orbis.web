@@ -14,6 +14,7 @@ export type Profile = {
   username: string;
   avatarUrl: string | null;
   coverUrl: string | null;
+  backgroundUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
   isAdmin: boolean;
@@ -112,12 +113,13 @@ export type CommunitySummary = Pick<Community, "id" | "name" | "iconUrl">;
 export type Post = {
   type: "post";
   id: number;
-  communityId: number;
+  communityId: number | null;
   content: string;
   commentCount: number;
   createdAt: string;
   author: Author;
-  community: CommunitySummary;
+  community: CommunitySummary | null;
+  wallUser: Author | null;
 };
 
 export type Thread = {
@@ -449,6 +451,39 @@ export async function getFeed(
   return res.json();
 }
 
+export async function createWallPost(
+  token: string,
+  username: string,
+  content: string,
+): Promise<Post> {
+  const res = await api(`/users/${encodeURIComponent(username)}/posts`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (res.status === 400) throw new Error("Write something before posting.");
+  if (res.status === 403) throw new Error("Only friends can post on this wall.");
+  if (!res.ok) throw new Error("Could not post. Please try again.");
+  return res.json();
+}
+
+export async function getUserPosts(
+  token: string,
+  username: string,
+  cursor?: string,
+): Promise<Page<FeedEntry>> {
+  const res = await api(withQuery(`/users/${encodeURIComponent(username)}/posts`, { cursor }), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load these posts.");
+  return res.json();
+}
+
 export async function createPost(
   token: string,
   communityId: number,
@@ -711,7 +746,8 @@ export type NotificationType =
   | "comment_reply"
   | "friend_request"
   | "friend_accepted"
-  | "report_status";
+  | "report_status"
+  | "wall_post";
 
 export type Notification = {
   id: number;
@@ -822,6 +858,7 @@ export type PublicProfile = {
   name: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
+  backgroundUrl: string | null;
   isAdmin: boolean;
   createdAt: string;
   online: boolean;
@@ -832,7 +869,27 @@ export type PublicProfile = {
     id: number;
     name: string;
     iconUrl: string | null;
+    coverUrl: string | null;
+    memberCount: number;
     isOwner: boolean;
+  }[];
+  friends: {
+    userId: number;
+    username: string;
+    name: string | null;
+    avatarUrl: string | null;
+    coverUrl: string | null;
+    online: boolean;
+  }[];
+  library: {
+    id: number;
+    mediaType: MediaType;
+    sourceId: string;
+    title: string;
+    coverImage: string | null;
+    status: LibraryStatus;
+    progress: number;
+    total: number | null;
   }[];
 };
 
@@ -873,6 +930,33 @@ export async function removeUserCover(token: string): Promise<Profile> {
   });
 
   if (!res.ok) throw new Error("Could not remove your cover.");
+  return res.json();
+}
+
+export async function uploadUserBackground(token: string, file: File): Promise<Profile> {
+  const body = new FormData();
+  body.append("file", file);
+
+  const res = await api("/users/me/background", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body,
+  });
+
+  if (res.status === 413) throw new Error("Wallpapers must be 10 MB or smaller.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not upload your wallpaper."));
+  }
+  return res.json();
+}
+
+export async function removeUserBackground(token: string): Promise<Profile> {
+  const res = await api("/users/me/background", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not remove your wallpaper.");
   return res.json();
 }
 

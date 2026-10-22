@@ -6,6 +6,7 @@ import {
   CircleCheck,
   CloudOff,
   MessageSquare,
+  PenLine,
   Reply,
   Search,
   UserCheck,
@@ -33,11 +34,12 @@ const typeIcons: Record<NotificationType, ReactNode> = {
   friend_request: <UserPlus size={12} />,
   friend_accepted: <UserCheck size={12} />,
   report_status: <CircleCheck size={12} />,
+  wall_post: <PenLine size={12} />,
 };
 
 const filters: { value: NotificationFilter; label: string }[] = [
   { value: "all", label: "All" },
-  { value: "comments", label: "Comments" },
+  { value: "comments", label: "Posts & comments" },
   { value: "friends", label: "Friends" },
   { value: "reports", label: "Reports" },
 ];
@@ -168,7 +170,7 @@ export function NotificationCenter() {
       <Molecule.PageIntro
         eyebrow="Inbox"
         title="Notifications."
-        description="Comments, replies, friend requests, and updates on your reports."
+        description="Wall posts, comments, replies, friend requests, and updates on your reports."
       />
       <div className="flex flex-col gap-3 rounded-lg border border-divider bg-surface p-4">
         <Atom.Input

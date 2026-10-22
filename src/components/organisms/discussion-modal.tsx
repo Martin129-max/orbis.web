@@ -78,7 +78,11 @@ export function DiscussionModal({
       {item && (
         <div className="flex flex-col gap-6">
           <Molecule.ModalHeader
-            eyebrow={`${item.community.name} / ${item.type === "thread" ? "Forum" : "Feed"}`}
+            eyebrow={
+              item.community
+                ? `${item.community.name} / ${item.type === "thread" ? "Forum" : "Feed"}`
+                : `${item.type === "post" && item.wallUser ? displayName(item.wallUser) : "Profile"} / Wall`
+            }
             title="The discussion"
           />
           {item.type === "thread" ? (

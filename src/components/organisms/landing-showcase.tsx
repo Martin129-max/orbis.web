@@ -338,7 +338,7 @@ export function LandingShowcase() {
       <Showcase
         eyebrow="Profiles"
         title="Make it yours."
-        text="Pick a picture and cover photo, and check out the profiles of everyone you meet."
+        text="Pick a picture, cover, and wallpaper, leave posts on your friends’ walls, and see everyone’s communities, friends, and what they’re watching."
         visual={<ProfileVisual />}
       />
       <Showcase

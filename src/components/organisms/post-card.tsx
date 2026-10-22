@@ -1,3 +1,4 @@
+import { ChevronRight } from "lucide-react";
 import * as Molecule from "@molecule";
 import type { Post } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
@@ -14,19 +15,32 @@ export function PostCard({
   showCommunity = false,
   onOpenComments,
 }: PostCardProps) {
+  const wallUser =
+    post.wallUser && post.wallUser.id !== post.author.id ? post.wallUser : null;
+
   return (
     <article className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
       <header className="flex items-center gap-3">
         <Molecule.AuthorAvatar
           author={post.author}
-          community={showCommunity ? post.community : undefined}
+          community={(showCommunity && post.community) || undefined}
         />
         <div className="flex min-w-0 flex-1 flex-col">
-          <Molecule.UserLink username={post.author.username} className="w-fit max-w-full truncate text-sm">
-            {displayName(post.author)}
-          </Molecule.UserLink>
+          <span className="flex min-w-0 items-center gap-1 text-sm">
+            <Molecule.UserLink username={post.author.username} className="min-w-0 truncate">
+              {displayName(post.author)}
+            </Molecule.UserLink>
+            {wallUser && (
+              <>
+                <ChevronRight size={14} aria-label="on the wall of" className="shrink-0 text-muted" />
+                <Molecule.UserLink username={wallUser.username} className="min-w-0 truncate">
+                  {displayName(wallUser)}
+                </Molecule.UserLink>
+              </>
+            )}
+          </span>
           <span className="truncate text-xs text-muted">
-            {showCommunity && `${post.community.name} · `}
+            {showCommunity && post.community && `${post.community.name} · `}
             <time
               dateTime={post.createdAt}
               title={new Date(post.createdAt).toLocaleString()}

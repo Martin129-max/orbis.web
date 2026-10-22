@@ -2,7 +2,7 @@
 
 import { Switch } from "antd";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
@@ -14,31 +14,6 @@ import {
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
-
-function Section({
-  title,
-  aside,
-  description,
-  children,
-}: {
-  title: string;
-  aside?: string;
-  description?: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-6 border-t border-divider pt-8">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-baseline justify-between gap-3">
-          <h3 className="font-display text-2xl font-bold">{title}</h3>
-          {aside && <span className="text-xs text-muted uppercase">{aside}</span>}
-        </div>
-        {description && <p className="text-xs text-muted">{description}</p>}
-      </div>
-      {children}
-    </section>
-  );
-}
 
 function GeneralSettings({ community }: { community: Community }) {
   const updateCommunity = useCommunityStore((state) => state.updateCommunity);
@@ -72,7 +47,7 @@ function GeneralSettings({ community }: { community: Community }) {
   }
 
   return (
-    <Section title="General">
+    <Molecule.SettingsSection title="General">
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
         <Molecule.FormField
           label="Community name"
@@ -114,7 +89,7 @@ function GeneralSettings({ community }: { community: Community }) {
           {message && <span className="text-xs text-muted">{message}</span>}
         </div>
       </form>
-    </Section>
+    </Molecule.SettingsSection>
   );
 }
 
@@ -149,7 +124,7 @@ function AdminSettings({ community }: { community: Community }) {
   }
 
   return (
-    <Section
+    <Molecule.SettingsSection
       title="Admins"
       aside="Owner only"
       description={
@@ -197,7 +172,7 @@ function AdminSettings({ community }: { community: Community }) {
           })}
         </ul>
       )}
-    </Section>
+    </Molecule.SettingsSection>
   );
 }
 
@@ -223,7 +198,7 @@ function DangerZone({ community }: { community: Community }) {
   const members = community.memberCount ?? 0;
 
   return (
-    <Section
+    <Molecule.SettingsSection
       title="Delete community"
       description="This permanently removes all posts, threads, and memberships. This action can’t be undone."
     >
@@ -265,7 +240,7 @@ function DangerZone({ community }: { community: Community }) {
           </div>
         </div>
       )}
-    </Section>
+    </Molecule.SettingsSection>
   );
 }
 
