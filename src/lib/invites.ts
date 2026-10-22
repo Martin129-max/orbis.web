@@ -32,3 +32,24 @@ export function inviteUses(invite: Pick<Invite, "uses" | "maxUses">) {
     ? `${invite.uses} / ${invite.maxUses} uses`
     : `${invite.uses} ${invite.uses === 1 ? "use" : "uses"}`;
 }
+
+export function inviteActive(invite: Pick<Invite, "expiresAt" | "uses" | "maxUses">, now: number) {
+  return (
+    (!invite.expiresAt || new Date(invite.expiresAt).getTime() > now) &&
+    (invite.maxUses === null || invite.uses < invite.maxUses)
+  );
+}
+
+export function inviteCountdown(expiresAt: string | null, now: number) {
+  if (!expiresAt) return "Never";
+
+  const seconds = Math.max(0, Math.floor((new Date(expiresAt).getTime() - now) / 1000));
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  if (days > 0) return `${days}d ${hours}h`;
+  if (hours > 0) return `${hours}h ${pad(minutes)}m`;
+  return `${minutes}m ${pad(seconds % 60)}s`;
+}

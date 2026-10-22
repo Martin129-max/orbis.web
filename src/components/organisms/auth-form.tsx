@@ -3,7 +3,7 @@
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { useAuthStore } from "@/stores/auth-store";
@@ -43,12 +43,12 @@ const content = {
 
 export function AuthForm({
   mode,
-  intro,
+  compact = false,
   onAuthenticated,
   onSwitch,
 }: {
   mode: Mode;
-  intro?: ReactNode;
+  compact?: boolean;
   onAuthenticated?: () => void;
   onSwitch?: () => void;
 }) {
@@ -87,17 +87,20 @@ export function AuthForm({
 
   return (
     <div className="flex w-full max-w-[400px] flex-col gap-10 sm:gap-16">
-      <Link
-        href="/"
-        className="focus-ring inline-flex w-fit items-center gap-2 rounded-sm text-[13px] transition-colors hover:text-accent"
-      >
-        <ArrowLeft size={16} />
-        Back to homepage
-      </Link>
+      {!compact && (
+        <Link
+          href="/"
+          className="focus-ring inline-flex w-fit items-center gap-2 rounded-sm text-[13px] transition-colors hover:text-accent"
+        >
+          <ArrowLeft size={16} />
+          Back to homepage
+        </Link>
+      )}
       <div className="flex flex-col gap-6">
-        <Atom.Brand className="text-5xl" />
-        {intro}
-        <h1 className="font-display text-5xl leading-[1.04] font-bold">
+        {!compact && <Atom.Brand className="text-5xl" />}
+        <h1
+          className={`font-display leading-[1.04] font-bold ${compact ? "text-3xl" : "text-5xl"}`}
+        >
           {title}
         </h1>
         <form onSubmit={handleSubmit} className="flex flex-col gap-5">

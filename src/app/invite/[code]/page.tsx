@@ -1,13 +1,11 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
-import Link from "next/link";
+import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useSyncExternalStore } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Organism from "@organism";
-import * as Template from "@template";
 import { getInvitePreview, type InvitePreview } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
@@ -47,72 +45,70 @@ export default function InvitePage() {
   }
 
   const current = loaded?.code === code ? loaded : null;
+  const community = current?.invite?.community;
+  const background =
+    community?.backgroundUrl ?? community?.coverUrl ?? "/images/login-illustration.jpg";
 
   return (
-    <Template.AuthTemplate
-      illustration={
-        mode === "signup" && !token
-          ? "/images/signup-illustration.jpg"
-          : "/images/login-illustration.jpg"
-      }
-    >
-      {!current ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Atom.Loader />
-        </div>
-      ) : current.failed ? (
-        <div className="flex flex-1 items-center justify-center">
-          <Molecule.ConnectionError onRetry={() => window.location.reload()} />
-        </div>
-      ) : current.invite && !token ? (
-        <Organism.AuthForm
-          key={mode}
-          mode={mode}
-          intro={<Molecule.InviteSummary invite={current.invite} />}
-          onAuthenticated={join}
-          onSwitch={() => setMode(mode === "login" ? "signup" : "login")}
+    <div className="relative isolate flex min-h-dvh flex-1 flex-col items-center gap-6 p-4 sm:p-6">
+      {current && (
+        <Image
+          src={background}
+          alt=""
+          fill
+          priority
+          unoptimized={!background.startsWith("/")}
+          className="-z-20 object-cover"
         />
-      ) : (
-        <div className="flex w-full max-w-[400px] flex-col gap-10 sm:gap-16">
-          <Link
-            href="/"
-            className="focus-ring inline-flex w-fit items-center gap-2 rounded-sm text-[13px] transition-colors hover:text-accent"
-          >
-            <ArrowLeft size={16} />
-            Back to homepage
-          </Link>
-          <div className="flex flex-col gap-6">
-            <Atom.Brand className="text-5xl" />
-            {current.invite ? (
-              <>
-                <Molecule.InviteSummary invite={current.invite} />
-                {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-                <Atom.Button
-                  size="large"
-                  loading={joining}
-                  onClick={join}
-                  className="w-fit"
-                >
-                  Join {current.invite.community.name}
-                </Atom.Button>
-              </>
-            ) : (
-              <>
-                <h1 className="font-display text-5xl leading-[1.04] font-bold">
-                  Invite invalid.
-                </h1>
-                <p className="text-sm text-muted">
-                  This invite may have expired, reached its limit, or been
-                  revoked. Ask whoever sent it for a new one.
-                </p>
-                <Atom.ButtonLink href="/" size="large" className="w-fit">
-                  Go to Orbis
-                </Atom.ButtonLink>
-              </>
-            )}
-          </div>
-        </div>
       )}
-    </Template.AuthTemplate>
+      <div className="absolute inset-0 -z-10 bg-black/55 backdrop-blur-[2px]" />
+      <div className="self-start rounded-xl bg-surface/90 px-3 py-2.5 shadow-lg backdrop-blur">
+        <Atom.Brand className="text-[28px]" />
+      </div>
+      <main className="my-auto w-full max-w-[440px] overflow-hidden rounded-2xl bg-surface shadow-2xl">
+        {!current ? (
+          <div className="flex justify-center py-16">
+            <Atom.Loader />
+          </div>
+        ) : current.failed ? (
+          <div className="p-6">
+            <Molecule.ConnectionError onRetry={() => window.location.reload()} />
+          </div>
+        ) : !current.invite ? (
+          <div className="flex flex-col gap-4 p-6 sm:p-8">
+            <h1 className="font-display text-3xl leading-[1.04] font-bold">Invite invalid.</h1>
+            <p className="text-sm text-muted">
+              This invite may have expired, reached its limit, or been revoked. Ask whoever sent
+              it for a new one.
+            </p>
+            <Atom.ButtonLink href="/" size="large" className="w-fit">
+              Go to Orbis
+            </Atom.ButtonLink>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6 pb-6 sm:pb-8">
+            <Molecule.InviteSummary invite={current.invite} />
+            <div className="flex flex-col gap-4 px-6">
+              {!token ? (
+                <Organism.AuthForm
+                  key={mode}
+                  mode={mode}
+                  compact
+                  onAuthenticated={join}
+                  onSwitch={() => setMode(mode === "login" ? "signup" : "login")}
+                />
+              ) : (
+                <>
+                  {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+                  <Atom.Button size="large" block loading={joining} onClick={join}>
+                    Join {current.invite.community.name}
+                  </Atom.Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

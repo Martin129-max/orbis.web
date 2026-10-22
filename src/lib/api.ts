@@ -491,7 +491,10 @@ export type InvitePreview = {
   code: string;
   expiresAt: string | null;
   creator: InviteCreator;
-  community: Pick<Community, "id" | "name" | "iconUrl" | "coverUrl" | "isPublic"> & {
+  community: Pick<
+    Community,
+    "id" | "name" | "iconUrl" | "coverUrl" | "backgroundUrl" | "isPublic"
+  > & {
     memberCount: number;
   };
 };
