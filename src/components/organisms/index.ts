@@ -15,6 +15,7 @@ export * from "./guest-gate";
 export * from "./home-feed";
 export * from "./landing-hero";
 export * from "./member-list";
+export * from "./member-presence";
 export * from "./post-card";
 export * from "./post-composer";
 export * from "./post-list";

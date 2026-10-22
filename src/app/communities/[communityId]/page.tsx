@@ -7,6 +7,7 @@ import {
   MessagesSquare,
   Newspaper,
   Settings,
+  Users,
   Wallpaper,
 } from "lucide-react";
 import Image from "next/image";
@@ -32,13 +33,18 @@ type Loaded = { id: string; community: Community | null; failed?: boolean };
 const tabs = [
   { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
   { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
+  { value: "members", label: "Members", icon: <Users size={16} /> },
 ] as const;
+
+type Tab = (typeof tabs)[number]["value"];
 
 export default function CommunityPage() {
   const { communityId } = useParams<{ communityId: string }>();
   const router = useRouter();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
-  const tab = useSearchParams().get("tab") === "forum" ? "forum" : "feed";
+  const requested = useSearchParams().get("tab");
+  const tab: Tab =
+    tabs.find(({ value }) => value === requested)?.value ?? "feed";
   const [collapsed, setCollapsed] = useState(false);
   const setCommunityImage = useCommunityStore(
     (state) => state.setCommunityImage,
@@ -121,7 +127,7 @@ export default function CommunityPage() {
               <Link
                 key={value}
                 href={`/communities/${current.community!.id}${
-                  value === "forum" ? "?tab=forum" : ""
+                  value === "feed" ? "" : `?tab=${value}`
                 }`}
                 aria-current={tab === value ? "page" : undefined}
                 className={`focus-ring -mb-px flex items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
@@ -186,7 +192,12 @@ export default function CommunityPage() {
               </Molecule.ImageMenu>
             )}
             <Template.PageColumn onScroll={handleScroll}>
-              {tab === "forum" ? (
+              {tab === "members" ? (
+                <Organism.MemberList
+                  key={current.community.id}
+                  communityId={current.community.id}
+                />
+              ) : tab === "forum" ? (
                 <Organism.CommunityForum
                   key={current.community.id}
                   communityId={current.community.id}
@@ -199,7 +210,7 @@ export default function CommunityPage() {
               )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
-              <Organism.MemberList
+              <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}
               />

@@ -37,6 +37,7 @@ export type CommunitySearchResult = {
   id: number;
   name: string;
   iconUrl: string | null;
+  coverUrl: string | null;
   memberCount: number;
   joined: boolean;
 };
@@ -158,6 +159,7 @@ export type Member = {
   username: string;
   name: string | null;
   avatarUrl: string | null;
+  online: boolean;
   nickname: string | null;
   joinedAt: string;
   isOwner: boolean;

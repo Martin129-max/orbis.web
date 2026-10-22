@@ -77,7 +77,9 @@ function CoverButton({
           ) : (
             <ImagePlus size={14} />
           )}
-          {hasCover ? "Edit cover" : "Add cover"}
+          <span className="sr-only sm:not-sr-only">
+            {hasCover ? "Edit cover" : "Add cover"}
+          </span>
         </button>
       )}
     </Molecule.ImageMenu>

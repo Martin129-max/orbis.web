@@ -1,6 +1,7 @@
 "use client";
 
 import { Search } from "lucide-react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -81,7 +82,7 @@ export function CommunitySearch() {
         />
       </div>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      <section className="flex flex-col gap-2">
+      <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="font-display text-2xl font-bold">
             {query.trim() ? "Results" : "Public communities"}
@@ -113,46 +114,63 @@ export function CommunitySearch() {
               : "No one has made a public community yet."}
           </p>
         ) : (
-          <ul className="flex flex-col">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {results.map((community) => (
               <li
                 key={community.id}
-                className="flex items-center gap-4 border-b border-divider py-4"
+                className="flex flex-col overflow-hidden rounded-lg border border-divider bg-surface"
               >
-                <span
-                  aria-hidden
-                  className="relative flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[22px] leading-none font-bold"
-                >
-                  <Atom.CommunityIcon
-                    name={community.name}
-                    src={community.iconUrl}
-                  />
-                </span>
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate">{community.name}</span>
-                  <span className="text-xs text-muted">
-                    {community.memberCount.toLocaleString()}{" "}
-                    {community.memberCount === 1 ? "member" : "members"}
-                  </span>
+                <div className="relative aspect-[3/1] bg-rail-item">
+                  {community.coverUrl && (
+                    <Image
+                      src={community.coverUrl}
+                      alt=""
+                      fill
+                      unoptimized
+                      className="object-cover"
+                    />
+                  )}
                 </div>
-                {community.joined ? (
-                  <Atom.ButtonLink
-                    href={`/communities/${community.id}`}
-                    variant="secondary"
-                    size="small"
+                <div className="flex flex-1 flex-col gap-3 px-4 pb-4">
+                  <span
+                    aria-hidden
+                    className="relative -mt-7 flex h-14 w-14 shrink-0 items-center justify-center rounded-full border-4 border-surface bg-rail-item font-display text-[26px] leading-none font-bold"
                   >
-                    Open
-                  </Atom.ButtonLink>
-                ) : (
-                  <Atom.Button
-                    size="small"
-                    loading={joining === community.id}
-                    disabled={joining !== null && joining !== community.id}
-                    onClick={() => handleJoin(community.id)}
-                  >
-                    Join
-                  </Atom.Button>
-                )}
+                    <Atom.CommunityIcon
+                      name={community.name}
+                      src={community.iconUrl}
+                    />
+                  </span>
+                  <div className="flex items-end justify-between gap-3">
+                    <div className="flex min-w-0 flex-col">
+                      <span className="truncate font-semibold">
+                        {community.name}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {community.memberCount.toLocaleString()}{" "}
+                        {community.memberCount === 1 ? "member" : "members"}
+                      </span>
+                    </div>
+                    {community.joined ? (
+                      <Atom.ButtonLink
+                        href={`/communities/${community.id}`}
+                        variant="secondary"
+                        size="small"
+                      >
+                        Open
+                      </Atom.ButtonLink>
+                    ) : (
+                      <Atom.Button
+                        size="small"
+                        loading={joining === community.id}
+                        disabled={joining !== null && joining !== community.id}
+                        onClick={() => handleJoin(community.id)}
+                      >
+                        Join
+                      </Atom.Button>
+                    )}
+                  </div>
+                </div>
               </li>
             ))}
           </ul>

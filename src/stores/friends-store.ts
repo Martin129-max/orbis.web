@@ -8,6 +8,7 @@ type FriendsState = {
   friends: Friend[];
   incoming: FriendUser[];
   outgoing: FriendUser[];
+  presence: Record<number, boolean>;
   loaded: boolean;
   connect: () => void;
   fetchFriends: () => Promise<void>;
@@ -15,7 +16,13 @@ type FriendsState = {
   removeFriend: (userId: number) => Promise<void>;
 };
 
-const empty = { friends: [], incoming: [], outgoing: [], loaded: false };
+const empty = {
+  friends: [],
+  incoming: [],
+  outgoing: [],
+  presence: {},
+  loaded: false,
+};
 
 let socket: Socket | null = null;
 
@@ -35,6 +42,7 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
           friends: state.friends.map((friend) =>
             friend.userId === userId ? { ...friend, online } : friend,
           ),
+          presence: { ...state.presence, [userId]: online },
         })),
     );
     get().fetchFriends();
