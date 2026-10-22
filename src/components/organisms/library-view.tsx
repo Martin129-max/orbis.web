@@ -2,13 +2,17 @@
 
 import { App, InputNumber, Segmented, Select } from "antd";
 import {
+  Bookmark,
   Check,
+  CirclePlay,
+  CircleX,
   LayoutGrid,
   Library,
   List,
   Lock,
   Minus,
   MoreHorizontal,
+  Pause,
   Plus,
   Search,
 } from "lucide-react";
@@ -210,6 +214,15 @@ function ListView({
 type TypeFilter = "all" | MediaType;
 type StatusFilter = "all" | LibraryStatus;
 
+const statusIcons = {
+  all: Library,
+  current: CirclePlay,
+  completed: Check,
+  on_hold: Pause,
+  dropped: CircleX,
+  planned: Bookmark,
+} satisfies Record<StatusFilter, typeof Library>;
+
 export function MediaCover({
   src,
   className = "",
@@ -363,41 +376,53 @@ function LibraryShelf({
           <Library size={20} className="text-muted" />
           Your library / {entries.length}
         </h2>
-        <div className="flex items-center gap-2">
-        <Segmented<View>
-          size="small"
-          value={view}
-          onChange={setView}
-          options={[
-            { value: "cards", icon: <LayoutGrid size={14} />, title: "Cards" },
-            { value: "list", icon: <List size={14} />, title: "List" },
-          ]}
-        />
-        <Select<TypeFilter>
-          size="small"
-          aria-label="Type"
-          value={type}
-          onChange={setType}
-          popupMatchSelectWidth={false}
-          options={[
-            { value: "all", label: "All types" },
-            { value: "anime", label: "Anime" },
-            { value: "manga", label: "Manga" },
-            { value: "game", label: "Games" },
-          ]}
-        />
+        <div className="ml-auto max-w-full overflow-x-auto">
+          <Segmented<TypeFilter>
+            size="small"
+            aria-label="Media type"
+            value={type}
+            onChange={setType}
+            options={(["all", "anime", "manga", "game"] as const).map((value) => ({
+              value,
+              label: value === "all" ? "All types" : value === "game" ? "Games" : mediaTypes[value].label,
+              icon: (
+                <span aria-hidden className="inline-flex items-center align-middle">
+                  {value === "all" ? <Library size={14} /> : mediaTypes[value].icon}
+                </span>
+              ),
+            }))}
+          />
         </div>
       </div>
-      <div className="-mx-1 overflow-x-auto px-1">
-        <Segmented<StatusFilter>
-          size="small"
-          value={status}
-          onChange={setStatus}
-          options={(["all", ...libraryStatuses] as StatusFilter[]).map((value) => ({
-            value,
-            label: `${value === "all" ? "All" : statusLabel(value, typeForLabels)} · ${count(value)}`,
-          }))}
-        />
+      <div className="flex min-w-0 items-center justify-between gap-3">
+        <div className="-mx-1 min-w-0 overflow-x-auto px-1">
+          <Segmented<StatusFilter>
+            size="small"
+            aria-label="Library status"
+            value={status}
+            onChange={setStatus}
+            options={(["all", ...libraryStatuses] as StatusFilter[]).map((value) => {
+              const Icon = statusIcons[value];
+              return {
+                value,
+                label: `${value === "all" ? "All" : statusLabel(value, typeForLabels)} · ${count(value)}`,
+                icon: <Icon size={14} aria-hidden className="inline-block align-middle" />,
+              };
+            })}
+          />
+        </div>
+        <div className="shrink-0">
+          <Segmented<View>
+            size="small"
+            aria-label="Library view"
+            value={view}
+            onChange={setView}
+            options={[
+              { value: "cards", icon: <LayoutGrid size={14} />, title: "Cards" },
+              { value: "list", icon: <List size={14} />, title: "List" },
+            ]}
+          />
+        </div>
       </div>
       {shown.length === 0 ? (
         <p className="py-6 text-center text-sm text-muted">
