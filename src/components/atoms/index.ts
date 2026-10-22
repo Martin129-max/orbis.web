@@ -8,4 +8,6 @@ export * from "./error-message";
 export * from "./heading";
 export * from "./input";
 export * from "./loader";
+export * from "./pill";
+export * from "./role-badge";
 export * from "./text-link";

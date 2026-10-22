@@ -165,7 +165,7 @@ export function FriendsPanel() {
                 </Atom.Button>
                 <Atom.Button
                   size="small"
-                  variant="text"
+                  variant="secondary"
                   onClick={() => removeFriend(user.userId).catch(() => null)}
                 >
                   Decline
@@ -181,7 +181,7 @@ export function FriendsPanel() {
             actions={
               <Atom.Button
                 size="small"
-                variant="text"
+                variant="secondary"
                 onClick={() => removeFriend(user.userId).catch(() => null)}
               >
                 Cancel request

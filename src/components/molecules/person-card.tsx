@@ -19,7 +19,7 @@ export function PersonCard({
   label: string;
   avatarUrl: string | null;
   coverUrl: string | null;
-  badge?: string;
+  badge?: ReactNode;
   presence?: "online" | "offline";
   action?: ReactNode;
 }) {
@@ -42,11 +42,7 @@ export function PersonCard({
             <UserLink username={username} className="truncate text-[13px] font-semibold">
               {label}
             </UserLink>
-            {badge && (
-              <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-px text-[10px] font-semibold text-accent">
-                {badge}
-              </span>
-            )}
+            {badge}
           </span>
           <span className="truncate text-xs text-muted">@{username}</span>
         </div>

@@ -233,19 +233,17 @@ export function StatusBadge({
   status: LibraryStatus;
   type?: MediaType;
 }) {
-  const tone = {
-    current: "bg-accent-soft text-accent",
-    completed: "bg-rail-item text-online",
-    on_hold: "bg-rail-item text-foreground",
-    dropped: "bg-rail-item text-muted",
-    planned: "bg-rail-item text-foreground",
-  }[status];
+  const tone = (
+    {
+      current: "info",
+      completed: "success",
+      on_hold: "warning",
+      dropped: "neutral",
+      planned: "special",
+    } as const
+  )[status];
 
-  return (
-    <span className={`w-fit rounded-full px-2 py-0.5 text-[11px] font-semibold ${tone}`}>
-      {statusLabel(status, type)}
-    </span>
-  );
+  return <Atom.Pill tone={tone}>{statusLabel(status, type)}</Atom.Pill>;
 }
 
 function SearchResults({

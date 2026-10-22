@@ -161,11 +161,7 @@ function ProfileHeader({
             <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
               <span>@{profile.username}</span>
               <span>· {online ? "Online" : "Offline"}</span>
-              {profile.isAdmin && (
-                <span className="rounded-full bg-white/20 px-2 py-0.5 text-[11px] font-semibold">
-                  Site admin
-                </span>
-              )}
+              {profile.isAdmin && <Atom.RoleBadge role="site-admin" />}
             </p>
           )}
         </div>
@@ -376,7 +372,7 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
               iconUrl={community.iconUrl}
               coverUrl={community.coverUrl}
               memberCount={community.memberCount}
-              badge={community.isOwner ? "Owner" : undefined}
+              badge={community.isOwner ? <Atom.RoleBadge role="owner" /> : undefined}
               action={
                 joined.some(({ id }) => id === community.id) ? (
                   <Atom.ButtonLink
@@ -476,7 +472,7 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
                     id={community.id}
                     name={community.name}
                     iconUrl={community.iconUrl}
-                    role={community.isOwner ? "Owner" : "Member"}
+                    role={community.isOwner ? "owner" : "member"}
                   />
                 </li>
               ))}

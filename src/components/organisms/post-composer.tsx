@@ -162,7 +162,7 @@ export function PostComposer({
           </div>
           <div className="flex items-center gap-2">
             {onCancel && (
-              <Atom.Button size="small" variant="text" onClick={onCancel}>
+              <Atom.Button size="small" variant="secondary" onClick={onCancel}>
                 Cancel
               </Atom.Button>
             )}

@@ -70,7 +70,7 @@ function FeedbackModal({ open, onClose }: { open: boolean; onClose: () => void }
     >
       {ticket !== null ? (
         <div className="flex flex-col items-start gap-6">
-          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-accent-soft text-online">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-success text-success-foreground">
             <CircleCheck size={24} />
           </span>
           <Molecule.ModalHeader

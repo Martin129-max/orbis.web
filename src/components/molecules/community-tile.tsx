@@ -10,7 +10,7 @@ export function CommunityTile({
   id: number;
   name: string;
   iconUrl: string | null;
-  role: string;
+  role: Atom.Role;
 }) {
   return (
     <Link
@@ -23,9 +23,9 @@ export function CommunityTile({
       >
         <Atom.CommunityIcon name={name} src={iconUrl} />
       </span>
-      <span className="flex min-w-0 flex-1 flex-col">
-        <span className="truncate text-sm font-semibold">{name}</span>
-        <span className="text-xs text-muted">{role}</span>
+      <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
+        <span className="w-full truncate text-sm font-semibold">{name}</span>
+        <Atom.RoleBadge role={role} />
       </span>
     </Link>
   );

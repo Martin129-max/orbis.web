@@ -23,13 +23,21 @@
   --rail-item: #ddd7cb;
   --divider: #d6d0c5;
   --foreground: #242320;
-  --muted: #777269;
-  --accent: #c4432d;
+  --muted: #625d55;
+  --accent: #b23b26;
   --accent-foreground: #ffffff;
   --accent-soft: #f7e6df;
   --danger: #b7312b;
-  --online: #54815b;
+  --online: #46704d;
   --offline: #99958e;
+  --info: #2f6fd6;
+  --info-foreground: #ffffff;
+  --success: #2f7d4a;
+  --success-foreground: #ffffff;
+  --warning: #e8b13a;
+  --warning-foreground: #3a2800;
+  --special: #7a4fd6;
+  --special-foreground: #ffffff;
 }
 
 @theme inline {
@@ -46,6 +54,14 @@
   --color-danger: var(--danger);
   --color-online: var(--online);
   --color-offline: var(--offline);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-special: var(--special);
+  --color-special-foreground: var(--special-foreground);
   --font-sans: var(--font-inter);
   --font-display: var(--font-barlow-condensed);
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -62,10 +78,18 @@
     --muted: #aca99e;
     --accent: #f07357;
     --accent-foreground: #211c18;
-    --accent-soft: #403029;
+    --accent-soft: #352620;
     --danger: #f58276;
     --online: #83ac83;
     --offline: #777970;
+  --info: #6fa0f0;
+  --info-foreground: #10213d;
+  --success: #7cc494;
+  --success-foreground: #0f2a18;
+  --warning: #f0c46c;
+  --warning-foreground: #2a1d00;
+  --special: #b195f2;
+  --special-foreground: #241640;
   }
 }
 
@@ -79,10 +103,18 @@
   --muted: #aca99e;
   --accent: #f07357;
   --accent-foreground: #211c18;
-  --accent-soft: #403029;
+  --accent-soft: #352620;
   --danger: #f58276;
   --online: #83ac83;
   --offline: #777970;
+  --info: #6fa0f0;
+  --info-foreground: #10213d;
+  --success: #7cc494;
+  --success-foreground: #0f2a18;
+  --warning: #f0c46c;
+  --warning-foreground: #2a1d00;
+  --special: #b195f2;
+  --special-foreground: #241640;
 }
 
 * {

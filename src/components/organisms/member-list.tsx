@@ -1,5 +1,6 @@
 "use client";
 
+import { Check, Clock, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -26,26 +27,32 @@ export function FriendAction({ userId, self }: { userId: number; self: boolean }
 
   if (status === "unknown") return null;
 
-  const { label, title } = {
-    self: { label: "You", title: "This is you" },
-    friend: { label: "Friends", title: "You're friends" },
-    sent: { label: "Sent", title: "Friend request sent" },
-    incoming: { label: "Accept", title: "Accept friend request" },
-    none: { label: "Add", title: "Add friend" },
-  }[status];
-  const actionable = status === "none" || status === "incoming";
+  if (status === "self" || status === "friend" || status === "sent") {
+    const pill = {
+      self: { label: "You", tone: "neutral", icon: <UserRound size={12} /> },
+      friend: { label: "Friends", tone: "success", icon: <Check size={12} /> },
+      sent: { label: "Sent", tone: "neutral", icon: <Clock size={12} /> },
+    } as const;
+    const { label, tone, icon } = pill[status];
+    return (
+      <Atom.Pill tone={tone} size="md" icon={icon}>
+        {label}
+      </Atom.Pill>
+    );
+  }
+
+  const title = status === "incoming" ? "Accept friend request" : "Add friend";
 
   return (
     <Atom.Button
       size="small"
-      variant="secondary"
+      variant={status === "incoming" ? "primary" : "secondary"}
       title={title}
-      aria-label={actionable ? title : undefined}
-      disabled={!actionable}
+      aria-label={title}
       onClick={() => addFriend({ userId }).catch(() => null)}
       className="shrink-0"
     >
-      {label}
+      {status === "incoming" ? "Accept" : "Add"}
     </Atom.Button>
   );
 }
@@ -77,7 +84,13 @@ function MemberGroup({
                 label={label}
                 avatarUrl={member.avatarUrl}
                 coverUrl={member.coverUrl}
-                badge={member.isOwner ? "Owner" : member.isAdmin ? "Admin" : undefined}
+                badge={
+                  member.isOwner ? (
+                    <Atom.RoleBadge role="owner" />
+                  ) : member.isAdmin ? (
+                    <Atom.RoleBadge role="admin" />
+                  ) : undefined
+                }
                 action={
                   myId !== undefined && (
                     <FriendAction userId={member.userId} self={member.userId === myId} />

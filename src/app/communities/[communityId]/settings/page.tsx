@@ -93,7 +93,7 @@ export default function CommunitySettingsPage() {
               )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
-              <Organism.MemberList
+              <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}
               />

@@ -14,7 +14,7 @@ export function CommunityCard({
   iconUrl: string | null;
   coverUrl: string | null;
   memberCount: number;
-  badge?: string;
+  badge?: ReactNode;
   action?: ReactNode;
 }) {
   return (
@@ -35,11 +35,7 @@ export function CommunityCard({
           <div className="flex min-w-0 flex-col">
             <span className="flex min-w-0 items-center gap-1.5">
               <span className="truncate font-semibold">{name}</span>
-              {badge && (
-                <span className="shrink-0 rounded-full bg-accent-soft px-1.5 py-px text-[10px] font-semibold text-accent">
-                  {badge}
-                </span>
-              )}
+              {badge}
             </span>
             <span className="text-xs text-muted">
               {memberCount.toLocaleString()} {memberCount === 1 ? "member" : "members"}

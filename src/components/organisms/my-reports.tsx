@@ -2,6 +2,7 @@
 
 import { CloudOff, Inbox } from "lucide-react";
 import { useEffect, useState } from "react";
+import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { getMyReports, type Report } from "@/lib/api";
 import { ticketNumber } from "@/lib/ticket";
@@ -9,10 +10,10 @@ import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { categoryStyle, columns } from "./report-board";
 
-const statusStyle = {
-  todo: "bg-rail-item text-muted",
-  in_progress: "bg-accent-soft text-accent",
-  done: "bg-rail-item text-online",
+const statusTone = {
+  todo: "neutral",
+  in_progress: "info",
+  done: "success",
 } as const;
 
 export function MyReports() {
@@ -66,21 +67,20 @@ export function MyReports() {
               <span className="font-mono text-xs font-semibold">
                 {ticketNumber(report.id)}
               </span>
-              <span
-                className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${category.className}`}
-              >
-                {category.icon}
+              <Atom.Pill tone={category.tone} icon={category.icon}>
                 {category.label}
-              </span>
+              </Atom.Pill>
               <span className="text-xs text-muted">
                 · {timeAgo(report.createdAt)}
               </span>
-              <span
-                className={`ml-auto flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyle[report.status]}`}
+              <Atom.Pill
+                tone={statusTone[report.status]}
+                size="md"
+                icon={status.icon}
+                className="ml-auto"
               >
-                {status.icon}
                 {status.title}
-              </span>
+              </Atom.Pill>
             </div>
             <p className="text-sm whitespace-pre-wrap">{report.message}</p>
           </li>

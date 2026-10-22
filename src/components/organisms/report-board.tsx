@@ -40,11 +40,11 @@ import { useAuthStore } from "@/stores/auth-store";
 
 export const categoryStyle: Record<
   ReportCategory,
-  { label: string; icon: ReactNode; className: string }
+  { label: string; icon: ReactNode; tone: Atom.PillTone }
 > = {
-  bug: { label: "Bug", icon: <Bug size={12} />, className: "bg-accent-soft text-danger" },
-  idea: { label: "Idea", icon: <Lightbulb size={12} />, className: "bg-rail-item text-foreground" },
-  other: { label: "Other", icon: <MessageCircle size={12} />, className: "bg-rail-item text-muted" },
+  bug: { label: "Bug", icon: <Bug size={12} />, tone: "danger" },
+  idea: { label: "Idea", icon: <Lightbulb size={12} />, tone: "warning" },
+  other: { label: "Other", icon: <MessageCircle size={12} />, tone: "neutral" },
 };
 
 export const columns: { status: ReportStatus; title: string; icon: ReactNode }[] = [
@@ -66,12 +66,9 @@ function ReportCard({ report, dragging = false }: { report: Report; dragging?: b
         <span className="font-mono text-[11px] font-semibold text-muted">
           {ticketNumber(report.id)}
         </span>
-        <span
-          className={`flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${category.className}`}
-        >
-          {category.icon}
+        <Atom.Pill tone={category.tone} icon={category.icon}>
           {category.label}
-        </span>
+        </Atom.Pill>
         <span className="ml-auto text-[11px] text-muted">
           {timeAgo(report.createdAt)}
         </span>

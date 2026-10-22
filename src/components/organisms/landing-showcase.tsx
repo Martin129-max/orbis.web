@@ -30,6 +30,7 @@ const library = [
     title: "Sousou no Frieren",
     cover: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx154587-qQTzQnEJJ3oB.jpg",
     status: "Watching",
+    tone: "info" as const,
     progress: 12,
     total: 28,
     unit: "ep",
@@ -38,6 +39,7 @@ const library = [
     title: "ONE PIECE",
     cover: "https://s4.anilist.co/file/anilistcdn/media/manga/cover/large/bx30013-BeslEMqiPhlk.jpg",
     status: "Reading",
+    tone: "info" as const,
     progress: 1100,
     total: null,
     unit: "ch",
@@ -46,6 +48,7 @@ const library = [
     title: "Cowboy Bebop",
     cover: "https://s4.anilist.co/file/anilistcdn/media/anime/cover/large/bx1-GCsPm7waJ4kS.png",
     status: "Completed",
+    tone: "success" as const,
     progress: 26,
     total: 26,
     unit: "ep",
@@ -173,7 +176,7 @@ function LibraryVisual() {
               </span>
             </span>
             <span className="flex w-24 shrink-0 flex-col items-end gap-0.5">
-              <span className="text-xs font-semibold">{item.status}</span>
+              <Atom.Pill tone={item.tone}>{item.status}</Atom.Pill>
               <span className="text-[11px] text-muted">
                 {item.progress} / {item.total ?? "?"} {item.unit}
               </span>

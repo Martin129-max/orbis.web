@@ -151,10 +151,11 @@ function AdminSettings({ community }: { community: Community }) {
                   seed={member.userId}
                 />
                 <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-[13px] font-semibold">
-                    {label}
-                    {(member.isOwner || member.isAdmin) &&
-                      ` · ${member.isOwner ? "Owner" : "Admin"}`}
+                  <span className="flex min-w-0 items-center gap-1.5">
+                    <span className="truncate text-[13px] font-semibold">{label}</span>
+                    {(member.isOwner || member.isAdmin) && (
+                      <Atom.RoleBadge role={member.isOwner ? "owner" : "admin"} />
+                    )}
                   </span>
                   <span className="truncate text-xs text-muted">
                     @{member.username}
