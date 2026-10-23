@@ -9,6 +9,7 @@ import { ticketNumber } from "@/lib/ticket";
 import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { categoryStyle, columns } from "./report-board";
+import { getReporterStatusLabel } from "@/lib/report-status";
 
 const statusTone = {
   todo: "neutral",
@@ -79,7 +80,7 @@ export function MyReports() {
                 icon={status.icon}
                 className="ml-auto"
               >
-                {status.title}
+                {getReporterStatusLabel(report.status, report.category)}
               </Atom.Pill>
             </div>
             <p className="text-sm whitespace-pre-wrap">{report.message}</p>
