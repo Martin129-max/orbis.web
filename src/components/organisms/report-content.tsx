@@ -1,0 +1,174 @@
+"use client";
+
+import { App, Input, Modal, Radio, Tooltip } from "antd";
+import { Flag } from "lucide-react";
+import { useState } from "react";
+import * as Atom from "@atom";
+import * as Molecule from "@molecule";
+import { reportContent, type ContentReportReason, type ContentReportTarget } from "@/lib/api";
+import { useAuthStore } from "@/stores/auth-store";
+
+export const reportReasons: { value: ContentReportReason; label: string; hint: string }[] = [
+  { value: "spam", label: "Spam", hint: "Ads, scams, or the same thing posted over and over." },
+  { value: "harassment", label: "Harassment", hint: "Bullying, threats, or targeting someone." },
+  { value: "inappropriate", label: "Inappropriate", hint: "Explicit, hateful, or otherwise not okay here." },
+  { value: "other", label: "Something else", hint: "Anything else the admins should look at." },
+];
+
+const nouns: Record<ContentReportTarget, string> = {
+  post: "post",
+  thread: "thread",
+  comment: "comment",
+  user: "profile",
+  community: "community",
+};
+
+function ReportModal({
+  type,
+  id,
+  open,
+  onClose,
+}: {
+  type: ContentReportTarget;
+  id: number;
+  open: boolean;
+  onClose: () => void;
+}) {
+  const { message } = App.useApp();
+  const [reason, setReason] = useState<ContentReportReason | null>(null);
+  const [details, setDetails] = useState("");
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function close() {
+    setReason(null);
+    setDetails("");
+    setError(null);
+    onClose();
+  }
+
+  async function submit() {
+    const { token } = useAuthStore.getState();
+    if (!token || !reason) return;
+
+    setPending(true);
+    setError(null);
+    try {
+      await reportContent(token, { type, id, reason, details: details.trim() || undefined });
+      close();
+      message.success("Thanks for letting us know. An admin will take a look.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      title={null}
+      footer={null}
+      width={460}
+      destroyOnHidden
+      onCancel={close}
+      styles={{ container: { padding: 24 } }}
+    >
+      <div className="flex flex-col gap-6">
+        <Molecule.ModalHeader
+          eyebrow="Report"
+          title={`Report this ${nouns[type]}.`}
+          description="Only admins see reports. The person you report isn’t told who reported them."
+        />
+        <Radio.Group
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          className="flex flex-col gap-3"
+        >
+          {reportReasons.map((option) => (
+            <Radio key={option.value} value={option.value}>
+              <span className="flex flex-col">
+                <span className="text-sm font-semibold">{option.label}</span>
+                <span className="text-xs text-muted">{option.hint}</span>
+              </span>
+            </Radio>
+          ))}
+        </Radio.Group>
+        <Input.TextArea
+          aria-label="Details"
+          placeholder="Add details (optional)"
+          maxLength={1000}
+          autoSize={{ minRows: 2, maxRows: 6 }}
+          value={details}
+          onChange={(event) => setDetails(event.target.value)}
+        />
+        {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        <div className="flex justify-end gap-2 border-t border-divider pt-6">
+          <Atom.Button variant="secondary" onClick={close}>
+            Cancel
+          </Atom.Button>
+          <Atom.Button danger loading={pending} disabled={!reason} onClick={submit}>
+            Report
+          </Atom.Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+export function ReportButton({
+  type,
+  id,
+  ownerId,
+  variant = "icon",
+  className = "",
+}: {
+  type: ContentReportTarget;
+  id: number;
+  ownerId: number;
+  variant?: "icon" | "text";
+  className?: string;
+}) {
+  const myId = useAuthStore((state) => state.profile?.userId);
+  const [open, setOpen] = useState(false);
+
+  if (myId === undefined || myId === ownerId) return null;
+
+  const label = `Report ${nouns[type]}`;
+  const trigger =
+    variant === "text" ? (
+      <button
+        type="button"
+        onClick={(event) => {
+          event.stopPropagation();
+          setOpen(true);
+        }}
+        className={`focus-ring cursor-pointer rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-danger ${className}`}
+      >
+        Report
+      </button>
+    ) : (
+      <Tooltip title={label}>
+        <button
+          type="button"
+          aria-label={label}
+          onClick={(event) => {
+            event.stopPropagation();
+            setOpen(true);
+          }}
+          className={`icon-button cursor-pointer hover:text-danger ${className}`}
+        >
+          <Flag size={16} />
+        </button>
+      </Tooltip>
+    );
+
+  return (
+    <>
+      {trigger}
+      <span onClick={(event) => event.stopPropagation()}>
+        <ReportModal type={type} id={id} open={open} onClose={() => setOpen(false)} />
+      </span>
+    </>
+  );
+}

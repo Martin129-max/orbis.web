@@ -7,6 +7,7 @@ import type { Thread } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
+import { ReportButton } from "./report-content";
 
 export function ThreadMeta({
   thread,
@@ -79,7 +80,10 @@ export function ThreadCard({
         }
       />
       <div className="flex min-w-0 flex-1 flex-col gap-2">
-        <ThreadMeta thread={thread} showCommunity={showCommunity} />
+        <div className="flex items-start justify-between gap-2">
+          <ThreadMeta thread={thread} showCommunity={showCommunity} />
+          <ReportButton type="thread" id={thread.id} ownerId={thread.author.id} className="-mt-1 -mr-1.5" />
+        </div>
         <h3 className="text-xl font-bold">
           <button
             type="button"

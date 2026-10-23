@@ -14,6 +14,7 @@ import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
 import { useAuthStore } from "@/stores/auth-store";
 import { PostComposer } from "./post-composer";
+import { ReportButton } from "./report-content";
 
 const MAX_INDENT = 5;
 
@@ -99,6 +100,7 @@ function CommentItem({
           >
             Reply
           </button>
+          <ReportButton type="comment" id={node.id} ownerId={node.author.id} variant="text" />
         </div>
         {replying && (
           <PostComposer

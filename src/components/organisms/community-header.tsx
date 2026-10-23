@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { Community, CommunityImage } from "@/lib/api";
+import { ReportButton } from "./report-content";
 
 type ImageChange = (image: CommunityImage, file: File | null) => Promise<unknown>;
 
@@ -76,7 +77,10 @@ export function CommunityHeader({
               onRemove={() => onImage("cover", null)}
             />
           )}
-          <div className="flex items-center gap-1">{actions}</div>
+          <div className="flex items-center gap-1">
+            <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
+            {actions}
+          </div>
         </div>
       </header>
     );
@@ -120,6 +124,7 @@ export function CommunityHeader({
         </Atom.Heading>
       </div>
       <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
+        <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
         {actions}
       </div>
       {onImage && !collapsed && (

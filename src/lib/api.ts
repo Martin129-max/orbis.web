@@ -59,11 +59,16 @@ export type CommunitySearchResult = {
 };
 
 export async function api(path: string, init?: RequestInit) {
+  let res: Response;
   try {
-    return await fetch(`${API_URL}${path}`, init);
+    res = await fetch(`${API_URL}${path}`, init);
   } catch {
     throw new Error("Can't reach Orbis right now. Please try again.");
   }
+  if (res.status === 429) {
+    throw new Error("You’re doing that too often. Try again in a minute.");
+  }
+  return res;
 }
 
 async function errorMessage(res: Response, fallback: string) {
@@ -412,6 +417,7 @@ export async function createCommunity(
     body: JSON.stringify({ name, isPublic }),
   });
 
+  if (res.status === 403) throw new Error(await errorMessage(res, "You can’t create more communities."));
   if (!res.ok) throw new Error("Could not create the community. Please try again.");
   return res.json();
 }
@@ -527,6 +533,7 @@ export async function joinCommunity(
   });
 
   if (res.status === 404) throw new Error("This community is no longer public.");
+  if (res.status === 403) throw new Error(await errorMessage(res, "You can’t join more communities."));
   if (!res.ok) throw new Error("Could not join the community. Please try again.");
   return res.json();
 }
@@ -619,6 +626,7 @@ export async function acceptInvite(token: string, code: string): Promise<Communi
   });
 
   if (res.status === 404) throw new Error("This invite is invalid or has expired.");
+  if (res.status === 403) throw new Error(await errorMessage(res, "You can’t join more communities."));
   if (!res.ok) throw new Error("Could not join the community. Please try again.");
   return res.json();
 }
@@ -959,6 +967,77 @@ export type Report = {
 };
 
 export type ReportAdmin = Author & { isHeadAdmin: boolean; online: boolean };
+
+export type ContentReportTarget = "post" | "thread" | "comment" | "user" | "community";
+export type ContentReportReason = "spam" | "harassment" | "inappropriate" | "other";
+
+export type ReportedItem = {
+  type: ContentReportTarget;
+  id: number;
+  target: {
+    title: string;
+    excerpt: string | null;
+    author: Author | null;
+    link: string;
+  } | null;
+  count: number;
+  reasons: Partial<Record<ContentReportReason, number>>;
+  reports: {
+    id: number;
+    reason: ContentReportReason;
+    details: string | null;
+    createdAt: string;
+    reporter: Author;
+  }[];
+  lastReportedAt: string;
+};
+
+export async function reportContent(
+  token: string,
+  report: { type: ContentReportTarget; id: number; reason: ContentReportReason; details?: string },
+): Promise<void> {
+  const res = await api("/content-reports", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(report),
+  });
+
+  if (res.status === 409 || res.status === 400 || res.status === 404) {
+    throw new Error(await errorMessage(res, "Could not send the report."));
+  }
+  if (!res.ok) throw new Error("Could not send the report. Please try again.");
+}
+
+export async function getReportedItems(token: string): Promise<ReportedItem[]> {
+  const res = await api("/content-reports", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load reported content.");
+  return res.json();
+}
+
+export async function resolveReportedItem(
+  token: string,
+  item: { type: ContentReportTarget; id: number },
+  resolution: "resolved" | "dismissed",
+): Promise<void> {
+  const res = await api("/content-reports/resolution", {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ ...item, resolution }),
+  });
+
+  if (!res.ok && res.status !== 404) {
+    throw new Error("Could not update the report. Please try again.");
+  }
+}
 
 export type ReportComment = {
   id: number;

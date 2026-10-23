@@ -4,6 +4,7 @@ import type { Post } from "@/lib/api";
 import { toggleLike } from "@/lib/votes";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
+import { ReportButton } from "./report-content";
 
 type PostCardProps = {
   post: Post;
@@ -55,6 +56,7 @@ export function PostCard({
             </time>
           </span>
         </div>
+        <ReportButton type="post" id={post.id} ownerId={post.author.id} className="-mr-1.5 self-start" />
       </header>
       <div
         className="rich-text"

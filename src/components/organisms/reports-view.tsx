@@ -1,7 +1,7 @@
 "use client";
 
 import { Select, Tooltip } from "antd";
-import { EyeOff, Inbox, KanbanSquare, List, Search } from "lucide-react";
+import { EyeOff, Flag, Inbox, KanbanSquare, List, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -11,6 +11,7 @@ import { getReportAdmins, type Report, type ReportAdmin } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { MyReports } from "./my-reports";
+import { ReportedContent } from "./reported-content";
 import {
   AdminsPanel,
   DiscordWebhookButton,
@@ -26,6 +27,7 @@ import { SidePanel, SidePanelToggle } from "./side-panel";
 const tabs = [
   { value: "board", label: "Board", icon: <KanbanSquare size={16} /> },
   { value: "hidden", label: "Hidden", icon: <EyeOff size={16} /> },
+  { value: "reported", label: "Reported", icon: <Flag size={16} /> },
 ] as const;
 
 type Tab = (typeof tabs)[number]["value"];
@@ -67,7 +69,11 @@ function AdminReports() {
   const reportParam = Number(params.get("report"));
   const openReport = Number.isInteger(reportParam) && reportParam > 0 ? reportParam : null;
   const [admins, setAdmins] = useState<ReportAdmin[] | null>(null);
-  const [views, setViews] = useState<Record<Tab, ReportView>>({ board: "board", hidden: "list" });
+  const [views, setViews] = useState<Record<Tab, ReportView>>({
+    board: "board",
+    hidden: "list",
+    reported: "list",
+  });
   const [filter, setFilter] = useState<ReportFilter>({ assignee: "anyone", category: "all", query: "" });
   const [patch, setPatch] = useState<Report | null>(null);
 
@@ -133,7 +139,9 @@ function AdminReports() {
             </Link>
           ))}
         </div>
-        <div className="ml-auto flex shrink-0 items-center gap-2 self-center">
+        <div
+          className={`ml-auto flex shrink-0 items-center gap-2 self-center ${tab === "reported" ? "invisible" : ""}`}
+        >
           <Select<ReportFilter["assignee"]>
             size="small"
             aria-label="Assigned to"
@@ -183,7 +191,13 @@ function AdminReports() {
       </nav>
       <div className="flex min-h-0 flex-1">
         <div className={content}>
-          {tab === "hidden" ? <HiddenReports {...listProps} /> : <ReportBoard {...listProps} />}
+          {tab === "reported" ? (
+            <ReportedContent query={filter.query} />
+          ) : tab === "hidden" ? (
+            <HiddenReports {...listProps} />
+          ) : (
+            <ReportBoard {...listProps} />
+          )}
         </div>
         <SidePanel label="Admins">
           <AdminsPanel admins={admins} />

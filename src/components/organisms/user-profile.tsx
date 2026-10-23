@@ -38,6 +38,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
 import { FriendAction } from "./member-list";
+import { ReportButton } from "./report-content";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { ProfileLibrary } from "./profile-library";
@@ -653,6 +654,7 @@ export function UserProfile({ username }: { username: string }) {
                     />
                   )}
                   <FriendAction userId={profile.userId} self={false} />
+                  <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
                 </>
               )
             )}
