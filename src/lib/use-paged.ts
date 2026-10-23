@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import type { FeedEntry, Page } from "@/lib/api";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type { FeedContentType, FeedEntry, Page } from "@/lib/api";
+import {
+  feedContentTypes,
+  useFeedPreferencesStore,
+} from "@/stores/feed-preferences-store";
 import { useAuthStore } from "@/stores/auth-store";
 
 export type FetchPage<T extends FeedEntry> = (
   token: string,
   cursor?: string,
+  excludedTypes?: FeedContentType[],
 ) => Promise<Page<T>>;
 
 export type Paged<T extends FeedEntry> = {
+  contentTypes: FeedContentType[];
+  filtered: boolean;
   items: T[] | null;
   failed: boolean;
   retry: () => void;
@@ -30,9 +37,34 @@ export function itemKey({ type, id }: FeedEntry) {
 }
 
 export function usePaged<T extends FeedEntry>(
-  fetchPage: FetchPage<T>,
-  { live = false }: { live?: boolean } = {},
+  fetch: FetchPage<T>,
+  {
+    live = false,
+    types = feedContentTypes,
+  }: { live?: boolean; types?: FeedContentType[] } = {},
 ): Paged<T> {
+  const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
+  const filterKey = excluded.slice().sort().join(",");
+  const allHidden = types.every((type) => excluded.includes(type));
+  const fetchPage = useCallback<FetchPage<T>>(
+    (token, cursor) => {
+      if (allHidden) return Promise.resolve({ items: [], nextCursor: null });
+      return fetch(
+        token,
+        cursor,
+        filterKey ? (filterKey.split(",") as FeedContentType[]) : [],
+      );
+    },
+    [fetch, filterKey, allHidden],
+  );
+  const [source, setSource] = useState<FetchPage<T> | null>(null);
+  const activeFetcher = useRef(fetchPage);
+  useEffect(() => {
+    activeFetcher.current = fetchPage;
+  }, [fetchPage]);
+  useEffect(() => {
+    useFeedPreferencesStore.persist.rehydrate();
+  }, []);
   const [items, setItems] = useState<T[] | null>(null);
   const [incoming, setIncoming] = useState<T[]>([]);
   const loaded = useRef<T[] | null>(null);
@@ -50,13 +82,23 @@ export function usePaged<T extends FeedEntry>(
     fetchPage(token)
       .then((page) => {
         if (ignore) return;
+        setSource(() => fetchPage);
+        setLoadingMore(false);
+        setMoreFailed(false);
         setFailed(false);
         setItems(page.items);
         setIncoming([]);
         setNextCursor(page.nextCursor);
       })
       .catch(() => {
-        if (!ignore) setFailed(true);
+        if (!ignore) {
+          setSource(() => fetchPage);
+          setLoadingMore(false);
+          setItems(null);
+          setIncoming([]);
+          setNextCursor(null);
+          setFailed(true);
+        }
       });
 
     return () => {
@@ -65,8 +107,8 @@ export function usePaged<T extends FeedEntry>(
   }, [fetchPage, attempt]);
 
   useEffect(() => {
-    loaded.current = items;
-  }, [items]);
+    loaded.current = source === fetchPage ? items : null;
+  }, [items, source, fetchPage]);
 
   useEffect(() => {
     if (!live) return;
@@ -89,6 +131,7 @@ export function usePaged<T extends FeedEntry>(
         setIncoming(
           page.items.filter(
             (item) =>
+              !filterKey.split(",").includes(item.type) &&
               !seen.has(itemKey(item)) &&
               new Date(item.createdAt).getTime() > newest,
           ),
@@ -103,19 +146,22 @@ export function usePaged<T extends FeedEntry>(
       clearInterval(timer);
       document.removeEventListener("visibilitychange", check);
     };
-  }, [live, fetchPage]);
+  }, [live, fetchPage, filterKey]);
 
   const shown = new Set(items?.map(itemKey));
-  const fresh = incoming.filter((item) => !shown.has(itemKey(item)));
+  const fresh = incoming.filter(
+    (item) => !excluded.includes(item.type) && !shown.has(itemKey(item)),
+  );
 
   function loadMore() {
     const { token } = useAuthStore.getState();
-    if (!token || !nextCursor || loadingMore) return;
+    if (!token || !nextCursor || loadingMore || source !== fetchPage) return;
 
     setLoadingMore(true);
     setMoreFailed(false);
     fetchPage(token, nextCursor)
       .then((page) => {
+        if (activeFetcher.current !== fetchPage) return;
         setItems((current) => {
           const seen = new Set(current?.map(itemKey));
           return [
@@ -125,23 +171,35 @@ export function usePaged<T extends FeedEntry>(
         });
         setNextCursor(page.nextCursor);
       })
-      .catch(() => setMoreFailed(true))
-      .finally(() => setLoadingMore(false));
+      .catch(() => {
+        if (activeFetcher.current === fetchPage) setMoreFailed(true);
+      })
+      .finally(() => {
+        if (activeFetcher.current === fetchPage) setLoadingMore(false);
+      });
   }
 
   return {
-    items,
-    failed,
+    contentTypes: types,
+    filtered: types.some((type) => excluded.includes(type)),
+    items:
+      source === fetchPage
+        ? (items?.filter((item) => !excluded.includes(item.type)) ?? null)
+        : null,
+    failed: source === fetchPage && failed,
     retry: () => {
       setFailed(false);
       setAttempt((count) => count + 1);
     },
-    hasMore: nextCursor !== null,
-    loadingMore,
-    moreFailed,
+    hasMore: source === fetchPage && nextCursor !== null,
+    loadingMore: source === fetchPage && loadingMore,
+    moreFailed: source === fetchPage && moreFailed,
     loadMore,
-    prepend: (item) => setItems((current) => [item, ...(current ?? [])]),
-    newCount: fresh.length,
+    prepend: (item) => {
+      if (!excluded.includes(item.type))
+        setItems((current) => [item, ...(current ?? [])]);
+    },
+    newCount: source === fetchPage ? fresh.length : 0,
     showNew: () => {
       setItems((current) => [...fresh, ...(current ?? [])]);
       setIncoming([]);

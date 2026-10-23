@@ -1,0 +1,100 @@
+"use client";
+
+import { Checkbox, Dropdown, Popover } from "antd";
+import {
+  ChevronDown,
+  LayoutPanelTop,
+  List,
+  RotateCcw,
+  SlidersHorizontal,
+} from "lucide-react";
+import * as Atom from "@atom";
+import type { FeedContentType } from "@/lib/api";
+import { useFeedPreferencesStore } from "@/stores/feed-preferences-store";
+
+const labels = {
+  post: "Posts",
+  thread: "Forum threads",
+  activity: "Library updates",
+};
+
+export function FeedFilters({ types }: { types: FeedContentType[] }) {
+  const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
+  const toggle = useFeedPreferencesStore((state) => state.toggleType);
+  const showAll = useFeedPreferencesStore((state) => state.showAll);
+  const view = useFeedPreferencesStore((state) => state.view);
+  const setView = useFeedPreferencesStore((state) => state.setView);
+
+  return (
+    <div
+      className="flex flex-wrap items-center justify-between gap-3"
+      data-tour="feed-filters"
+    >
+      <Dropdown
+        trigger={["click"]}
+        menu={{
+          selectable: true,
+          selectedKeys: [view],
+          items: [
+            { key: "card", label: "Card", icon: <LayoutPanelTop size={14} /> },
+            { key: "compact", label: "Compact", icon: <List size={14} /> },
+          ],
+          onClick: ({ key }) => {
+            if (key === "card" || key === "compact") setView(key);
+          },
+        }}
+      >
+        <Atom.Button
+          size="small"
+          variant="secondary"
+          aria-label={`Feed view: ${view === "card" ? "Card" : "Compact"}`}
+          icon={
+            view === "card" ? <LayoutPanelTop size={14} /> : <List size={14} />
+          }
+        >
+          {view === "card" ? "Card" : "Compact"}
+          <ChevronDown size={12} aria-hidden />
+        </Atom.Button>
+      </Dropdown>
+      <div className="ml-auto flex items-center gap-2">
+        {excluded.length > 0 && (
+          <Atom.Button size="small" variant="secondary" icon={<RotateCcw size={14} />} onClick={showAll}>
+            Reset Filters
+          </Atom.Button>
+        )}
+        <Popover
+          trigger="click"
+          placement="bottomRight"
+          content={
+            <div
+              className="flex min-w-48 flex-col gap-3"
+              aria-label="Feed content types"
+            >
+              <p className="text-[13px] font-semibold">Show in feeds</p>
+              {types.map((type) => (
+                <Checkbox
+                  key={type}
+                  checked={!excluded.includes(type)}
+                  onChange={() => toggle(type)}
+                >
+                  {labels[type]}
+                </Checkbox>
+              ))}
+              <p className="max-w-56 text-xs text-muted">
+                Your choices apply across feeds on this browser.
+              </p>
+            </div>
+          }
+        >
+          <Atom.Button
+            size="small"
+            variant="secondary"
+            icon={<SlidersHorizontal size={14} />}
+          >
+            Filter feed
+          </Atom.Button>
+        </Popover>
+      </div>
+    </div>
+  );
+}

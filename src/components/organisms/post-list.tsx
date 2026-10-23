@@ -6,6 +6,9 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { FeedEntry } from "@/lib/api";
 import { itemKey, type Paged } from "@/lib/use-paged";
+import { useFeedPreferencesStore } from "@/stores/feed-preferences-store";
+import { CompactFeedItem } from "./compact-feed-item";
+import { FeedFilters } from "./feed-filters";
 import { ActivityCard } from "./activity-card";
 import { DiscussionModal } from "./discussion-modal";
 import { PostCard } from "./post-card";
@@ -18,7 +21,16 @@ type PostListProps<T extends FeedEntry> = {
   showCommunity?: boolean;
 };
 
-export function PostList<T extends FeedEntry>({
+export function PostList<T extends FeedEntry>(props: PostListProps<T>) {
+  return (
+    <div className="flex flex-col gap-3">
+      <FeedFilters types={props.feed.contentTypes} />
+      <PostListContent {...props} />
+    </div>
+  );
+}
+
+function PostListContent<T extends FeedEntry>({
   feed,
   empty,
   end = <Molecule.FeedEnd label="You’re all caught up" />,
@@ -26,6 +38,7 @@ export function PostList<T extends FeedEntry>({
 }: PostListProps<T>) {
   const { items, failed, retry, hasMore, loadingMore, moreFailed, loadMore } =
     feed;
+  const view = useFeedPreferencesStore((state) => state.view);
   const [openKey, setOpenKey] = useState<string | null>(null);
   const open = items?.find((item) => itemKey(item) === openKey) ?? null;
   const update = (item: FeedEntry) => feed.update(item as T);
@@ -65,9 +78,13 @@ export function PostList<T extends FeedEntry>({
         <Molecule.FeedState
           eyebrow="Empty"
           icon={<NotebookPen size={24} strokeWidth={1.5} />}
-          title={empty.title}
-          description={empty.description}
-          action={empty.action}
+          title={feed.filtered ? "No matching posts." : empty.title}
+          description={
+            feed.filtered
+              ? "Try showing more content types using Filter feed."
+              : empty.description
+          }
+          action={feed.filtered ? undefined : empty.action}
         />
       </div>
     );
@@ -76,32 +93,48 @@ export function PostList<T extends FeedEntry>({
   return (
     <div className="flex flex-col gap-3">
       {newPosts}
-      {items.map((item) =>
-        item.type === "activity" ? (
-          <ActivityCard
-            key={itemKey(item)}
-            activity={item}
-            onOpenComments={() => setOpenKey(itemKey(item))}
-            onChange={update}
-          />
-        ) : item.type === "thread" ? (
-          <ThreadCard
-            key={itemKey(item)}
-            thread={item}
-            showCommunity={showCommunity}
-            onOpen={() => setOpenKey(itemKey(item))}
-            onChange={update}
-          />
-        ) : (
-          <PostCard
-            key={itemKey(item)}
-            post={item}
-            showCommunity={showCommunity}
-            onOpenComments={() => setOpenKey(itemKey(item))}
-            onChange={update}
-          />
-        ),
-      )}
+      <div
+        className={
+          view === "compact"
+            ? "min-w-0 divide-y divide-divider overflow-hidden rounded-lg border border-divider bg-surface"
+            : "flex flex-col gap-3"
+        }
+      >
+        {items.map((item) =>
+          view === "compact" ? (
+            <CompactFeedItem
+              key={itemKey(item)}
+              item={item}
+              showCommunity={showCommunity}
+              onOpen={() => setOpenKey(itemKey(item))}
+              onChange={update}
+            />
+          ) : item.type === "activity" ? (
+            <ActivityCard
+              key={itemKey(item)}
+              activity={item}
+              onOpenComments={() => setOpenKey(itemKey(item))}
+              onChange={update}
+            />
+          ) : item.type === "thread" ? (
+            <ThreadCard
+              key={itemKey(item)}
+              thread={item}
+              showCommunity={showCommunity}
+              onOpen={() => setOpenKey(itemKey(item))}
+              onChange={update}
+            />
+          ) : (
+            <PostCard
+              key={itemKey(item)}
+              post={item}
+              showCommunity={showCommunity}
+              onOpenComments={() => setOpenKey(itemKey(item))}
+              onChange={update}
+            />
+          ),
+        )}
+      </div>
       {hasMore ? (
         <Molecule.LoadMore
           onLoadMore={loadMore}

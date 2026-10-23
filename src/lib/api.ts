@@ -200,6 +200,8 @@ export type Activity = {
 
 export type FeedEntry = FeedItem | Activity;
 
+export type FeedContentType = FeedEntry["type"];
+
 export type Page<T> = { items: T[]; nextCursor: string | null };
 
 export type NumberedPage<T> = { items: T[]; total: number; page: number; pageSize: number };
@@ -647,8 +649,9 @@ export async function getPosts(
   token: string,
   communityId: number,
   cursor?: string,
+  excludedTypes: FeedContentType[] = [],
 ): Promise<Page<Post | Activity>> {
-  const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor }), {
+  const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor, exclude: excludedTypes.join(",") }), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -659,8 +662,9 @@ export async function getPosts(
 export async function getFeed(
   token: string,
   cursor?: string,
+  excludedTypes: FeedContentType[] = [],
 ): Promise<Page<FeedEntry>> {
-  const res = await api(withQuery("/feed", { cursor }), {
+  const res = await api(withQuery("/feed", { cursor, exclude: excludedTypes.join(",") }), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -692,8 +696,9 @@ export async function getUserPosts(
   token: string,
   username: string,
   cursor?: string,
+  excludedTypes: FeedContentType[] = [],
 ): Promise<Page<FeedEntry>> {
-  const res = await api(withQuery(`/users/${encodeURIComponent(username)}/posts`, { cursor }), {
+  const res = await api(withQuery(`/users/${encodeURIComponent(username)}/posts`, { cursor, exclude: excludedTypes.join(",") }), {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -706,9 +711,10 @@ export async function getMediaPosts(
   type: MediaType,
   sourceId: string,
   cursor?: string,
+  excludedTypes: FeedContentType[] = [],
 ): Promise<Page<FeedEntry>> {
   const res = await api(
-    withQuery(`/library/media/${type}/${encodeURIComponent(sourceId)}/posts`, { cursor }),
+    withQuery(`/library/media/${type}/${encodeURIComponent(sourceId)}/posts`, { cursor, exclude: excludedTypes.join(",") }),
     { headers: { Authorization: `Bearer ${token}` } },
   );
 
@@ -1517,6 +1523,7 @@ export async function addToLibrary(
     sourceId: string;
     status: LibraryStatus;
     isPublic: boolean;
+    progress?: number;
   },
 ): Promise<LibraryEntry> {
   const res = await api("/library", {

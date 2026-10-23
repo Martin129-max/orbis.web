@@ -58,6 +58,12 @@ export const tourStops: TourStop[] = [
       "Write a post and pick which community it goes to. Use the forum tab inside a community for longer discussions with votes.",
   },
   {
+    target: "feed-filters",
+    placement: "bottom",
+    title: "Choose your feed",
+    description: "Switch between Card and Compact view, and show or hide posts, forum threads, and library updates. Your choices are remembered across feeds on this browser.",
+  },
+  {
     target: "add-friend",
     placement: "bottom",
     title: "Find people",
@@ -323,7 +329,7 @@ export const pageTours = {
       target: "library-search",
       placement: "bottom",
       title: "Add anime, manga, and games",
-      description: "Search for a title and add it to your library with a status.",
+      description: "Search for a title and add it with a status and your episode or chapter progress.",
     },
     {
       target: "library-tabs",

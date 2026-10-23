@@ -8,6 +8,7 @@ import {
   MessageCircle,
   Moon,
   ShieldCheck,
+  SlidersHorizontal,
   Ticket,
   UserRound,
   Users,
@@ -21,6 +22,7 @@ import { getPublicCommunities, type PublicCommunity } from "@/lib/api";
 
 const extras: { icon: ReactNode; label: string }[] = [
   { icon: <Compass size={18} />, label: "Explore public communities" },
+  { icon: <SlidersHorizontal size={18} />, label: "Feed filters and compact view" },
   { icon: <FolderOpen size={18} />, label: "Folders for your communities" },
   { icon: <Moon size={18} />, label: "Light and dark themes" },
   { icon: <WifiOff size={18} />, label: "Appear offline anytime" },

@@ -29,6 +29,7 @@ import {
   uploadAvatar,
   uploadUserBackground,
   uploadUserCover,
+  type FeedContentType,
   type Profile as OwnProfile,
   type PublicProfile as Profile,
 } from "@/lib/api";
@@ -245,7 +246,7 @@ function Wall({
 }) {
   const feed = usePaged(
     useCallback(
-      (token: string, cursor?: string) => getUserPosts(token, profile.username, cursor),
+      (token: string, cursor?: string, excluded?: FeedContentType[]) => getUserPosts(token, profile.username, cursor, excluded),
       [profile.username],
     ),
     { live: true },
@@ -259,7 +260,7 @@ function Wall({
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-3">
       {canPost && (
         <div data-tour="profile-wall">
           <PostComposer

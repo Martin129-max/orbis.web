@@ -1,8 +1,8 @@
 "use client";
 
-import { App, Dropdown, Modal, Radio, Switch } from "antd";
+import { App, Dropdown, InputNumber, Modal, Radio, Switch } from "antd";
 import { Check, Globe, Lock, MoreHorizontal, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useId, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
@@ -35,6 +35,8 @@ export function AddToLibraryButton({
   const [open, setOpen] = useState(false);
   const [status, setStatus] = useState<LibraryStatus>("planned");
   const [isPublic, setIsPublic] = useState(true);
+  const [progress, setProgress] = useState<number | null>(0);
+  const progressId = useId();
   const [pending, setPending] = useState(false);
 
   async function add() {
@@ -45,6 +47,7 @@ export function AddToLibraryButton({
         sourceId: media.sourceId,
         status,
         isPublic,
+        ...(media.type !== "game" && { progress: progress ?? 0 }),
       });
       onAdded(entry);
       setOpen(false);
@@ -58,7 +61,14 @@ export function AddToLibraryButton({
 
   return (
     <>
-      <Atom.Button size={size} icon={<Plus size={14} />} onClick={() => setOpen(true)}>
+      <Atom.Button
+        size={size}
+        icon={<Plus size={14} />}
+        onClick={() => {
+          setProgress(0);
+          setOpen(true);
+        }}
+      >
         Add to library
       </Atom.Button>
       <Modal
@@ -86,6 +96,29 @@ export function AddToLibraryButton({
               ))}
             </Radio.Group>
           </div>
+          {media.type !== "game" && (
+            <div className="flex flex-col gap-2">
+              <label htmlFor={progressId} className="text-[13px] font-semibold">
+                {media.type === "manga" ? "Chapters read" : "Episodes watched"}
+              </label>
+              <InputNumber
+                id={progressId}
+                min={0}
+                max={100000}
+                step={1}
+                precision={0}
+                value={progress}
+                onChange={setProgress}
+                disabled={pending}
+                className="w-full"
+              />
+              {status === "completed" && (
+                <p className="text-xs text-muted">
+                  Completed titles use the full count when available.
+                </p>
+              )}
+            </div>
+          )}
           <label className="flex items-start justify-between gap-4">
             <span className="flex flex-col gap-1">
               <span className="text-[13px] font-semibold">Public</span>
@@ -130,9 +163,17 @@ export function EntryMenu({
         await removeFromLibrary(token(), entry.id);
         onRemove(entry.id);
       } else if (key === "public" || key === "private") {
-        onChange(await updateLibraryEntry(token(), entry.id, { isPublic: key === "public" }));
+        onChange(
+          await updateLibraryEntry(token(), entry.id, {
+            isPublic: key === "public",
+          }),
+        );
       } else {
-        onChange(await updateLibraryEntry(token(), entry.id, { status: key as LibraryStatus }));
+        onChange(
+          await updateLibraryEntry(token(), entry.id, {
+            status: key as LibraryStatus,
+          }),
+        );
       }
     } catch (e) {
       message.error(e instanceof Error ? e.message : "Something went wrong.");
@@ -160,9 +201,22 @@ export function EntryMenu({
           },
           { type: "divider" },
           entry.isPublic
-            ? { key: "private", icon: <Lock size={16} />, label: "Make private" }
-            : { key: "public", icon: <Globe size={16} />, label: "Make public" },
-          { key: "remove", icon: <Trash2 size={16} />, label: "Remove", danger: true },
+            ? {
+                key: "private",
+                icon: <Lock size={16} />,
+                label: "Make private",
+              }
+            : {
+                key: "public",
+                icon: <Globe size={16} />,
+                label: "Make public",
+              },
+          {
+            key: "remove",
+            icon: <Trash2 size={16} />,
+            label: "Remove",
+            danger: true,
+          },
         ],
         onClick: ({ key }) => act(key),
       }}

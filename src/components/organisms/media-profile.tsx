@@ -10,6 +10,7 @@ import {
   createMediaPost,
   getMediaPosts,
   getMediaProfile,
+  type FeedContentType,
   type LibraryEntry,
   type MediaProfile as Profile,
 } from "@/lib/api";
@@ -292,11 +293,11 @@ function YourLibrary({
 function MediaWall({ profile }: { profile: Profile }) {
   const feed = usePaged(
     useCallback(
-      (token: string, cursor?: string) =>
-        getMediaPosts(token, profile.type, profile.sourceId, cursor),
+      (token: string, cursor?: string, excluded?: FeedContentType[]) =>
+        getMediaPosts(token, profile.type, profile.sourceId, cursor, excluded),
       [profile.type, profile.sourceId],
     ),
-    { live: true },
+    { live: true, types: ["post"] },
   );
 
   async function handlePost(content: string) {
@@ -306,7 +307,7 @@ function MediaWall({ profile }: { profile: Profile }) {
   }
 
   return (
-    <section data-tour="media-wall" className="flex min-w-0 flex-col gap-4 md:col-start-1">
+    <section data-tour="media-wall" className="flex min-w-0 flex-col gap-3 md:col-start-1">
       <PostComposer
         onPost={handlePost}
         placeholder={`Share your thoughts on ${profile.title}…`}

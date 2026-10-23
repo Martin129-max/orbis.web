@@ -35,6 +35,7 @@ function ForumThreads({
         getThreads(token, communityId, sort, cursor),
       [communityId, sort],
     ),
+    { types: ["thread"] },
   );
 
   return (
@@ -130,7 +131,7 @@ export function CommunityForum({ communityId }: { communityId: number }) {
   const [creating, setCreating] = useState(false);
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Segmented<ThreadSort>
           aria-label="Sort threads"
