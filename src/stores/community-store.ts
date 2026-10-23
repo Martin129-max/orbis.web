@@ -12,7 +12,7 @@ type CommunityState = {
   acceptInvite: (code: string) => Promise<Community>;
   updateCommunity: (
     communityId: number,
-    changes: Partial<Pick<Community, "name" | "isPublic">>,
+    changes: Partial<Pick<Community, "name" | "isPublic" | "description">>,
   ) => Promise<Community>;
   setCommunityImage: (
     communityId: number,
@@ -84,7 +84,12 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
     set((state) => ({
       communities: state.communities.map((community) =>
         community.id === communityId
-          ? { ...community, name: updated.name, isPublic: updated.isPublic }
+          ? {
+              ...community,
+              name: updated.name,
+              description: updated.description,
+              isPublic: updated.isPublic,
+            }
           : community,
       ),
     }));

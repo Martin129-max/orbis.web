@@ -8,6 +8,7 @@ export function IdentityCard({
   subtitle,
   badge,
   action,
+  children,
 }: {
   coverUrl: string | null;
   avatar: ReactNode;
@@ -15,16 +16,17 @@ export function IdentityCard({
   subtitle: ReactNode;
   badge?: ReactNode;
   action?: ReactNode;
+  children?: ReactNode;
 }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-transparent bg-background transition-colors hover:border-divider">
+    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-divider bg-surface transition-colors hover:border-muted">
       <div className="relative h-14 shrink-0 bg-gradient-to-br from-accent-soft to-rail-item">
         {coverUrl && (
           <Image src={coverUrl} alt="" fill unoptimized className="object-cover" />
         )}
       </div>
       <div className="flex items-end gap-3 px-3 pb-3">
-        <div className="relative -mt-5 shrink-0 rounded-full border-[3px] border-background bg-background">
+        <div className="relative -mt-5 shrink-0 rounded-full border-[3px] border-surface bg-surface">
           {avatar}
         </div>
         <div className="flex min-w-0 flex-1 flex-col pt-2">
@@ -36,6 +38,7 @@ export function IdentityCard({
         </div>
         {action && <div className="shrink-0">{action}</div>}
       </div>
+      {children && <div className="px-3 pb-3">{children}</div>}
     </div>
   );
 }

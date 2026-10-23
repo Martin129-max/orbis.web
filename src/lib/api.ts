@@ -27,6 +27,7 @@ export type CommunityRole = "owner" | "admin" | "member";
 export type Community = {
   id: number;
   name: string;
+  description?: string | null;
   iconUrl: string | null;
   coverUrl: string | null;
   backgroundUrl: string | null;
@@ -37,13 +38,24 @@ export type Community = {
   memberCount?: number;
 };
 
+export type CommunityPerson = {
+  id: number;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+};
+
 export type CommunitySearchResult = {
   id: number;
   name: string;
+  description: string | null;
   iconUrl: string | null;
   coverUrl: string | null;
   memberCount: number;
   joined: boolean;
+  members: CommunityPerson[];
+  mutuals: CommunityPerson[];
+  mutualCount: number;
 };
 
 export async function api(path: string, init?: RequestInit) {
@@ -407,7 +419,7 @@ export async function createCommunity(
 export async function updateCommunity(
   token: string,
   communityId: number,
-  changes: Partial<Pick<Community, "name" | "isPublic">>,
+  changes: Partial<Pick<Community, "name" | "isPublic" | "description">>,
 ): Promise<Community> {
   const res = await api(`/communities/${communityId}`, {
     method: "PATCH",

@@ -4,7 +4,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import { searchCommunities, type CommunitySearchResult } from "@/lib/api";
+import {
+  searchCommunities,
+  type CommunityPerson,
+  type CommunitySearchResult,
+} from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 
@@ -52,6 +57,58 @@ function JoinAction({
     >
       Join
     </Atom.Button>
+  );
+}
+
+function AvatarStack({ people }: { people: CommunityPerson[] }) {
+  return (
+    <span className="flex shrink-0 items-center">
+      {people.map((person, index) => (
+        <span
+          key={person.id}
+          className={`rounded-full ring-2 ring-surface ${index > 0 ? "-ml-2" : ""}`}
+        >
+          <Atom.Avatar size="xs" label={displayName(person)} src={person.avatarUrl} seed={person.id} />
+        </span>
+      ))}
+    </span>
+  );
+}
+
+function mutualText({ mutuals, mutualCount }: CommunitySearchResult) {
+  const names = mutuals.map(displayName);
+  const others = mutualCount - names.length;
+  if (others > 0) {
+    return `${names.join(", ")} and ${others} other ${others === 1 ? "friend" : "friends"} are here`;
+  }
+  if (names.length === 1) return `${names[0]} is here`;
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]} are here`;
+}
+
+function CommunityDetails({ community }: { community: CommunitySearchResult }) {
+  return (
+    <div className="flex flex-col gap-3 border-t border-divider pt-3">
+      <p className={`text-[13px] ${community.description ? "" : "text-muted"}`}>
+        {community.description ?? "No description yet."}
+      </p>
+      {community.members.length > 0 && (
+        <div className="flex items-center gap-2 text-xs text-muted">
+          <AvatarStack people={community.members} />
+          {community.memberCount.toLocaleString()}{" "}
+          {community.memberCount === 1 ? "member" : "members"}
+        </div>
+      )}
+      <div className="flex items-center gap-2 text-xs text-muted">
+        {community.mutualCount > 0 ? (
+          <>
+            <AvatarStack people={community.mutuals} />
+            <span className="min-w-0">{mutualText(community)}</span>
+          </>
+        ) : (
+          "None of your friends are here yet."
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -192,7 +249,7 @@ export function CommunitySearch() {
         ) : (
           <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {results.map((community) => (
-              <li key={community.id}>
+              <li key={community.id} className="group relative">
                 <Molecule.CommunityCard
                   name={community.name}
                   iconUrl={community.iconUrl}
@@ -200,6 +257,17 @@ export function CommunitySearch() {
                   memberCount={community.memberCount}
                   action={<JoinAction community={community} joining={joining} onJoin={join} />}
                 />
+                <div className="invisible absolute inset-x-0 top-0 z-20 rounded-lg opacity-0 shadow-[0_16px_32px_-16px_rgb(0_0_0/0.45)] transition-[opacity,visibility] delay-0 duration-150 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 group-hover:delay-300 motion-reduce:transition-none">
+                  <Molecule.CommunityCard
+                    name={community.name}
+                    iconUrl={community.iconUrl}
+                    coverUrl={community.coverUrl}
+                    memberCount={community.memberCount}
+                    action={<JoinAction community={community} joining={joining} onJoin={join} />}
+                  >
+                    <CommunityDetails community={community} />
+                  </Molecule.CommunityCard>
+                </div>
               </li>
             ))}
           </ul>

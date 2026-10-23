@@ -9,6 +9,7 @@ export function CommunityCard({
   memberCount,
   badge,
   action,
+  children,
 }: {
   name: string;
   iconUrl: string | null;
@@ -16,6 +17,7 @@ export function CommunityCard({
   memberCount: number;
   badge?: ReactNode;
   action?: ReactNode;
+  children?: ReactNode;
 }) {
   const icon = (
     <span
@@ -34,6 +36,8 @@ export function CommunityCard({
       subtitle={`${memberCount.toLocaleString()} ${memberCount === 1 ? "member" : "members"}`}
       badge={badge}
       action={action}
-    />
+    >
+      {children}
+    </IdentityCard>
   );
 }

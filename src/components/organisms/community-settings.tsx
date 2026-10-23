@@ -1,6 +1,6 @@
 "use client";
 
-import { Switch } from "antd";
+import { Input, Switch } from "antd";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -23,11 +23,15 @@ function GeneralSettings({ community }: { community: Community }) {
   const updateCommunity = useCommunityStore((state) => state.updateCommunity);
   const [saved, setSaved] = useState(community);
   const [name, setName] = useState(community.name);
+  const [description, setDescription] = useState(community.description ?? "");
   const [isPublic, setIsPublic] = useState(community.isPublic);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const changed = name.trim() !== saved.name || isPublic !== saved.isPublic;
+  const changed =
+    name.trim() !== saved.name ||
+    description.trim() !== (saved.description ?? "") ||
+    isPublic !== saved.isPublic;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -38,10 +42,12 @@ function GeneralSettings({ community }: { community: Community }) {
     try {
       const updated = await updateCommunity(community.id, {
         name: name.trim(),
+        description: description.trim(),
         isPublic,
       });
       setSaved(updated);
       setName(updated.name);
+      setDescription(updated.description ?? "");
       setMessage("Settings saved.");
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -68,6 +74,24 @@ function GeneralSettings({ community }: { community: Community }) {
             setMessage(null);
           }}
         />
+        <label className="flex flex-col gap-2">
+          <span className="text-[13px] font-semibold">Description</span>
+          <Input.TextArea
+            name="description"
+            maxLength={300}
+            showCount
+            autoSize={{ minRows: 2, maxRows: 5 }}
+            placeholder="What’s this community about?"
+            value={description}
+            onChange={(event) => {
+              setDescription(event.target.value);
+              setMessage(null);
+            }}
+          />
+          <span className="text-xs text-muted">
+            Shown when people hover over the community in Explore.
+          </span>
+        </label>
         <label className="flex items-start justify-between gap-4">
           <span className="flex flex-col gap-1">
             <span className="text-[13px] font-semibold">Public community</span>
