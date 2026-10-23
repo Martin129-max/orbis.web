@@ -90,6 +90,7 @@ function Conversation({
   const markRead = useMessagesStore((state) => state.markRead);
   const visible = usePageVisible();
   const list = useRef<HTMLDivElement>(null);
+  const content = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
   const restoreFrom = useRef<number | null>(null);
   const name = displayName(person);
@@ -112,16 +113,24 @@ function Conversation({
     if (viewing && unread > 0) markRead(userId);
   }, [viewing, unread, markRead, userId]);
 
+  useEffect(() => {
+    const element = list.current!;
+    const observer = new ResizeObserver(() => {
+      if (atBottom.current) element.scrollTop = element.scrollHeight;
+    });
+    observer.observe(element);
+    observer.observe(content.current!);
+    return () => observer.disconnect();
+  }, []);
+
+  const firstId = messages?.[0]?.id;
+
   useLayoutEffect(() => {
     const element = list.current;
-    if (!element) return;
-    if (restoreFrom.current !== null) {
-      element.scrollTop = element.scrollHeight - restoreFrom.current;
-      restoreFrom.current = null;
-    } else if (atBottom.current) {
-      element.scrollTop = element.scrollHeight;
-    }
-  }, [messages, typing]);
+    if (!element || restoreFrom.current === null) return;
+    element.scrollTop = element.scrollHeight - restoreFrom.current;
+    restoreFrom.current = null;
+  }, [firstId]);
 
   function handleScroll() {
     const element = list.current!;
@@ -144,81 +153,83 @@ function Conversation({
       <div
         ref={list}
         onScroll={handleScroll}
-        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3"
+        className="flex min-h-0 flex-1 flex-col overflow-y-auto px-3 py-3 [overflow-anchor:none]"
       >
-        {messages === undefined ? (
-          <Atom.Loader />
-        ) : history?.failed ? (
-          <p className="m-auto text-center text-[13px] text-muted">
-            Couldn’t load this chat. Try again in a little while.
-          </p>
-        ) : messages.length === 0 ? (
-          <div className="m-auto flex flex-col items-center gap-2 py-6 text-center">
-            <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="lg" />
-            <p className="font-semibold">{name}</p>
-            <p className="text-[13px] text-muted">Say hi to start the conversation.</p>
-          </div>
-        ) : (
-          <ol className="mt-auto flex flex-col gap-0.5">
-            {messages.map((message, index) => {
-              const previous = messages[index - 1];
-              const next = messages[index + 1];
-              const mine = message.senderId === me;
-              const sentAt = new Date(message.sentAt).getTime();
-              const showTime =
-                !previous || sentAt - new Date(previous.sentAt).getTime() > TIME_GAP_MS;
-              const endsGroup =
-                !next ||
-                next.senderId !== message.senderId ||
-                new Date(next.sentAt).getTime() - sentAt > TIME_GAP_MS;
-              return (
-                <li key={message.id} className="flex flex-col">
-                  {showTime && (
-                    <p className="my-2 text-center text-[11px] text-muted">
-                      {formatTime(message.sentAt)}
-                    </p>
-                  )}
-                  <div
-                    className={`flex items-end gap-2 ${mine ? "justify-end" : ""} ${
-                      endsGroup ? "mb-1.5" : ""
-                    }`}
-                  >
-                    {!mine && (
-                      <span className={`w-5 shrink-0 ${endsGroup ? "" : "invisible"}`}>
-                        <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="xs" />
-                      </span>
+        <div ref={content} className="flex flex-1 flex-col">
+          {messages === undefined ? (
+            <Atom.Loader />
+          ) : history?.failed ? (
+            <p className="m-auto text-center text-[13px] text-muted">
+              Couldn’t load this chat. Try again in a little while.
+            </p>
+          ) : messages.length === 0 ? (
+            <div className="m-auto flex flex-col items-center gap-2 py-6 text-center">
+              <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="lg" />
+              <p className="font-semibold">{name}</p>
+              <p className="text-[13px] text-muted">Say hi to start the conversation.</p>
+            </div>
+          ) : (
+            <ol className="mt-auto flex flex-col gap-0.5">
+              {messages.map((message, index) => {
+                const previous = messages[index - 1];
+                const next = messages[index + 1];
+                const mine = message.senderId === me;
+                const sentAt = new Date(message.sentAt).getTime();
+                const showTime =
+                  !previous || sentAt - new Date(previous.sentAt).getTime() > TIME_GAP_MS;
+                const endsGroup =
+                  !next ||
+                  next.senderId !== message.senderId ||
+                  new Date(next.sentAt).getTime() - sentAt > TIME_GAP_MS;
+                return (
+                  <li key={message.id} className="flex flex-col">
+                    {showTime && (
+                      <p className="my-2 text-center text-[11px] text-muted">
+                        {formatTime(message.sentAt)}
+                      </p>
                     )}
-                    <p
-                      title={formatTime(message.sentAt)}
-                      className={`max-w-[78%] rounded-2xl px-3 py-1.5 text-sm whitespace-pre-wrap [overflow-wrap:anywhere] ${
-                        mine ? "bg-accent text-accent-foreground" : "bg-rail-item text-foreground"
+                    <div
+                      className={`flex items-end gap-2 ${mine ? "justify-end" : ""} ${
+                        endsGroup ? "mb-1.5" : ""
                       }`}
                     >
-                      {message.text}
-                    </p>
-                  </div>
+                      {!mine && (
+                        <span className={`w-5 shrink-0 ${endsGroup ? "" : "invisible"}`}>
+                          <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="xs" />
+                        </span>
+                      )}
+                      <p
+                        title={formatTime(message.sentAt)}
+                        className={`max-w-[78%] rounded-2xl px-3 py-1.5 text-sm whitespace-pre-wrap [overflow-wrap:anywhere] ${
+                          mine ? "bg-accent text-accent-foreground" : "bg-rail-item text-foreground"
+                        }`}
+                      >
+                        {message.text}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+              {seen && <li className="-mt-0.5 mb-1 text-right text-[11px] text-muted">Seen</li>}
+              {typing && (
+                <li className="flex items-end gap-2" aria-label={`${name} is typing`}>
+                  <span className="w-5 shrink-0">
+                    <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="xs" />
+                  </span>
+                  <span className="flex gap-1 rounded-2xl bg-rail-item px-3 py-2.5">
+                    {[0, 150, 300].map((delay) => (
+                      <span
+                        key={delay}
+                        style={{ animationDelay: `${delay}ms` }}
+                        className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted motion-reduce:animate-none"
+                      />
+                    ))}
+                  </span>
                 </li>
-              );
-            })}
-            {seen && <li className="-mt-0.5 mb-1 text-right text-[11px] text-muted">Seen</li>}
-            {typing && (
-              <li className="flex items-end gap-2" aria-label={`${name} is typing`}>
-                <span className="w-5 shrink-0">
-                  <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="xs" />
-                </span>
-                <span className="flex gap-1 rounded-2xl bg-rail-item px-3 py-2.5">
-                  {[0, 150, 300].map((delay) => (
-                    <span
-                      key={delay}
-                      style={{ animationDelay: `${delay}ms` }}
-                      className="h-1.5 w-1.5 animate-bounce rounded-full bg-muted motion-reduce:animate-none"
-                    />
-                  ))}
-                </span>
-              </li>
-            )}
-          </ol>
-        )}
+              )}
+            </ol>
+          )}
+        </div>
       </div>
       {request && <RequestBanner person={person} />}
       <Composer person={person} />
