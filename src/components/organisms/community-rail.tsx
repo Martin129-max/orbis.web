@@ -4,9 +4,12 @@ import {
   closestCenter,
   DndContext,
   KeyboardSensor,
+  pointerWithin,
   PointerSensor,
   useSensor,
   useSensors,
+  useDroppable,
+  type CollisionDetection,
   type DragEndEvent,
   type DragMoveEvent,
 } from "@dnd-kit/core";
@@ -44,6 +47,7 @@ import {
   folderKey,
   moveInLayout,
   normalizeLayout,
+  RAIL_END_KEY,
   ungroup,
   type RailDrop,
 } from "@/lib/rail-layout";
@@ -118,6 +122,10 @@ function fadeMask({ above, below }: { above: boolean; below: boolean }) {
 
 const OPEN_FOLDERS_KEY = "orbis:rail-open-folders";
 const noShift = () => null;
+const railCollision: CollisionDetection = (args) => {
+  const pointerCollisions = pointerWithin(args);
+  return pointerCollisions.length ? pointerCollisions : closestCenter(args);
+};
 
 function readOpenFolders() {
   try {
@@ -268,6 +276,21 @@ function SortableFolder({
         </button>
       </Dropdown>
     </RailSlot>
+  );
+}
+
+function RailEndDrop() {
+  const { isOver, setNodeRef } = useDroppable({ id: RAIL_END_KEY });
+
+  return (
+    <li
+      ref={setNodeRef}
+      data-rail-key={RAIL_END_KEY}
+      aria-hidden
+      className={`min-h-8 flex-1 rounded-lg transition-colors ${
+        isOver ? "bg-accent/15 ring-1 ring-inset ring-accent/50" : ""
+      }`}
+    />
   );
 }
 
@@ -515,7 +538,9 @@ export function CommunityRail() {
         : null;
     let next: typeof drop = null;
 
-    if (overKey && node) {
+    if (overKey === RAIL_END_KEY && node) {
+      next = { overKey, drop: "after" };
+    } else if (overKey && node) {
       const rect = node.getBoundingClientRect();
       const center = rect.top + rect.height / 2;
 
@@ -610,6 +635,21 @@ export function CommunityRail() {
         </RailSlot>
         <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
       </ul>
+      <DndContext
+        id="community-rail"
+        sensors={sensors}
+        collisionDetection={railCollision}
+        modifiers={[restrictToVerticalAxis]}
+        autoScroll={{ threshold: { x: 0, y: 0.1 } }}
+        onDragStart={({ active }) => {
+          suppressClick.current = true;
+          setDragging(String(active.id));
+        }}
+        onDragMove={trackDrop}
+        onDragOver={trackDrop}
+        onDragEnd={handleDragEnd}
+        onDragCancel={finishDrag}
+      >
       <ul
         ref={scrollList}
         onScroll={measureOverflow}
@@ -619,21 +659,6 @@ export function CommunityRail() {
         {communities.length > 0 && (
         <li data-tour="communities" className="w-full">
         <ul className="flex w-full flex-col items-center gap-4">
-        <DndContext
-          id="community-rail"
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          modifiers={[restrictToVerticalAxis]}
-          autoScroll={{ threshold: { x: 0, y: 0.1 } }}
-          onDragStart={({ active }) => {
-            suppressClick.current = true;
-            setDragging(String(active.id));
-          }}
-          onDragMove={trackDrop}
-          onDragOver={trackDrop}
-          onDragEnd={handleDragEnd}
-          onDragCancel={finishDrag}
-        >
           <SortableContext
             items={visible}
             strategy={noShift}
@@ -711,11 +736,11 @@ export function CommunityRail() {
               );
             })}
           </SortableContext>
-        </DndContext>
         </ul>
         </li>
         )}
-        <li aria-hidden className="mt-auto h-px w-full shrink-0 bg-divider" />
+        <RailEndDrop />
+        <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
         <RailSlot label="Create a community">
           <button
             type="button"
@@ -739,6 +764,7 @@ export function CommunityRail() {
           </Link>
         </RailSlot>
       </ul>
+      </DndContext>
       <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
       <div className="shrink-0">
         <NotificationBell className={itemClass} />

@@ -2,6 +2,8 @@ import type { RailFolder, RailItem } from "@/lib/api";
 
 export type RailDrop = "combine" | "before" | "after";
 
+export const RAIL_END_KEY = "rail-end";
+
 export const communityKey = (id: number) => `c:${id}`;
 export const folderKey = (id: number) => `f:${id}`;
 
@@ -65,6 +67,17 @@ export function moveInLayout(
   openFolders: Set<number>,
   newFolderId: number,
 ): RailItem[] {
+  if (overKey === RAIL_END_KEY) {
+    const active = parseKey(activeKey);
+    if (active.kind === "folder") {
+      const moving = layout.find((item) => item.type === "folder" && item.id === active.id);
+      return moving ? [...layout.filter((item) => item !== moving), moving] : layout;
+    }
+
+    const rest = withoutCommunity(layout, active.id);
+    return [...rest, { type: "community", communityId: active.id }];
+  }
+
   const active = parseKey(activeKey);
   const over = parseKey(overKey);
   if (activeKey === overKey) return layout;
