@@ -399,6 +399,13 @@ function DoneModal({
             title={`Mark as ${getReporterStatusLabel("done", report.category).toLowerCase()}.`}
             description={`${name} will be notified. Add a message if you want to tell them what changed.`}
           />
+          <blockquote className="flex flex-col gap-1 rounded-lg border border-divider bg-rail p-3">
+            <span className="flex items-center gap-1.5 text-[11px] font-bold text-muted uppercase">
+              {categoryStyle[report.category].icon}
+              {categoryStyle[report.category].label} from {name}
+            </span>
+            <p className="line-clamp-6 text-sm whitespace-pre-wrap">{report.message}</p>
+          </blockquote>
           <Input.TextArea
             aria-label={`Message to ${name}`}
             placeholder={`Write a message to ${name}…`}
