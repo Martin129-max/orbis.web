@@ -661,7 +661,11 @@ export function UserProfile({ username }: { username: string }) {
                     />
                   )}
                   <MessageButton person={profile} />
-                  <FriendAction userId={profile.userId} self={false} />
+                  <FriendAction
+                    userId={profile.userId}
+                    self={false}
+                    removableName={displayName(profile)}
+                  />
                   <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
                 </>
               )

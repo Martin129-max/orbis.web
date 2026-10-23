@@ -164,6 +164,13 @@ body {
   }
 }
 
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
 @utility icon-button {
   @apply focus-ring flex shrink-0 rounded-md p-1.5 text-muted transition-colors hover:bg-rail-item hover:text-foreground;
 }

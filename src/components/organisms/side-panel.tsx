@@ -37,7 +37,7 @@ export function SidePanel({
           collapsed ? "w-0" : "w-72 border-l"
         }`}
       >
-        <div className="flex w-72 shrink-0 flex-col gap-6 overflow-y-auto p-6">
+        <div className="flex w-72 shrink-0 flex-col gap-6 overflow-y-auto p-6 pb-[max(1.5rem,var(--feedback-dock-space,0px))]">
           {children}
         </div>
       </aside>

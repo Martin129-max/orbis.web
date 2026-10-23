@@ -1,5 +1,6 @@
 "use client";
 
+import { Popconfirm } from "antd";
 import { Check, Clock, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
@@ -13,10 +14,12 @@ export function FriendAction({
   userId,
   self,
   addLabel = "Add",
+  removableName,
 }: {
   userId: number;
   self: boolean;
   addLabel?: string;
+  removableName?: string;
 }) {
   const status = useFriendsStore((state) =>
     self
@@ -32,8 +35,30 @@ export function FriendAction({
               : "none",
   );
   const addFriend = useFriendsStore((state) => state.addFriend);
+  const removeFriend = useFriendsStore((state) => state.removeFriend);
 
   if (status === "unknown") return null;
+
+  if (status === "friend" && removableName) {
+    return (
+      <Popconfirm
+        title={`Remove ${removableName} from your friends?`}
+        okText="Remove"
+        okButtonProps={{ danger: true }}
+        onConfirm={() => removeFriend(userId).catch(() => null)}
+      >
+        <button
+          type="button"
+          aria-label={`Friends with ${removableName}. Remove friend`}
+          className="focus-ring shrink-0 cursor-pointer rounded-full"
+        >
+          <Atom.Pill tone="success" size="md" icon={<Check size={12} />}>
+            Friends
+          </Atom.Pill>
+        </button>
+      </Popconfirm>
+    );
+  }
 
   if (status === "self" || status === "friend" || status === "sent") {
     const pill = {

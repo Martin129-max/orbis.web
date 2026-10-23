@@ -1,7 +1,5 @@
 "use client";
 
-import { X } from "lucide-react";
-import { Popconfirm, Tooltip } from "antd";
 import { Fragment, useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -137,27 +135,6 @@ export function FriendsPanel() {
   const offline = friends.filter((friend) => !friend.online);
   const requests = incoming.length + outgoing.length;
 
-  function removeAction(user: FriendUser) {
-    return (
-      <Popconfirm
-        title={`Remove ${displayName(user)} from your friends?`}
-        okText="Remove"
-        okButtonProps={{ danger: true }}
-        onConfirm={() => removeFriend(user.userId)}
-      >
-        <Tooltip title="Remove friend">
-          <button
-            type="button"
-            aria-label={`Remove ${displayName(user)}`}
-            className="icon-button opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-          >
-            <X size={16} />
-          </button>
-        </Tooltip>
-      </Popconfirm>
-    );
-  }
-
   const sections = [
     requests > 0 && (
       <Section key="requests" title={`Requests / ${requests}`}>
@@ -210,12 +187,7 @@ export function FriendsPanel() {
             key={friend.userId}
             user={friend}
             presence="online"
-            trailing={
-              <>
-                <MessageButton person={friend} compact />
-                {removeAction(friend)}
-              </>
-            }
+            trailing={<MessageButton person={friend} compact />}
           />
         ))}
       </Section>
@@ -227,12 +199,7 @@ export function FriendsPanel() {
             key={friend.userId}
             user={friend}
             presence="offline"
-            trailing={
-              <>
-                <MessageButton person={friend} compact />
-                {removeAction(friend)}
-              </>
-            }
+            trailing={<MessageButton person={friend} compact />}
           />
         ))}
       </Section>

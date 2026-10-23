@@ -4,7 +4,7 @@ import { Input, Modal, Segmented, Tooltip } from "antd";
 import { BookUser, CircleCheck, Inbox, MessageSquareWarning } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { submitReport, type ReportCategory } from "@/lib/api";
@@ -139,13 +139,38 @@ function FeedbackModal({ open, onClose }: { open: boolean; onClose: () => void }
 export function FeedbackDock() {
   const profile = useAuthStore((state) => state.profile);
   const [open, setOpen] = useState(false);
+  const dock = useRef<HTMLDivElement>(null);
+  const signedIn = profile !== null;
+
+  useEffect(() => {
+    const element = dock.current;
+    if (!element) return;
+
+    const root = document.documentElement;
+    const measure = () =>
+      root.style.setProperty(
+        "--feedback-dock-space",
+        `${window.innerHeight - element.getBoundingClientRect().top}px`,
+      );
+    const observer = new ResizeObserver(measure);
+    observer.observe(element);
+    window.addEventListener("resize", measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", measure);
+      root.style.removeProperty("--feedback-dock-space");
+    };
+  }, [signedIn]);
 
   if (!profile) return null;
   const reportsLabel = profile.isAdmin ? "View reports" : "My reports";
 
   return (
     <>
-      <div className="fixed right-4 bottom-4 z-40 flex flex-col items-center gap-3 sm:right-6 sm:bottom-6">
+      <div
+        ref={dock}
+        className="fixed right-4 bottom-4 z-40 flex flex-col items-center gap-3 sm:right-6 sm:bottom-6"
+      >
         {profile.isAdmin && (
           <Tooltip title="Directory" placement="left">
             <Link
