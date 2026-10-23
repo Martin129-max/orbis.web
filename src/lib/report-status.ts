@@ -4,7 +4,7 @@ const reporterStatusLabels: Record<
   ReportStatus,
   (category: ReportCategory) => string
 > = {
-  todo: () => "Received", 
+  todo: () => "Received",
   in_progress: () => "Being worked on",
   done: (category) => {
     if (category === "bug") return "Fixed";
