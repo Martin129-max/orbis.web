@@ -64,6 +64,13 @@ export const tourStops: TourStop[] = [
     description: "Switch between Card and Compact view, and show or hide posts, forum threads, and library updates. Your choices are remembered across feeds on this browser.",
   },
   {
+    target: "messages-tab",
+    placement: "bottom",
+    title: "Messages",
+    description:
+      "Chat one-on-one with anyone on Orbis. New messages pop up in the corner, and messages from people who aren’t your friends wait in Requests.",
+  },
+  {
     target: "add-friend",
     placement: "bottom",
     title: "Find people",

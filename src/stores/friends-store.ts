@@ -3,6 +3,7 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import type { Friend, FriendTarget, FriendUser } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
+import { useMessagesStore } from "./messages-store";
 import { useNotificationsStore } from "./notifications-store";
 
 type FriendsState = {
@@ -27,6 +28,10 @@ const empty = {
 
 let socket: Socket | null = null;
 
+export function emitTyping(userId: number, typing: boolean) {
+  socket?.emit("typing", { userId, typing });
+}
+
 export const useFriendsStore = create<FriendsState>()((set, get) => ({
   ...empty,
   connect: () => {
@@ -37,11 +42,21 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     socket.on("connect", () => {
       get().fetchFriends();
       useNotificationsStore.getState().refresh();
+      useMessagesStore.getState().refresh();
     });
     socket.on("notifications:changed", () =>
       useNotificationsStore.getState().refresh(),
     );
     socket.on("friends:changed", () => get().fetchFriends());
+    socket.on("message", (event) => useMessagesStore.getState().receive(event));
+    socket.on("conversation:changed", (event) =>
+      useMessagesStore.getState().changed(event),
+    );
+    socket.on("conversation:removed", ({ userId }: { userId: number }) =>
+      useMessagesStore.getState().removed(userId),
+    );
+    socket.on("messages:read", (event) => useMessagesStore.getState().seen(event));
+    socket.on("typing", (event) => useMessagesStore.getState().setTyping(event));
     socket.on(
       "presence",
       ({ userId, online }: { userId: number; online: boolean }) =>
@@ -53,6 +68,7 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
         })),
     );
     get().fetchFriends();
+    useMessagesStore.getState().refresh();
   },
   fetchFriends: async () => {
     const { token } = useAuthStore.getState();

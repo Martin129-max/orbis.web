@@ -38,6 +38,7 @@ import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
+import { MessageButton } from "./chat-dock";
 import { FriendAction } from "./member-list";
 import { ReportButton } from "./report-content";
 import { PostComposer } from "./post-composer";
@@ -659,6 +660,7 @@ export function UserProfile({ username }: { username: string }) {
                       }
                     />
                   )}
+                  <MessageButton person={profile} />
                   <FriendAction userId={profile.userId} self={false} />
                   <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
                 </>

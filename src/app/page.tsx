@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import * as Atom from "@atom";
 import * as Organism from "@organism";
 import * as Template from "@template";
@@ -14,14 +15,9 @@ export default function Home() {
             >
               <Atom.Heading>Home</Atom.Heading>
             </Template.PageHeader>
-            <div className="flex min-h-0 flex-1">
-              <Template.PageColumn>
-                <Organism.HomeFeed />
-              </Template.PageColumn>
-              <Organism.SidePanel label="Friends">
-                <Organism.FriendsPanel />
-              </Organism.SidePanel>
-            </div>
+            <Suspense>
+              <Organism.HomeView />
+            </Suspense>
           </main>
         </Template.AppTemplate>
       }

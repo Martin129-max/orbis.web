@@ -9,6 +9,7 @@ import { searchPeople, type FriendUser } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
+import { MessageButton } from "./chat-dock";
 import { FriendAction } from "./member-list";
 import { PanelHeading } from "./side-panel";
 
@@ -209,7 +210,12 @@ export function FriendsPanel() {
             key={friend.userId}
             user={friend}
             presence="online"
-            trailing={removeAction(friend)}
+            trailing={
+              <>
+                <MessageButton person={friend} compact />
+                {removeAction(friend)}
+              </>
+            }
           />
         ))}
       </Section>
@@ -221,7 +227,12 @@ export function FriendsPanel() {
             key={friend.userId}
             user={friend}
             presence="offline"
-            trailing={removeAction(friend)}
+            trailing={
+              <>
+                <MessageButton person={friend} compact />
+                {removeAction(friend)}
+              </>
+            }
           />
         ))}
       </Section>

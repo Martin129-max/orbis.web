@@ -840,6 +840,108 @@ export async function removeFriend(token: string, userId: number): Promise<void>
   }
 }
 
+export type ChatMessage = {
+  id: number;
+  senderId: number;
+  text: string;
+  sentAt: string;
+};
+
+export type Conversation = FriendUser & {
+  lastText: string;
+  lastSenderId: number | null;
+  lastAt: string;
+  unread: number;
+  status: "accepted" | "request";
+};
+
+export type ChatHistory = {
+  messages: ChatMessage[];
+  seenAt: string | null;
+  hasMore: boolean;
+};
+
+export async function getConversations(token: string): Promise<Conversation[]> {
+  const res = await api("/messages", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your messages.");
+  return res.json();
+}
+
+export async function getChatHistory(
+  token: string,
+  userId: number,
+  before?: number,
+): Promise<ChatHistory> {
+  const query = before === undefined ? "" : `?before=${before}`;
+  const res = await api(`/messages/${userId}${query}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load this chat.");
+  return res.json();
+}
+
+export async function sendMessage(
+  token: string,
+  userId: number,
+  text: string,
+): Promise<ChatMessage> {
+  const res = await api(`/messages/${userId}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not send your message."));
+  }
+  return res.json();
+}
+
+export async function markMessagesRead(
+  token: string,
+  userId: number,
+): Promise<void> {
+  await api(`/messages/${userId}/read`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export async function acceptMessageRequest(
+  token: string,
+  userId: number,
+): Promise<void> {
+  const res = await api(`/messages/${userId}/accept`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok && res.status !== 404) {
+    throw new Error("Could not accept the request. Please try again.");
+  }
+}
+
+export async function declineMessageRequest(
+  token: string,
+  userId: number,
+): Promise<void> {
+  const res = await api(`/messages/${userId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok && res.status !== 404) {
+    throw new Error("Could not delete the request. Please try again.");
+  }
+}
+
 export async function getThreads(
   token: string,
   communityId: number,

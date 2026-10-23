@@ -7,6 +7,7 @@ import {
   FolderOpen,
   MessageCircle,
   Moon,
+  Send,
   ShieldCheck,
   SlidersHorizontal,
   Ticket,
@@ -123,6 +124,13 @@ const features = [
     title: "Stay in the loop.",
     text: "Connect with friends and get notified when someone replies or sends you a friend request.",
   },
+  {
+    id: "messages",
+    icon: Send,
+    label: "Messages",
+    title: "Keep talking.",
+    text: "Chat one-on-one with anyone. New messages pop up as they arrive, and ones from strangers wait in your requests.",
+  },
 ];
 
 export function LandingShowcase() {
@@ -133,7 +141,7 @@ export function LandingShowcase() {
       className="grid gap-6 md:grid-cols-2"
     >
       {features.map(({ id, icon: Icon, label, title, text }) => (
-        <LandingReveal key={id} className="h-full">
+        <LandingReveal key={id} className="h-full md:last:odd:col-span-2">
           <article
             id={id}
             className="flex h-full flex-col items-start gap-4 rounded-2xl border border-divider bg-surface p-6 sm:p-9"
