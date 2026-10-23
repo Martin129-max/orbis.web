@@ -25,7 +25,9 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
 
   return (
     <div className="flex flex-col gap-4">
-      <PostComposer onPost={handlePost} />
+      <div data-tour="community-composer">
+        <PostComposer onPost={handlePost} />
+      </div>
       <PostList
         feed={feed}
         empty={{

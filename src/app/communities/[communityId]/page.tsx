@@ -100,17 +100,21 @@ export default function CommunityPage() {
             actions={
               <>
                 {canManage(current.community) && (
-                  <Molecule.SettingsLink
-                    href={`/communities/${current.community.id}/settings`}
-                    label="Community settings"
-                  />
+                  <span data-tour="community-settings" className="flex">
+                    <Molecule.SettingsLink
+                      href={`/communities/${current.community.id}/settings`}
+                      label="Community settings"
+                    />
+                  </span>
                 )}
                 <Organism.SidePanelToggle label="Members" />
               </>
             }
           />
+          <Organism.PageTour name="community" />
           <nav
             aria-label="Community sections"
+            data-tour="community-tabs"
             className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
           >
             {tabs.map(({ value, label, icon }) => (

@@ -203,6 +203,53 @@ function revealed(element: HTMLElement) {
   return visiblePart(element);
 }
 
+function GuidedTour({
+  stops,
+  open,
+  run,
+  onEnd,
+}: {
+  stops: TourStop[];
+  open: boolean;
+  run: number;
+  onEnd: () => void;
+}) {
+  function endTour() {
+    document.getElementById("tour-visible-part")?.remove();
+    onEnd();
+  }
+
+  const steps = useMemo<NonNullable<TourProps["steps"]>>(
+    () =>
+      open && run > 0
+        ? stops.flatMap(({ target, title, description, placement }) => {
+            const element = visibleTarget(target);
+            return element
+              ? [{ title, description, placement, target: () => revealed(element) }]
+              : [];
+          })
+        : [],
+    [open, run, stops],
+  );
+
+  return (
+    <Tour
+      key={run}
+      open={open && steps.length > 0}
+      steps={steps}
+      arrow={false}
+      gap={{ radius: 12, offset: 0 }}
+      onClose={endTour}
+      onFinish={endTour}
+      indicatorsRender={(index, total) => (
+        <span className="text-xs text-muted">
+          {index + 1} / {total}
+        </span>
+      )}
+    />
+  );
+}
+
 export function OnboardingTour() {
   const onboarding = useOnboardingStore((state) => state.onboarding);
   const open = useOnboardingStore((state) => state.tourOpen);
@@ -220,38 +267,152 @@ export function OnboardingTour() {
     return () => clearTimeout(timer);
   }, [onboarding, autoStarted, startTour]);
 
-  function endTour() {
-    document.getElementById("tour-visible-part")?.remove();
-    finishTour();
-  }
+  return <GuidedTour stops={tourStops} open={open} run={run} onEnd={finishTour} />;
+}
 
-  const steps = useMemo<NonNullable<TourProps["steps"]>>(
-    () =>
-      open && run > 0
-        ? tourStops.flatMap(({ target, title, description, placement }) => {
-            const element = visibleTarget(target);
-            return element
-              ? [{ title, description, placement, target: () => revealed(element) }]
-              : [];
-          })
-        : [],
-    [open, run],
-  );
+export const pageTours = {
+  community: [
+    {
+      target: "community-tabs",
+      placement: "bottom",
+      title: "Feed, forum, members",
+      description:
+        "The feed is for quick updates, the forum for longer discussions with votes, and Members shows everyone here.",
+    },
+    {
+      target: "community-composer",
+      placement: "bottom",
+      title: "Post to this community",
+      description: "Share something with everyone in the community.",
+    },
+    {
+      target: "invite",
+      placement: "left",
+      title: "Invite people",
+      description: "Make an invite link to bring friends in. You can set when it expires and how many times it works.",
+    },
+    {
+      target: "community-settings",
+      placement: "bottom",
+      title: "Community settings",
+      description: "Change the name, description, pictures and admins, or make the community public or private.",
+    },
+  ],
+  profile: [
+    {
+      target: "profile-tabs",
+      placement: "bottom",
+      title: "Posts, library, friends",
+      description: "See someone’s wall, what they’re watching and reading, their friends, and their communities.",
+    },
+    {
+      target: "profile-wall",
+      placement: "bottom",
+      title: "Write on the wall",
+      description: "Post on your own wall, or on a friend’s.",
+    },
+    {
+      target: "side-panel",
+      placement: "left",
+      title: "Friends",
+      description: "Their friends, with who’s online right now.",
+    },
+  ],
+  library: [
+    {
+      target: "library-search",
+      placement: "bottom",
+      title: "Add anime, manga, and games",
+      description: "Search for a title and add it to your library with a status.",
+    },
+    {
+      target: "library-tabs",
+      placement: "bottom",
+      title: "Your shelves",
+      description: "Filter by what you’re watching, finished, paused, dropped, or planning.",
+    },
+    {
+      target: "library-view",
+      placement: "bottomRight",
+      title: "Type and view",
+      description: "Show only anime, manga, or games, and switch between cards and a list.",
+    },
+  ],
+  media: [
+    {
+      target: "media-library",
+      placement: "bottom",
+      title: "Track it",
+      description: "Add the title to your library and update your status and progress here.",
+    },
+    {
+      target: "media-wall",
+      placement: "top",
+      title: "Talk about it",
+      description: "Share your thoughts with everyone else who’s into this title.",
+    },
+  ],
+  explore: [
+    {
+      target: "explore-search",
+      placement: "bottom",
+      title: "Search communities",
+      description: "Find public communities by name and join them.",
+    },
+    {
+      target: "explore-communities",
+      placement: "top",
+      title: "Popular communities",
+      description: "Hover over a community to see what it’s about, who’s in it, and which friends are there.",
+    },
+  ],
+  reports: [
+    {
+      target: "reports-tabs",
+      placement: "bottom",
+      title: "Board, hidden, reported",
+      description:
+        "Track feedback on the board, find hidden reports, and review content people reported as spam or abuse.",
+    },
+    {
+      target: "reports-filters",
+      placement: "bottomRight",
+      title: "Filters",
+      description: "Show reports assigned to you or someone else, or only bugs, ideas, or other feedback.",
+    },
+    {
+      target: "reports-discord",
+      placement: "bottomRight",
+      title: "Discord",
+      description: "Post new reports and activity to a Discord channel.",
+    },
+  ],
+} satisfies Record<string, TourStop[]>;
+
+export function PageTour({ name }: { name: keyof typeof pageTours }) {
+  const onboarding = useOnboardingStore((state) => state.onboarding);
+  const fetchOnboarding = useOnboardingStore((state) => state.fetchOnboarding);
+  const completeTour = useOnboardingStore((state) => state.completeTour);
+  const [run, setRun] = useState(0);
+  const pending =
+    onboarding !== null && onboarding.tourCompleted && !onboarding.completedTours.includes(name);
+
+  useEffect(() => {
+    if (!onboarding) fetchOnboarding();
+  }, [onboarding, fetchOnboarding]);
+
+  useEffect(() => {
+    if (!pending || run > 0) return;
+    const timer = setTimeout(() => setRun(1), 1000);
+    return () => clearTimeout(timer);
+  }, [pending, run]);
 
   return (
-    <Tour
-      key={run}
-      open={open && steps.length > 0}
-      steps={steps}
-      arrow={false}
-      gap={{ radius: 12, offset: 0 }}
-      onClose={endTour}
-      onFinish={endTour}
-      indicatorsRender={(index, total) => (
-        <span className="text-xs text-muted">
-          {index + 1} / {total}
-        </span>
-      )}
+    <GuidedTour
+      stops={pageTours[name]}
+      open={pending && run > 0}
+      run={run}
+      onEnd={() => completeTour(name)}
     />
   );
 }

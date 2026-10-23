@@ -28,6 +28,7 @@ import {
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
+import { PageTour } from "./onboarding";
 
 const detailLabels: Record<string, string> = {
   format: "Format",
@@ -240,7 +241,10 @@ function YourLibrary({
   const entry = profile.entry;
 
   return (
-    <section className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border border-divider bg-surface p-5">
+    <section
+      data-tour="media-library"
+      className="flex flex-wrap items-center gap-x-4 gap-y-3 rounded-lg border border-divider bg-surface p-5"
+    >
       <div className="flex min-w-0 flex-1 basis-48 flex-col gap-0.5">
         <h3 className="font-display text-xl font-bold">Your library</h3>
         <p className="flex items-center gap-1.5 text-xs text-muted">
@@ -302,7 +306,7 @@ function MediaWall({ profile }: { profile: Profile }) {
   }
 
   return (
-    <section className="flex min-w-0 flex-col gap-4 md:col-start-1">
+    <section data-tour="media-wall" className="flex min-w-0 flex-col gap-4 md:col-start-1">
       <PostComposer
         onPost={handlePost}
         placeholder={`Share your thoughts on ${profile.title}…`}
@@ -413,6 +417,7 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
+      <PageTour name="media" />
       <MediaHeader profile={profile} collapsed={collapsed} onChange={setEntry} />
       <MetaBar profile={profile} />
       <div className="flex min-h-0 flex-1">

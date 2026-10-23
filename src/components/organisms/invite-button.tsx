@@ -216,6 +216,7 @@ export function InviteButton({ community }: { community: Community }) {
     <>
       <Atom.Button
         block
+        data-tour="invite"
         icon={<UserPlus size={16} />}
         onClick={handleOpen}
         className="shrink-0"

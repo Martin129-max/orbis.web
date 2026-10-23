@@ -23,6 +23,7 @@ import {
   type ReportView,
 } from "./report-board";
 import { SidePanel, SidePanelToggle } from "./side-panel";
+import { PageTour } from "./onboarding";
 
 const tabs = [
   { value: "board", label: "Board", icon: <KanbanSquare size={16} /> },
@@ -111,7 +112,11 @@ function AdminReports() {
         }
         actions={
           <>
-            {profile?.isHeadAdmin && <DiscordWebhookButton />}
+            {profile?.isHeadAdmin && (
+              <span data-tour="reports-discord" className="flex">
+                <DiscordWebhookButton />
+              </span>
+            )}
             <SidePanelToggle label="Admins" />
           </>
         }
@@ -122,7 +127,10 @@ function AdminReports() {
         aria-label="Report sections"
         className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
       >
-        <div className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
+        <div
+          data-tour="reports-tabs"
+          className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]"
+        >
           {tabs.map(({ value, label, icon }) => (
             <Link
               key={value}
@@ -140,6 +148,7 @@ function AdminReports() {
           ))}
         </div>
         <div
+          data-tour="reports-filters"
           className={`ml-auto flex shrink-0 items-center gap-2 self-center ${tab === "reported" ? "invisible" : ""}`}
         >
           <Select<ReportFilter["assignee"]>
@@ -203,6 +212,7 @@ function AdminReports() {
           <AdminsPanel admins={admins} />
         </SidePanel>
       </div>
+      <PageTour name="reports" />
       <ReportModal
         reportId={openReport}
         admins={admins ?? []}

@@ -8,6 +8,7 @@ import * as Molecule from "@molecule";
 import { createPost, getFeed } from "@/lib/api";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
@@ -28,6 +29,7 @@ export function HomeFeed() {
 
     const post = await createPost(token, target.id, content);
     feed.prepend(post);
+    useOnboardingStore.getState().refresh();
   }
 
   return (

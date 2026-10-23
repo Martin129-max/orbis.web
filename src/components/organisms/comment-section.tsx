@@ -13,6 +13,7 @@ import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
 import { useAuthStore } from "@/stores/auth-store";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import { PostComposer } from "./post-composer";
 import { ReportButton } from "./report-content";
 
@@ -176,6 +177,7 @@ export function CommentSection({
     if (!token) throw new Error("Please log in again.");
 
     const comment = await createComment(token, { type, id }, content, parentId);
+    useOnboardingStore.getState().refresh();
     const next = [...(comments ?? []), comment];
     setComments(next);
     onCommentsChange(next);

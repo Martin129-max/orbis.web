@@ -12,6 +12,7 @@ import {
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
+import { PageTour } from "./onboarding";
 
 function useJoin() {
   const router = useRouter();
@@ -181,11 +182,13 @@ function CommunityResults({ query }: { query: string }) {
 
 export function ExploreSearch() {
   return (
-    <Molecule.HeaderSearch
-      label="Search communities"
-      placeholder="Search communities by name…"
-      renderResults={(search) => <CommunityResults query={search} />}
-    />
+    <div data-tour="explore-search">
+      <Molecule.HeaderSearch
+        label="Search communities"
+        placeholder="Search communities by name…"
+        renderResults={(search) => <CommunityResults query={search} />}
+      />
+    </div>
   );
 }
 
@@ -221,6 +224,7 @@ export function CommunitySearch() {
 
   return (
     <div className="flex flex-col gap-8">
+      <PageTour name="explore" />
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       <section className="flex flex-col gap-3">
         <div className="flex items-baseline justify-between gap-3">
@@ -247,7 +251,7 @@ export function CommunitySearch() {
         ) : results.length === 0 ? (
           <p className="py-8 text-sm text-muted">No one has made a public community yet.</p>
         ) : (
-          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <ul data-tour="explore-communities" className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {results.map((community) => (
               <li key={community.id} className="group relative">
                 <Molecule.CommunityCard

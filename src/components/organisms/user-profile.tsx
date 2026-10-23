@@ -43,6 +43,7 @@ import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
+import { PageTour } from "./onboarding";
 
 const tabs = [
   { value: "posts", label: "Posts", icon: <Newspaper size={16} /> },
@@ -204,6 +205,7 @@ function ProfileTabs({ profile, tab }: { profile: Profile; tab: Tab }) {
   return (
     <nav
       aria-label="Profile sections"
+      data-tour="profile-tabs"
       className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
     >
       {tabs.map(({ value, label, icon }) => (
@@ -259,21 +261,23 @@ function Wall({
   return (
     <div className="flex flex-col gap-6">
       {canPost && (
-        <PostComposer
-          onPost={handlePost}
-          placeholder={isSelf ? "What’s on your mind?" : `Write something to ${name}…`}
-          target={
-            <div className="flex items-center gap-3">
-              <Atom.Avatar size="sm" label={name} src={profile.avatarUrl} seed={profile.userId} />
-              <div className="flex min-w-0 flex-col">
-                <span className="text-xs text-muted uppercase">Post to</span>
-                <span className="truncate text-sm font-semibold">
-                  {isSelf ? "Your wall" : `${name}’s wall`}
-                </span>
+        <div data-tour="profile-wall">
+          <PostComposer
+            onPost={handlePost}
+            placeholder={isSelf ? "What’s on your mind?" : `Write something to ${name}…`}
+            target={
+              <div className="flex items-center gap-3">
+                <Atom.Avatar size="sm" label={name} src={profile.avatarUrl} seed={profile.userId} />
+                <div className="flex min-w-0 flex-col">
+                  <span className="text-xs text-muted uppercase">Post to</span>
+                  <span className="truncate text-sm font-semibold">
+                    {isSelf ? "Your wall" : `${name}’s wall`}
+                  </span>
+                </div>
               </div>
-            </div>
-          }
-        />
+            }
+          />
+        </div>
       )}
       <PostList
         showCommunity
@@ -629,6 +633,7 @@ export function UserProfile({ username }: { username: string }) {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
+      <PageTour name="profile" />
       <ProfileHeader
         profile={profile}
         online={online}

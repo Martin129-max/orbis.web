@@ -41,6 +41,7 @@ import { mediaTypes } from "./activity-card";
 import { FriendsPanel } from "./friends-panel";
 import { AddToLibraryButton, EntryMenu } from "./library-controls";
 import { SidePanel, SidePanelToggle } from "./side-panel";
+import { PageTour } from "./onboarding";
 
 export function ProgressControl({
   entry,
@@ -371,7 +372,10 @@ function LibraryTabs({ entries }: { entries: LibraryEntry[] | null }) {
       aria-label="Library sections"
       className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
     >
-      <div className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
+      <div
+        data-tour="library-tabs"
+        className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]"
+      >
         {(["all", ...libraryStatuses] as StatusFilter[]).map((value) => {
           const Icon = statusIcons[value];
           const active = status === value;
@@ -394,7 +398,7 @@ function LibraryTabs({ entries }: { entries: LibraryEntry[] | null }) {
           );
         })}
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-2 self-center">
+      <div data-tour="library-view" className="ml-auto flex shrink-0 items-center gap-2 self-center">
         <Select<TypeFilter>
           size="small"
           aria-label="Media type"
@@ -528,13 +532,15 @@ function LibrarySearch({
   onAdded: (entry: LibraryEntry) => void;
 }) {
   return (
-    <Molecule.HeaderSearch
-      label="Search anime, manga, and games"
-      placeholder="Search anime, manga, and games…"
-      renderResults={(search) => (
-        <SearchResults query={search} entries={entries} onAdded={onAdded} />
-      )}
-    />
+    <div data-tour="library-search">
+      <Molecule.HeaderSearch
+        label="Search anime, manga, and games"
+        placeholder="Search anime, manga, and games…"
+        renderResults={(search) => (
+          <SearchResults query={search} entries={entries} onAdded={onAdded} />
+        )}
+      />
+    </div>
   );
 }
 
@@ -559,6 +565,7 @@ export function LibraryView() {
 
   return (
     <>
+      <PageTour name="library" />
       <Template.PageHeader
         center={
           <LibrarySearch

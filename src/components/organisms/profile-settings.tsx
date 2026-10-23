@@ -1,9 +1,50 @@
 "use client";
 
+import { App } from "antd";
+import { RotateCcw } from "lucide-react";
+import { useState } from "react";
+import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { Profile } from "@/lib/api";
+import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
+
+function RestartTours() {
+  const { message } = App.useApp();
+  const resetTours = useOnboardingStore((state) => state.resetTours);
+  const [pending, setPending] = useState(false);
+
+  async function restart() {
+    setPending(true);
+    try {
+      await resetTours();
+      message.success("Tours restarted. They’ll show again as you visit each page.");
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <p className="text-sm font-semibold">Guided tours</p>
+      <p className="text-xs text-muted">
+        Watch the welcome tour on Home and the tips on each page again.
+      </p>
+      <Atom.Button
+        variant="secondary"
+        icon={<RotateCcw size={14} />}
+        loading={pending}
+        onClick={restart}
+        className="w-fit"
+      >
+        Restart tours
+      </Atom.Button>
+    </div>
+  );
+}
 
 export function ProfileSettings({ profile }: { profile: Profile }) {
   return (
@@ -27,6 +68,7 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
             Friends see you as offline. You can still post as usual.
           </p>
         </div>
+        <RestartTours />
       </Molecule.SettingsSection>
       <Molecule.SettingsSection title="Account">
         <div className="flex flex-col gap-1">

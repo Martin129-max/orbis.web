@@ -1301,6 +1301,7 @@ export type OnboardingStep =
 export type Onboarding = {
   tourCompleted: boolean;
   checklistDismissed: boolean;
+  completedTours: string[];
   steps: Record<OnboardingStep, boolean>;
 };
 
@@ -1315,7 +1316,12 @@ export async function getOnboarding(token: string): Promise<Onboarding> {
 
 export async function updateOnboarding(
   token: string,
-  changes: { tourCompleted?: boolean; checklistDismissed?: boolean },
+  changes: {
+    tourCompleted?: boolean;
+    checklistDismissed?: boolean;
+    completedTour?: string;
+    resetTours?: boolean;
+  },
 ): Promise<Onboarding> {
   const res = await api("/users/me/onboarding", {
     method: "PATCH",
