@@ -84,6 +84,14 @@ export function MyReports() {
               </Atom.Pill>
             </div>
             <p className="text-sm whitespace-pre-wrap">{report.message}</p>
+            {report.resolutionNote && (
+              <div className="flex flex-col gap-1 rounded-lg bg-rail p-3">
+                <span className="text-[11px] font-bold text-muted uppercase">
+                  Message from the team
+                </span>
+                <p className="text-sm whitespace-pre-wrap">{report.resolutionNote}</p>
+              </div>
+            )}
           </li>
         );
       })}

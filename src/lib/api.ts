@@ -938,6 +938,8 @@ export type Report = {
   status: ReportStatus;
   message: string;
   pageUrl: string | null;
+  resolutionNote: string | null;
+  hiddenAt?: string | null;
   createdAt: string;
   author: Author;
 };
@@ -968,8 +970,8 @@ export async function getMyReports(token: string): Promise<Report[]> {
   return res.json();
 }
 
-export async function getReports(token: string): Promise<Report[]> {
-  const res = await api("/reports", {
+export async function getReports(token: string, hidden = false): Promise<Report[]> {
+  const res = await api(hidden ? "/reports?hidden=true" : "/reports", {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -982,6 +984,7 @@ export async function updateReportStatus(
   token: string,
   reportId: number,
   status: ReportStatus,
+  note?: string,
 ): Promise<Report> {
   const res = await api(`/reports/${reportId}`, {
     method: "PATCH",
@@ -989,10 +992,28 @@ export async function updateReportStatus(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ status }),
+    body: JSON.stringify({ status, note }),
   });
 
   if (!res.ok) throw new Error("Could not move the report. Please try again.");
+  return res.json();
+}
+
+export async function setReportHidden(
+  token: string,
+  reportId: number,
+  hidden: boolean,
+): Promise<Report> {
+  const res = await api(`/reports/${reportId}/hidden`, {
+    method: hidden ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) {
+    throw new Error(
+      hidden ? "Could not hide the report. Please try again." : "Could not restore the report. Please try again.",
+    );
+  }
   return res.json();
 }
 
