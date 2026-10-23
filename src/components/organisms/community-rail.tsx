@@ -288,7 +288,7 @@ function RailEndDrop({ highlighted }: { highlighted: boolean }) {
       ref={setNodeRef}
       data-rail-key={RAIL_END_KEY}
       aria-hidden
-      className={`min-h-8 flex-1 rounded-lg transition-colors ${
+      className={`-my-4 min-h-4 flex-1 rounded-lg transition-colors ${
         highlighted ? "bg-accent/15 ring-1 ring-inset ring-accent/50" : ""
       }`}
     />
