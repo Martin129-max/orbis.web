@@ -38,6 +38,8 @@ const typeIcons: Record<NotificationType, ReactNode> = {
   friend_request: <UserPlus size={12} />,
   friend_accepted: <UserCheck size={12} />,
   report_status: <CircleCheck size={12} />,
+  report_assigned: <UserCheck size={12} />,
+  report_comment: <MessageSquare size={12} />,
   wall_post: <PenLine size={12} />,
 };
 

@@ -1,12 +1,27 @@
 "use client";
 
-import { EyeOff, KanbanSquare } from "lucide-react";
+import { Select, Tooltip } from "antd";
+import { EyeOff, Inbox, KanbanSquare, List, Search } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import * as Atom from "@atom";
+import * as Template from "@template";
+import { getReportAdmins, type Report, type ReportAdmin } from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { MyReports } from "./my-reports";
-import { HiddenReports, ReportBoard } from "./report-board";
+import {
+  AdminsPanel,
+  DiscordWebhookButton,
+  HiddenReports,
+  ReportBoard,
+  ReportModal,
+  categoryStyle,
+  type ReportFilter,
+  type ReportView,
+} from "./report-board";
+import { SidePanel, SidePanelToggle } from "./side-panel";
 
 const tabs = [
   { value: "board", label: "Board", icon: <KanbanSquare size={16} /> },
@@ -17,32 +32,97 @@ type Tab = (typeof tabs)[number]["value"];
 
 const content = "flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto px-4 pt-6 pb-24 sm:px-8 sm:pt-8";
 
-export function ReportsView() {
-  const profile = useAuthStore((state) => state.profile);
-  const requested = useSearchParams().get("tab");
-  const tab: Tab = tabs.find(({ value }) => value === requested)?.value ?? "board";
+function ViewToggle({ view, onChange }: { view: ReportView; onChange: (view: ReportView) => void }) {
+  return (
+    <div role="group" aria-label="Report view" className="flex items-center gap-0.5">
+      {(
+        [
+          { value: "board", label: "Board", icon: <KanbanSquare size={16} /> },
+          { value: "list", label: "List", icon: <List size={16} /> },
+        ] as const
+      ).map((option) => (
+        <Tooltip key={option.value} title={option.label}>
+          <button
+            type="button"
+            aria-label={option.label}
+            aria-pressed={view === option.value}
+            onClick={() => onChange(option.value)}
+            className={`icon-button cursor-pointer ${view === option.value ? "bg-rail-item text-foreground" : ""}`}
+          >
+            {option.icon}
+          </button>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
 
-  if (!profile) {
-    return (
-      <div className={content}>
-        <Atom.Loader />
-      </div>
-    );
+function AdminReports() {
+  const router = useRouter();
+  const pathname = usePathname();
+  const params = useSearchParams();
+  const profile = useAuthStore((state) => state.profile);
+  const requested = params.get("tab");
+  const tab: Tab = tabs.find(({ value }) => value === requested)?.value ?? "board";
+  const reportParam = Number(params.get("report"));
+  const openReport = Number.isInteger(reportParam) && reportParam > 0 ? reportParam : null;
+  const [admins, setAdmins] = useState<ReportAdmin[] | null>(null);
+  const [views, setViews] = useState<Record<Tab, ReportView>>({ board: "board", hidden: "list" });
+  const [filter, setFilter] = useState<ReportFilter>({ assignee: "anyone", category: "all", query: "" });
+  const [patch, setPatch] = useState<Report | null>(null);
+
+  useEffect(() => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    getReportAdmins(token)
+      .then(setAdmins)
+      .catch(() => setAdmins([]));
+  }, []);
+
+  function setOpenReport(id: number | null) {
+    const next = new URLSearchParams(params);
+    if (id === null) next.delete("report");
+    else next.set("report", String(id));
+    const query = next.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }
 
-  if (profile.isAdmin) {
-    return (
-      <>
-        <nav
-          aria-label="Report sections"
-          className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
-        >
+  const listProps = { onOpen: setOpenReport, filter, view: views[tab], patch };
+
+  return (
+    <>
+      <Template.PageHeader
+        center={
+          <Atom.Input
+            aria-label="Search reports"
+            allowClear
+            prefix={<Search size={16} className="text-muted" />}
+            placeholder="Search by ticket, message or name…"
+            autoComplete="off"
+            value={filter.query}
+            onChange={(event) => setFilter({ ...filter, query: event.target.value })}
+          />
+        }
+        actions={
+          <>
+            {profile?.isHeadAdmin && <DiscordWebhookButton />}
+            <SidePanelToggle label="Admins" />
+          </>
+        }
+      >
+        <Atom.Heading>Reports</Atom.Heading>
+      </Template.PageHeader>
+      <nav
+        aria-label="Report sections"
+        className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+      >
+        <div className="-mb-px flex min-w-0 items-end gap-6 overflow-x-auto overflow-y-hidden [scrollbar-width:none]">
           {tabs.map(({ value, label, icon }) => (
             <Link
               key={value}
               href={value === "board" ? "/reports" : `/reports?tab=${value}`}
               aria-current={tab === value ? "page" : undefined}
-              className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+              className={`focus-ring flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm whitespace-nowrap transition-colors ${
                 tab === value
                   ? "border-accent text-accent"
                   : "border-transparent font-semibold text-foreground hover:text-accent"
@@ -52,17 +132,92 @@ export function ReportsView() {
               {label}
             </Link>
           ))}
-        </nav>
-        <div className={content}>{tab === "hidden" ? <HiddenReports /> : <ReportBoard />}</div>
-      </>
-    );
-  }
+        </div>
+        <div className="ml-auto flex shrink-0 items-center gap-2 self-center">
+          <Select<ReportFilter["assignee"]>
+            size="small"
+            aria-label="Assigned to"
+            value={filter.assignee}
+            onChange={(assignee) => setFilter({ ...filter, assignee })}
+            popupMatchSelectWidth={false}
+            className="w-36"
+            options={[
+              { value: "anyone", label: "Anyone" },
+              { value: "me", label: "Assigned to me" },
+              { value: "unassigned", label: "Unassigned" },
+              ...(admins ?? [])
+                .filter((admin) => admin.id !== profile?.userId)
+                .map((admin) => ({ value: admin.id, label: displayName(admin) })),
+            ]}
+          />
+          <Select<ReportFilter["category"]>
+            size="small"
+            aria-label="Type"
+            value={filter.category}
+            onChange={(category) => setFilter({ ...filter, category })}
+            popupMatchSelectWidth={false}
+            className="w-32"
+            options={[
+              {
+                value: "all",
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    <Inbox size={12} />
+                    All types
+                  </span>
+                ),
+              },
+              ...(Object.keys(categoryStyle) as (keyof typeof categoryStyle)[]).map((value) => ({
+                value,
+                label: (
+                  <span className="flex items-center gap-1.5">
+                    {categoryStyle[value].icon}
+                    {categoryStyle[value].label}s
+                  </span>
+                ),
+              })),
+            ]}
+          />
+          <ViewToggle view={views[tab]} onChange={(view) => setViews({ ...views, [tab]: view })} />
+        </div>
+      </nav>
+      <div className="flex min-h-0 flex-1">
+        <div className={content}>
+          {tab === "hidden" ? <HiddenReports {...listProps} /> : <ReportBoard {...listProps} />}
+        </div>
+        <SidePanel label="Admins">
+          <AdminsPanel admins={admins} />
+        </SidePanel>
+      </div>
+      <ReportModal
+        reportId={openReport}
+        admins={admins ?? []}
+        onClose={() => setOpenReport(null)}
+        onChange={setPatch}
+      />
+    </>
+  );
+}
+
+export function ReportsView() {
+  const profile = useAuthStore((state) => state.profile);
+
+  if (profile?.isAdmin) return <AdminReports />;
 
   return (
-    <div className={content}>
-      <div className="mx-auto flex w-full max-w-[672px] flex-col gap-8 lg:max-w-[760px] xl:max-w-[880px] 2xl:max-w-[1040px]">
-        <MyReports />
+    <>
+      <Template.PageHeader>
+        <Atom.Heading>Reports</Atom.Heading>
+      </Template.PageHeader>
+      <div className={content}>
+        {!profile ? (
+          <Atom.Loader />
+        ) : (
+          <div className="mx-auto flex w-full max-w-[672px] flex-col gap-8 lg:max-w-[760px] xl:max-w-[880px] 2xl:max-w-[1040px]">
+            <MyReports />
+          </div>
+        )}
       </div>
-    </div>
+    </>
   );
 }

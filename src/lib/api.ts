@@ -940,9 +940,74 @@ export type Report = {
   pageUrl: string | null;
   resolutionNote: string | null;
   hiddenAt?: string | null;
+  assignee?: Author | null;
+  commentCount?: number;
   createdAt: string;
   author: Author;
 };
+
+export type ReportAdmin = Author & { isHeadAdmin: boolean; online: boolean };
+
+export type ReportComment = {
+  id: number;
+  content: string;
+  createdAt: string;
+  author: Author;
+};
+
+export async function getReportAdmins(token: string): Promise<ReportAdmin[]> {
+  const res = await api("/reports/admins", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load admins.");
+  return res.json();
+}
+
+export async function assignReport(
+  token: string,
+  reportId: number,
+  assigneeId: number | null,
+): Promise<Report> {
+  const res = await api(`/reports/${reportId}/assignee`, {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ assigneeId }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not assign the report."));
+  return res.json();
+}
+
+export async function getReportComments(token: string, reportId: number): Promise<ReportComment[]> {
+  const res = await api(`/reports/${reportId}/comments`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load comments.");
+  return res.json();
+}
+
+export async function addReportComment(
+  token: string,
+  reportId: number,
+  content: string,
+): Promise<ReportComment> {
+  const res = await api(`/reports/${reportId}/comments`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content }),
+  });
+
+  if (!res.ok) throw new Error("Could not post the comment. Please try again.");
+  return res.json();
+}
 
 export async function submitReport(
   token: string,
@@ -999,6 +1064,46 @@ export async function updateReportStatus(
   return res.json();
 }
 
+export async function getReport(token: string, reportId: number): Promise<Report | null> {
+  const res = await api(`/reports/${reportId}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Could not load the report.");
+  return res.json();
+}
+
+export type ReportWebhook = { url: string | null; siteUrl: string | null };
+
+export async function getReportWebhook(token: string): Promise<ReportWebhook> {
+  const res = await api("/reports/webhook", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load the Discord webhook.");
+  return res.json();
+}
+
+export async function setReportWebhook(
+  token: string,
+  webhook: { url: string; siteUrl: string } | null,
+): Promise<ReportWebhook> {
+  const res = await api("/reports/webhook", {
+    method: webhook ? "PUT" : "DELETE",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(webhook && { "Content-Type": "application/json" }),
+    },
+    ...(webhook && { body: JSON.stringify(webhook) }),
+  });
+
+  if (res.status === 400) throw new Error(await errorMessage(res, "Check the webhook and site URL."));
+  if (res.status === 403) throw new Error("Only the head admin can change the webhook.");
+  if (!res.ok) throw new Error("Could not save the webhook. Please try again.");
+  return res.json();
+}
+
 export async function setReportHidden(
   token: string,
   reportId: number,
@@ -1024,6 +1129,8 @@ export type NotificationType =
   | "friend_request"
   | "friend_accepted"
   | "report_status"
+  | "report_assigned"
+  | "report_comment"
   | "wall_post";
 
 export type Notification = {
