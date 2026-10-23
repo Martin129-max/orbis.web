@@ -3,6 +3,7 @@
 import { Switch } from "antd";
 import {
   Bell,
+  CheckCheck,
   CircleCheck,
   Inbox,
   CloudOff,
@@ -162,19 +163,35 @@ export function NotificationSearch() {
   );
 }
 
-export function MarkAllReadButton() {
+function UnreadBar() {
   const unreadCount = useNotificationsStore((state) => state.unreadCount);
   const markAllRead = useNotificationsStore((state) => state.markAllRead);
+  const [pending, setPending] = useState(false);
+
+  if (unreadCount === 0) return null;
 
   return (
-    <Atom.Button
-      size="small"
-      variant="secondary"
-      disabled={unreadCount === 0}
-      onClick={() => markAllRead()}
-    >
-      Mark all as read
-    </Atom.Button>
+    <div className="flex flex-wrap items-center gap-3 rounded-lg border border-accent/40 bg-accent-soft px-4 py-3">
+      <Bell size={16} className="shrink-0 text-accent" aria-hidden />
+      <span className="flex-1 text-sm font-semibold">
+        {unreadCount.toLocaleString()} unread {unreadCount === 1 ? "notification" : "notifications"}
+      </span>
+      <Atom.Button
+        size="small"
+        icon={<CheckCheck size={14} />}
+        loading={pending}
+        onClick={async () => {
+          setPending(true);
+          try {
+            await markAllRead();
+          } finally {
+            setPending(false);
+          }
+        }}
+      >
+        Mark all as read
+      </Atom.Button>
+    </div>
   );
 }
 
@@ -273,6 +290,7 @@ export function NotificationCenter() {
       <div className="flex min-h-0 flex-1">
         <Template.PageColumn>
           <div className="flex flex-col gap-6">
+            <UnreadBar />
             {failed && !items ? (
               <Molecule.FeedState
                 role="alert"
