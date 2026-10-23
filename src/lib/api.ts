@@ -144,6 +144,7 @@ export type Post = {
   likeCount: number;
   liked: boolean;
   previewComments: PreviewComment[];
+  hiddenAt?: string | null;
   createdAt: string;
   author: Author;
   community: CommunitySummary | null;
@@ -160,6 +161,7 @@ export type Thread = {
   commentCount: number;
   myVote: number;
   previewComments?: PreviewComment[];
+  hiddenAt?: string | null;
   createdAt: string;
   author: Author;
   community: CommunitySummary;
@@ -258,6 +260,7 @@ export type Comment = {
   content: string;
   score: number;
   myVote: number;
+  hidden?: "review" | "reported" | null;
   createdAt: string;
   author: Author;
 };

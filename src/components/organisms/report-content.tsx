@@ -1,7 +1,7 @@
 "use client";
 
 import { App, Input, Modal, Radio, Tooltip } from "antd";
-import { Flag } from "lucide-react";
+import { EyeOff, Flag } from "lucide-react";
 import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -116,6 +116,15 @@ function ReportModal({
   );
 }
 
+export function HiddenNotice() {
+  return (
+    <p className="flex items-center gap-2 rounded-md border border-divider bg-rail px-3 py-2 text-xs text-muted">
+      <EyeOff size={14} aria-hidden className="shrink-0" />
+      Hidden from others while admins review reports. Only you can see it.
+    </p>
+  );
+}
+
 export function ReportButton({
   type,
   id,
@@ -135,40 +144,34 @@ export function ReportButton({
   if (myId === undefined || myId === ownerId) return null;
 
   const label = `Report ${nouns[type]}`;
-  const trigger =
-    variant === "text" ? (
-      <button
-        type="button"
-        onClick={(event) => {
-          event.stopPropagation();
-          setOpen(true);
-        }}
-        className={`focus-ring cursor-pointer rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-danger ${className}`}
-      >
-        Report
-      </button>
-    ) : (
-      <Tooltip title={label}>
-        <button
-          type="button"
-          aria-label={label}
-          onClick={(event) => {
-            event.stopPropagation();
-            setOpen(true);
-          }}
-          className={`icon-button cursor-pointer hover:text-danger ${className}`}
-        >
-          <Flag size={16} />
-        </button>
-      </Tooltip>
-    );
 
   return (
-    <>
-      {trigger}
-      <span onClick={(event) => event.stopPropagation()}>
-        <ReportModal type={type} id={id} open={open} onClose={() => setOpen(false)} />
-      </span>
-    </>
+    <span
+      className={`inline-flex shrink-0 ${className}`}
+      onClick={(event) => event.stopPropagation()}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      {variant === "text" ? (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="focus-ring cursor-pointer rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-danger"
+        >
+          Report
+        </button>
+      ) : (
+        <Tooltip title={label}>
+          <button
+            type="button"
+            aria-label={label}
+            onClick={() => setOpen(true)}
+            className="icon-button cursor-pointer hover:text-danger"
+          >
+            <Flag size={16} />
+          </button>
+        </Tooltip>
+      )}
+      <ReportModal type={type} id={id} open={open} onClose={() => setOpen(false)} />
+    </span>
   );
 }

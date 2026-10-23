@@ -77,10 +77,18 @@ function CommentItem({
             {timeAgo(node.createdAt)}
           </time>
         </p>
-        <div
-          className="rich-text"
-          dangerouslySetInnerHTML={{ __html: node.content }}
-        />
+        {node.hidden ? (
+          <p className="text-sm text-muted italic">
+            {node.hidden === "reported"
+              ? "You reported this comment."
+              : "This comment is hidden while admins review it."}
+          </p>
+        ) : (
+          <div
+            className="rich-text"
+            dangerouslySetInnerHTML={{ __html: node.content }}
+          />
+        )}
         <div className="flex items-center gap-2">
           <Molecule.VoteControl
             orientation="horizontal"

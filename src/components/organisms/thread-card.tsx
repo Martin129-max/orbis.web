@@ -7,7 +7,7 @@ import type { Thread } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
-import { ReportButton } from "./report-content";
+import { HiddenNotice, ReportButton } from "./report-content";
 
 export function ThreadMeta({
   thread,
@@ -84,6 +84,7 @@ export function ThreadCard({
           <ThreadMeta thread={thread} showCommunity={showCommunity} />
           <ReportButton type="thread" id={thread.id} ownerId={thread.author.id} className="-mt-1 -mr-1.5" />
         </div>
+        {thread.hiddenAt && <HiddenNotice />}
         <h3 className="text-xl font-bold">
           <button
             type="button"
