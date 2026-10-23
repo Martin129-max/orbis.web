@@ -670,12 +670,7 @@ export function CommunityRail() {
         aria-label="Orbis home"
         className="group focus-ring flex rounded-sm font-display text-2xl leading-none font-extrabold text-accent sm:text-[32px]"
       >
-        <span className="inline-block origin-bottom group-hover:animate-logo-squish group-focus-visible:animate-logo-squish motion-reduce:animate-none!">
-          o
-        </span>
-        <span className="inline-block origin-[-0.23em_0.64em] group-hover:animate-logo-orbit group-focus-visible:animate-logo-orbit motion-reduce:animate-none!">
-          .
-        </span>
+        <Atom.LogoMark animation="hover" />
       </Link>
       <ul className="flex w-full shrink-0 flex-col items-center gap-4">
         <RailSlot label="Home">
