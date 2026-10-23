@@ -3,6 +3,7 @@
 import {
   closestCenter,
   DndContext,
+  DragOverlay,
   KeyboardSensor,
   pointerWithin,
   PointerSensor,
@@ -41,7 +42,7 @@ import {
   type ReactNode,
 } from "react";
 import * as Atom from "@atom";
-import type { Community, RailFolder } from "@/lib/api";
+import type { Community, RailFolder, RailItem } from "@/lib/api";
 import {
   communityKey,
   folderKey,
@@ -279,8 +280,8 @@ function SortableFolder({
   );
 }
 
-function RailEndDrop() {
-  const { isOver, setNodeRef } = useDroppable({ id: RAIL_END_KEY });
+function RailEndDrop({ highlighted }: { highlighted: boolean }) {
+  const { setNodeRef } = useDroppable({ id: RAIL_END_KEY });
 
   return (
     <li
@@ -288,7 +289,7 @@ function RailEndDrop() {
       data-rail-key={RAIL_END_KEY}
       aria-hidden
       className={`min-h-8 flex-1 rounded-lg transition-colors ${
-        isOver ? "bg-accent/15 ring-1 ring-inset ring-accent/50" : ""
+        highlighted ? "bg-accent/15 ring-1 ring-inset ring-accent/50" : ""
       }`}
     />
   );
@@ -435,7 +436,7 @@ export function CommunityRail() {
   );
   const items = useMemo(() => normalizeLayout(layout, ids), [layout, ids]);
   const isOpen = (folder: RailFolder) =>
-    openFolders.has(folder.id) && dragging !== folderKey(folder.id);
+    openFolders.has(folder.id) && !dragging?.startsWith("f:");
   const visible = items.flatMap((item) =>
     item.type === "community"
       ? [communityKey(item.communityId)]
@@ -445,6 +446,66 @@ export function CommunityRail() {
         ],
   );
   const activeId = Number(communityId);
+  const draggedCommunity = dragging?.startsWith("c:")
+    ? byId.get(Number(dragging.slice(2)))
+    : undefined;
+  const nextKey = new Map<string, string>();
+  const previousKey = new Map<string, string>();
+  const folderOfMember = new Map<string, number>();
+  const keyOf = (item: RailItem) =>
+    item.type === "community" ? communityKey(item.communityId) : folderKey(item.id);
+  items.forEach((item, index) => {
+    const key = keyOf(item);
+    const following = items[index + 1];
+    if (following) {
+      nextKey.set(key, keyOf(following));
+      previousKey.set(keyOf(following), key);
+    }
+    if (item.type !== "folder" || !isOpen(item)) return;
+
+    const members = item.communityIds.map(communityKey);
+    if (members.length > 0) nextKey.set(key, members[0]);
+    members.forEach((member, position) => {
+      folderOfMember.set(member, item.id);
+      if (position > 0) {
+        nextKey.set(members[position - 1], member);
+        previousKey.set(member, members[position - 1]);
+      }
+    });
+  });
+  const lastKey = items.length > 0 ? keyOf(items[items.length - 1]) : null;
+
+  function settleDrop(
+    activeKey: string,
+    target: { overKey: string; drop: RailDrop },
+    side: "before" | "after",
+  ) {
+    let { overKey, drop } = target;
+
+    if (drop === "combine") {
+      const insideFolder = folderOfMember.has(overKey);
+      const ownFolder =
+        overKey.startsWith("f:") && folderOfMember.get(activeKey) === Number(overKey.slice(2));
+      if (insideFolder || ownFolder) drop = side;
+    }
+
+    if (drop === "after") {
+      const following = nextKey.get(overKey);
+      if (following) {
+        overKey = following;
+        drop = "before";
+      } else if (overKey === lastKey) {
+        overKey = RAIL_END_KEY;
+      }
+    }
+
+    if (overKey === RAIL_END_KEY) {
+      return activeKey === lastKey ? null : { overKey, drop: "after" as const };
+    }
+    if (overKey === activeKey) return null;
+    if (drop === "before" && previousKey.get(overKey) === activeKey) return null;
+    return { overKey, drop };
+  }
 
   useEffect(() => {
     const closing = closeTimers.current;
@@ -539,27 +600,28 @@ export function CommunityRail() {
     let next: typeof drop = null;
 
     if (overKey === RAIL_END_KEY && node) {
-      next = { overKey, drop: "after" };
+      next = settleDrop(activeKey, { overKey, drop: "after" }, "after");
     } else if (overKey && node) {
       const rect = node.getBoundingClientRect();
       const center = rect.top + rect.height / 2;
 
       if (activatorEvent instanceof PointerEvent) {
         const pointer = activatorEvent.clientY + delta.y;
-        next = {
-          overKey,
-          drop:
-            activeKey.startsWith("c:") && Math.abs(pointer - center) < rect.height * 0.3
-              ? "combine"
-              : pointer < center
-                ? "before"
-                : "after",
-        };
+        const side = pointer < center ? "before" : "after";
+        next = settleDrop(
+          activeKey,
+          {
+            overKey,
+            drop:
+              activeKey.startsWith("c:") && Math.abs(pointer - center) < rect.height * 0.3
+                ? "combine"
+                : side,
+          },
+          side,
+        );
       } else {
-        next = {
-          overKey,
-          drop: visible.indexOf(activeKey) < visible.indexOf(overKey) ? "after" : "before",
-        };
+        const side = visible.indexOf(activeKey) < visible.indexOf(overKey) ? "after" : "before";
+        next = settleDrop(activeKey, { overKey, drop: side }, side);
       }
     }
 
@@ -739,7 +801,7 @@ export function CommunityRail() {
         </ul>
         </li>
         )}
-        <RailEndDrop />
+        <RailEndDrop highlighted={drop?.overKey === RAIL_END_KEY} />
         <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
         <RailSlot label="Create a community">
           <button
@@ -764,6 +826,19 @@ export function CommunityRail() {
           </Link>
         </RailSlot>
       </ul>
+      <DragOverlay dropAnimation={null} className="pointer-events-none flex justify-center">
+        {draggedCommunity && (
+          <div
+            aria-hidden
+            className={`${itemClass(draggedCommunity.id === activeId)} cursor-grabbing ring-2 ring-accent ring-offset-2 ring-offset-rail`}
+          >
+            <Atom.CommunityIcon
+              name={draggedCommunity.name}
+              src={draggedCommunity.iconUrl}
+            />
+          </div>
+        )}
+      </DragOverlay>
       </DndContext>
       <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
       <div className="shrink-0">

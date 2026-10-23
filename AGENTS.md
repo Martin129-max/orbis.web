@@ -23,7 +23,7 @@ New users get a guided tour and a "Get started" checklist on the homepage. Both 
 
 The homepage tour introduces the app as a whole: the rail, the composer, notifications, the account menu, and the feedback buttons. Features that live on a specific page (a community, a profile, the library, a title page, Explore, the reports board for admins) belong in that page's own tour instead, shown the first time someone opens the page. Keep each page tour short, two to five stops, and only include what isn't obvious from the page itself.
 
-Page tours don't exist yet. When you add the first one, build the shared support once rather than one-off code: a reusable tour component that takes a tour name and its stops, and per-tour completion saved on the server (for example, a list of completed tour names on the user, returned by `GET /users/me/onboarding` and updated with `PATCH`), so each tour shows once per account. Reuse it for every page tour after that.
+Page tours are defined in `pageTours` in the same file and shown with `<PageTour name="…" />` on each page. Each one appears once per account, after the homepage tour, and its completion is saved in `completedTours` on the user (returned by `GET /users/me/onboarding`, updated with `PATCH`). To give a new page a tour, add an entry to `pageTours`, render `PageTour` on the page, and add the name to `PAGE_TOURS` in `server/prisma/seed.ts` so seeded accounts start with it completed.
 
 Decide whether a new user needs to know about the feature. If so:
 
