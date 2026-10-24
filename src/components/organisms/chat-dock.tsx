@@ -107,28 +107,31 @@ function ChatWindow({
       }`}
     >
       <header className="flex shrink-0 items-center gap-1 border-b border-divider py-1.5 pr-1.5 pl-2">
-        <button
-          type="button"
-          onClick={() => toggleChat(person.userId)}
-          aria-expanded={!minimized}
-          className="focus-ring flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-lg p-1 text-left hover:bg-rail-item"
-        >
-          <Atom.Avatar label={name} src={person.avatarUrl} seed={person.userId} size="sm" />
-          <span className="truncate text-sm font-semibold">{name}</span>
-          {minimized && unread > 0 && (
-            <span className="ml-auto rounded-full bg-accent px-1.5 text-[11px] leading-[18px] font-bold text-accent-foreground">
-              {unread > 99 ? "99+" : unread}
-            </span>
-          )}
-        </button>
-        {!minimized && (
+        {minimized ? (
+          <button
+            type="button"
+            onClick={() => toggleChat(person.userId)}
+            aria-expanded={false}
+            className="focus-ring flex min-w-0 flex-1 items-center gap-2 rounded-lg p-1 text-left hover:bg-rail-item"
+          >
+            <Atom.Avatar label={name} src={person.avatarUrl} seed={person.userId} size="sm" />
+            <span className="truncate text-sm font-semibold">{name}</span>
+            {unread > 0 && (
+              <span className="ml-auto rounded-full bg-accent px-1.5 text-[11px] leading-[18px] font-bold text-accent-foreground">
+                {unread > 99 ? "99+" : unread}
+              </span>
+            )}
+          </button>
+        ) : (
           <>
             <Link
               href={`/users/${person.username}`}
-              className="focus-ring rounded-md px-1.5 py-1 text-xs text-muted hover:text-accent"
+              className="focus-ring flex min-w-0 items-center gap-2 rounded-lg p-1 hover:bg-rail-item"
             >
-              Profile
+              <Atom.Avatar label={name} src={person.avatarUrl} seed={person.userId} size="sm" />
+              <span className="truncate text-sm font-semibold">{name}</span>
             </Link>
+            <span className="flex-1" />
             <button
               type="button"
               onClick={() => toggleChat(person.userId)}
