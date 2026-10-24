@@ -16,6 +16,7 @@ import { ThreadCard } from "./thread-card";
 
 type PostListProps<T extends FeedEntry> = {
   feed: Paged<T>;
+  trailing?: ReactNode;
   empty: { title: ReactNode; description: ReactNode; action?: ReactNode };
   end?: ReactNode;
   showCommunity?: boolean;
@@ -24,7 +25,7 @@ type PostListProps<T extends FeedEntry> = {
 export function PostList<T extends FeedEntry>(props: PostListProps<T>) {
   return (
     <div className="flex flex-col gap-3">
-      <FeedFilters types={props.feed.contentTypes} />
+      <FeedFilters types={props.feed.contentTypes} trailing={props.trailing} />
       <PostListContent {...props} />
     </div>
   );

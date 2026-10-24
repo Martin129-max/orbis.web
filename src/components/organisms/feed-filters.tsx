@@ -1,6 +1,7 @@
 "use client";
 
 import { Checkbox, Dropdown, Popover } from "antd";
+import type { ReactNode } from "react";
 import {
   ChevronDown,
   LayoutPanelTop,
@@ -18,7 +19,13 @@ const labels = {
   activity: "Library updates",
 };
 
-export function FeedFilters({ types }: { types: FeedContentType[] }) {
+export function FeedFilters({
+  types,
+  trailing,
+}: {
+  types: FeedContentType[];
+  trailing?: ReactNode;
+}) {
   const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
   const setShown = useFeedPreferencesStore((state) => state.setShown);
   const showAll = useFeedPreferencesStore((state) => state.showAll);
@@ -65,53 +72,56 @@ export function FeedFilters({ types }: { types: FeedContentType[] }) {
           <ChevronDown size={12} aria-hidden />
         </Atom.Button>
       </Dropdown>
-      {types.length > 1 && (
-        <div className="ml-auto flex items-center gap-2">
-          {filtered && (
-            <Atom.Button
-              size="small"
-              variant="secondary"
-              icon={<RotateCcw size={14} />}
-              onClick={showAll}
-            >
-              Reset Filters
-            </Atom.Button>
-          )}
-          <Popover
-            trigger="click"
-            placement="bottomRight"
-            content={
-              <div
-                className="flex min-w-48 flex-col gap-3"
-                aria-label="Feed content types"
+      <div className="ml-auto flex items-center gap-2">
+        {trailing}
+        {types.length > 1 && (
+          <>
+            {filtered && (
+              <Atom.Button
+                size="small"
+                variant="secondary"
+                icon={<RotateCcw size={14} />}
+                onClick={showAll}
               >
-                <p className="text-[13px] font-semibold">Show in feeds</p>
-                {types.map((type) => (
-                  <Checkbox
-                    key={type}
-                    checked={shown.includes(type)}
-                    disabled={shown.length === 1 && shown.includes(type)}
-                    onChange={() => toggle(type)}
-                  >
-                    {labels[type]}
-                  </Checkbox>
-                ))}
-                <p className="max-w-56 text-xs text-muted">
-                  Your choices apply across feeds on this browser.
-                </p>
-              </div>
-            }
-          >
-            <Atom.Button
-              size="small"
-              variant="secondary"
-              icon={<SlidersHorizontal size={14} />}
+                Reset Filters
+              </Atom.Button>
+            )}
+            <Popover
+              trigger="click"
+              placement="bottomRight"
+              content={
+                <div
+                  className="flex min-w-48 flex-col gap-3"
+                  aria-label="Feed content types"
+                >
+                  <p className="text-[13px] font-semibold">Show in feeds</p>
+                  {types.map((type) => (
+                    <Checkbox
+                      key={type}
+                      checked={shown.includes(type)}
+                      disabled={shown.length === 1 && shown.includes(type)}
+                      onChange={() => toggle(type)}
+                    >
+                      {labels[type]}
+                    </Checkbox>
+                  ))}
+                  <p className="max-w-56 text-xs text-muted">
+                    Your choices apply across feeds on this browser.
+                  </p>
+                </div>
+              }
             >
-              Filter feed
-            </Atom.Button>
-          </Popover>
-        </div>
-      )}
+              <Atom.Button
+                size="small"
+                variant="secondary"
+                icon={<SlidersHorizontal size={14} />}
+              >
+                Filter feed
+              </Atom.Button>
+            </Popover>
+          </>
+        )}
+      </div>
     </div>
   );
 }

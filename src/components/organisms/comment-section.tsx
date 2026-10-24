@@ -52,7 +52,7 @@ function CommentItem({
 }: {
   node: CommentNode;
   depth: number;
-  onReply: (content: string, parentId: number) => Promise<void>;
+  onReply: (content: string, parentId: number, linkUrl?: string) => Promise<void>;
   onChange: (comment: Comment) => void;
 }) {
   const [replying, setReplying] = useState(false);
@@ -85,10 +85,15 @@ function CommentItem({
               : "This comment is hidden while admins review it."}
           </p>
         ) : (
-          <div
-            className="rich-text"
-            dangerouslySetInnerHTML={{ __html: node.content }}
-          />
+          <>
+            {node.content && (
+              <div
+                className="rich-text"
+                dangerouslySetInnerHTML={{ __html: node.content }}
+              />
+            )}
+            {node.linkUrl && <Molecule.LinkPreview url={node.linkUrl} />}
+          </>
         )}
         <div className="flex items-center gap-2">
           <Molecule.VoteControl
@@ -114,6 +119,7 @@ function CommentItem({
         {replying && (
           <PostComposer
             autoFocus
+            linkPreview
             target={
               <p className="text-xs text-muted">
                 Replying to @{node.author.username}
@@ -121,7 +127,7 @@ function CommentItem({
             }
             placeholder="Write a reply…"
             submitLabel="Reply"
-            onPost={(content) => onReply(content, node.id)}
+            onPost={(content, linkUrl) => onReply(content, node.id, linkUrl)}
             onPosted={() => setReplying(false)}
             onCancel={() => setReplying(false)}
           />
@@ -172,11 +178,11 @@ export function CommentSection({
       .catch(() => setFailed(true));
   }, [type, id, attempt]);
 
-  async function handleReply(content: string, parentId?: number) {
+  async function handleReply(content: string, parentId?: number, linkUrl?: string) {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
 
-    const comment = await createComment(token, { type, id }, content, parentId);
+    const comment = await createComment(token, { type, id }, content, parentId, linkUrl);
     useOnboardingStore.getState().refresh();
     const next = [...(comments ?? []), comment];
     setComments(next);
@@ -204,9 +210,10 @@ export function CommentSection({
       <div className="flex flex-col gap-2">
         <p className="text-[13px] font-semibold">Add a comment</p>
         <PostComposer
+          linkPreview
           placeholder="Write a comment…"
           submitLabel="Comment"
-          onPost={(content) => handleReply(content)}
+          onPost={(content, linkUrl) => handleReply(content, undefined, linkUrl)}
         />
       </div>
       {failed && !comments ? (

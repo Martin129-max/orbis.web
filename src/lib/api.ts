@@ -262,6 +262,7 @@ export type Comment = {
   id: number;
   parentId: number | null;
   content: string;
+  linkUrl: string | null;
   score: number;
   myVote: number;
   hidden?: "review" | "reported" | null;
@@ -1036,6 +1037,7 @@ export async function createComment(
   { type, id }: Commentable,
   content: string,
   parentId?: number,
+  linkUrl?: string,
 ): Promise<Comment> {
   const res = await api("/comments", {
     method: "POST",
@@ -1043,7 +1045,7 @@ export async function createComment(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ type, id, parentId, content }),
+    body: JSON.stringify({ type, id, parentId, content, linkUrl }),
   });
 
   if (res.status === 400) throw new Error("Write something before commenting.");

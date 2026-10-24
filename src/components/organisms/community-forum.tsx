@@ -1,8 +1,8 @@
 "use client";
 
-import { Modal, Segmented } from "antd";
+import { Segmented } from "antd";
 import { Flame, Sparkles, TrendingUp } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
@@ -12,7 +12,6 @@ import {
 } from "@/lib/api";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
-import { useCommunityStore } from "@/stores/community-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 
@@ -25,9 +24,11 @@ const sorts = [
 function ForumThreads({
   communityId,
   sort,
+  trailing,
 }: {
   communityId: number;
   sort: ThreadSort;
+  trailing: ReactNode;
 }) {
   const feed = usePaged(
     useCallback(
@@ -41,6 +42,7 @@ function ForumThreads({
   return (
     <PostList
       feed={feed}
+      trailing={trailing}
       empty={{
         title: "No threads yet.",
         description:
@@ -51,23 +53,14 @@ function ForumThreads({
   );
 }
 
-function NewThreadModal({
+function ThreadComposer({
   communityId,
-  open,
-  onClose,
   onCreated,
 }: {
   communityId: number;
-  open: boolean;
-  onClose: () => void;
   onCreated: () => void;
 }) {
   const [title, setTitle] = useState("");
-  const communityName = useCommunityStore(
-    (state) =>
-      state.communities.find((community) => community.id === communityId)
-        ?.name,
-  );
 
   async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
@@ -77,87 +70,57 @@ function NewThreadModal({
     await createThread(token, communityId, { title: title.trim(), content, linkUrl });
   }
 
-  function close() {
-    setTitle("");
-    onClose();
-  }
-
   return (
-    <Modal
-      open={open}
-      onCancel={close}
-      footer={null}
-      width={640}
-      destroyOnHidden
-      title={null}
-      styles={{ container: { padding: 24 } }}
-    >
-      <div className="flex flex-col gap-6">
-        <Molecule.ModalHeader
-          eyebrow={`${communityName ?? "Community"} / New thread`}
-          title="Start a new thread."
-          description="Ask a question or start a discussion with this community."
-        />
-        <Molecule.FormField
-          label="Title"
-          size="large"
-          maxLength={300}
+    <PostComposer
+      allowEmpty
+      linkPreview
+      placeholder="Add details or context…"
+      submitLabel="Post thread"
+      target={
+        <Atom.Input
+          variant="borderless"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          autoFocus
+          maxLength={300}
+          placeholder="Thread title"
+          aria-label="Thread title"
+          className="font-display text-2xl font-bold"
         />
-        <div className="flex flex-col gap-2">
-          <p className="text-[13px] font-semibold">Body (optional)</p>
-          <PostComposer
-            allowEmpty
-            linkPreview
-            onCancel={close}
-            placeholder="Add details or context…"
-            submitLabel="Post thread"
-            onPost={handlePost}
-            onPosted={() => {
-              setTitle("");
-              onCreated();
-            }}
-          />
-        </div>
-      </div>
-    </Modal>
+      }
+      onPost={handlePost}
+      onPosted={() => {
+        setTitle("");
+        onCreated();
+      }}
+    />
   );
 }
 
 export function CommunityForum({ communityId }: { communityId: number }) {
   const [sort, setSort] = useState<ThreadSort>("hot");
   const [version, setVersion] = useState(0);
-  const [creating, setCreating] = useState(false);
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Segmented<ThreadSort>
-          aria-label="Sort threads"
-          options={sorts}
-          value={sort}
-          onChange={setSort}
-        />
-        <Atom.Button size="large" onClick={() => setCreating(true)}>
-          New thread
-        </Atom.Button>
-      </div>
+      <ThreadComposer
+        communityId={communityId}
+        onCreated={() => {
+          setSort("new");
+          setVersion((count) => count + 1);
+        }}
+      />
       <ForumThreads
         key={`${sort}-${version}`}
         communityId={communityId}
         sort={sort}
-      />
-      <NewThreadModal
-        communityId={communityId}
-        open={creating}
-        onClose={() => setCreating(false)}
-        onCreated={() => {
-          setCreating(false);
-          setSort("new");
-          setVersion((count) => count + 1);
-        }}
+        trailing={
+          <Segmented<ThreadSort>
+            aria-label="Sort threads"
+            options={sorts}
+            value={sort}
+            onChange={setSort}
+          />
+        }
       />
     </div>
   );
