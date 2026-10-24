@@ -29,6 +29,7 @@ export * from "./member-presence";
 export * from "./messages-view";
 export * from "./notification-bell";
 export * from "./notification-center";
+export * from "./notification-toasts";
 export * from "./onboarding";
 export * from "./person-row";
 export * from "./post-card";

@@ -28,6 +28,7 @@ import {
   LibraryBig,
   LogOut,
   Plus,
+  Settings,
   User,
 } from "lucide-react";
 import { Dropdown, Popover, Tooltip } from "antd";
@@ -327,26 +328,28 @@ function UserButton() {
       styles={{ container: { padding: 20, borderRadius: 12 } }}
       content={
         <div className="flex w-[300px] flex-col gap-4">
-          {profile && (
-            <div className="flex items-center gap-3">
-              <Atom.Avatar
-                label={profile.username}
-                src={profile.avatarUrl}
-                seed={profile.userId}
-              />
-              <div className="flex min-w-0 flex-col">
-                <span className="truncate">{profile.username}</span>
-                <span className="truncate text-xs text-muted">{username}</span>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center gap-3">
+            {profile && (
+              <>
+                <Atom.Avatar
+                  label={profile.username}
+                  src={profile.avatarUrl}
+                  seed={profile.userId}
+                />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <span className="truncate">{profile.username}</span>
+                  <span className="truncate text-xs text-muted">{username}</span>
+                </div>
+              </>
+            )}
+            <label className="ml-auto flex shrink-0 items-center gap-2">
+              <span className="text-xs text-muted">Appear offline</span>
+              <AppearOfflineSwitch size="small" />
+            </label>
+          </div>
           <hr className="border-divider" />
           <p className="text-xs text-muted uppercase">Theme</p>
           <ThemeToggle block />
-          <label className="flex items-center justify-between gap-2">
-            <span className="text-sm">Appear offline</span>
-            <AppearOfflineSwitch />
-          </label>
           <hr className="border-divider" />
           <Link
             href={profile ? `/users/${profile.username}` : "/profile"}
@@ -355,6 +358,10 @@ function UserButton() {
           >
             <User size={18} />
             View profile
+          </Link>
+          <Link href="/settings" onClick={() => setOpen(false)} className={menuRow}>
+            <Settings size={18} />
+            Settings
           </Link>
           <button
             type="button"

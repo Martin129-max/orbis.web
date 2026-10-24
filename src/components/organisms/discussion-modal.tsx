@@ -22,6 +22,7 @@ function ThreadDetail({
   return (
     <article className="flex gap-4">
       <Molecule.VoteControl
+        symbols="thumbs"
         score={thread.score}
         myVote={thread.myVote}
         onVote={(value) =>

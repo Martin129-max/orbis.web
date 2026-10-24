@@ -9,6 +9,7 @@ export function AppTemplate({ children }: { children: ReactNode }) {
         {children}
       </div>
       <Organism.ChatDock />
+      <Organism.NotificationToasts />
       <Organism.FeedbackDock />
     </div>
   );

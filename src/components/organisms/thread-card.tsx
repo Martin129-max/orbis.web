@@ -71,6 +71,7 @@ export function ThreadCard({
       className="flex cursor-pointer gap-4 rounded-lg border border-divider bg-surface p-5 transition-colors hover:border-muted"
     >
       <Molecule.VoteControl
+        symbols="thumbs"
         score={thread.score}
         myVote={thread.myVote}
         onVote={(value) =>

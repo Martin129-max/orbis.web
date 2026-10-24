@@ -62,3 +62,9 @@ export function previewFor(token: string, link: string) {
   }
   return preview;
 }
+
+export function attachmentLabel(link: string) {
+  if (youtubeVideo(link)) return "posted a video";
+  if (gifLink(link)) return "posted a GIF";
+  return "posted a link";
+}

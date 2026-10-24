@@ -1,12 +1,18 @@
 "use client";
 
-import { ArrowDown, ArrowUp } from "lucide-react";
+import { ArrowDown, ArrowUp, ThumbsDown, ThumbsUp } from "lucide-react";
+
+const symbols = {
+  arrows: { up: ArrowUp, down: ArrowDown },
+  thumbs: { up: ThumbsUp, down: ThumbsDown },
+};
 
 type VoteControlProps = {
   score: number;
   myVote: number;
   onVote: (value: 1 | -1) => void;
   orientation?: "vertical" | "horizontal";
+  symbols?: keyof typeof symbols;
 };
 
 export function VoteControl({
@@ -14,7 +20,9 @@ export function VoteControl({
   myVote,
   onVote,
   orientation = "vertical",
+  symbols: style = "arrows",
 }: VoteControlProps) {
+  const { up: Up, down: Down } = symbols[style];
   const arrow = (active: boolean) =>
     `focus-ring flex rounded-sm transition-colors ${
       active ? "text-accent" : "text-muted hover:text-foreground"
@@ -36,7 +44,7 @@ export function VoteControl({
         onClick={() => onVote(1)}
         className={arrow(myVote === 1)}
       >
-        <ArrowUp size={16} />
+        <Up size={16} />
       </button>
       <span
         aria-label={`Score ${score}`}
@@ -53,7 +61,7 @@ export function VoteControl({
         onClick={() => onVote(-1)}
         className={arrow(myVote === -1)}
       >
-        <ArrowDown size={16} />
+        <Down size={16} />
       </button>
     </div>
   );

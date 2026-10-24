@@ -1,7 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import type { Friend, FriendTarget, FriendUser } from "@/lib/api";
+import type { Friend, FriendTarget, FriendUser, Notification } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
 import { useMessagesStore } from "./messages-store";
 import { useNotificationsStore } from "./notifications-store";
@@ -44,8 +44,12 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
       useNotificationsStore.getState().refresh();
       useMessagesStore.getState().refresh();
     });
-    socket.on("notifications:changed", () =>
-      useNotificationsStore.getState().refresh(),
+    socket.on(
+      "notifications:changed",
+      ({ notifications = [] }: { notifications?: Notification[] } = {}) => {
+        useNotificationsStore.getState().refresh();
+        useNotificationsStore.getState().showToasts(notifications);
+      },
     );
     socket.on("friends:changed", () => get().fetchFriends());
     socket.on("message", (event) => useMessagesStore.getState().receive(event));

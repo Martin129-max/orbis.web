@@ -131,6 +131,7 @@ export type CommunitySummary = Pick<Community, "id" | "name" | "iconUrl">;
 export type PreviewComment = {
   id: number;
   content: string;
+  linkUrl: string | null;
   createdAt: string;
   author: Author;
 };

@@ -42,6 +42,7 @@ export function CompactFeedItem({
     >
       {item.type === "thread" ? (
         <Molecule.VoteControl
+          symbols="thumbs"
           score={item.score}
           myVote={item.myVote}
           onVote={(value) =>

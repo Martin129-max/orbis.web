@@ -2,9 +2,9 @@
 
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import { Tooltip } from "antd";
+import { Modal, Tooltip } from "antd";
 import { Link2 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { previewFor, TEXT_LINK, trimLink, webUrl, youtubeVideo } from "@/lib/links";
@@ -78,6 +78,9 @@ export function PostComposer({
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [attachment, setAttachment] = useState<string | null>(null);
+  const [linkOpen, setLinkOpen] = useState(false);
+  const [linkDraft, setLinkDraft] = useState("");
+  const [linkError, setLinkError] = useState<string | null>(null);
   const attached = useRef<string | null>(null);
   const dismissed = useRef(false);
   const checking = useRef<string | null>(null);
@@ -197,8 +200,26 @@ export function PostComposer({
       return;
     }
 
-    const href = window.prompt("Link URL");
-    if (href) editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+    setLinkDraft("");
+    setLinkError(null);
+    setLinkOpen(true);
+  }
+
+  function insertLink(event: FormEvent) {
+    event.preventDefault();
+    const raw = linkDraft.trim();
+    const href = webUrl(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    if (!href || !editor) {
+      setLinkError("Enter a valid link, like example.com or https://example.com.");
+      return;
+    }
+
+    if (editor.state.selection.empty) {
+      editor.chain().focus().insertContent(`${href} `).run();
+    } else {
+      editor.chain().focus().extendMarkRange("link").setLink({ href }).run();
+    }
+    setLinkOpen(false);
   }
 
   const tools: {
@@ -282,6 +303,44 @@ export function PostComposer({
         </div>
       </div>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      <Modal
+        open={linkOpen}
+        title={null}
+        onCancel={() => setLinkOpen(false)}
+        footer={null}
+        width={420}
+        destroyOnHidden
+        styles={{ container: { padding: 24 } }}
+      >
+        <form onSubmit={insertLink} className="flex flex-col gap-6">
+          <Molecule.ModalHeader
+            eyebrow="Add link"
+            title="Link to something."
+            description="Paste a page, video or GIF. Its preview appears under your post."
+          />
+          <Molecule.FormField
+            label="Link"
+            value={linkDraft}
+            onChange={(event) => {
+              setLinkDraft(event.target.value);
+              setLinkError(null);
+            }}
+            placeholder="example.com/page"
+            inputMode="url"
+            autoComplete="off"
+            autoFocus
+          />
+          {linkError && <Atom.ErrorMessage>{linkError}</Atom.ErrorMessage>}
+          <div className="flex justify-end gap-2 border-t border-divider pt-6">
+            <Atom.Button variant="secondary" onClick={() => setLinkOpen(false)}>
+              Cancel
+            </Atom.Button>
+            <Atom.Button type="submit" disabled={!linkDraft.trim()}>
+              Add link
+            </Atom.Button>
+          </div>
+        </form>
+      </Modal>
     </div>
   );
 }

@@ -88,7 +88,7 @@ export const tourStops: TourStop[] = [
     placement: "rightBottom",
     title: "Notifications",
     description:
-      "Comments on your posts, replies, friend requests, and report updates all land here. Search and filter them on the notifications page.",
+      "Comments on your posts, replies, friend requests, and report updates all land here, and new ones pop up in the corner for a few seconds. Search and filter them on the notifications page.",
   },
   {
     target: "account",
