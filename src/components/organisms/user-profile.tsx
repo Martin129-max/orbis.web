@@ -111,6 +111,7 @@ function ProfileHeader({
   online,
   collapsed,
   actions,
+  adminAction,
   social,
   images,
 }: {
@@ -118,6 +119,7 @@ function ProfileHeader({
   online: boolean;
   collapsed: boolean;
   actions: React.ReactNode;
+  adminAction?: React.ReactNode;
   social?: React.ReactNode;
   images?: ProfileImages;
 }) {
@@ -182,8 +184,15 @@ function ProfileHeader({
           {!collapsed && social && <div className="mt-2 flex items-center gap-2">{social}</div>}
         </div>
       </div>
-      <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
-        {actions}
+      <div className="absolute top-2.5 right-4 flex items-center gap-2 sm:top-4 sm:right-8">
+        {adminAction && (
+          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+            {adminAction}
+          </div>
+        )}
+        <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+          {actions}
+        </div>
       </div>
       {images && !collapsed && (
         <Molecule.CoverButton
@@ -646,6 +655,20 @@ export function UserProfile({ username }: { username: string }) {
             </>
           )
         }
+        adminAction={
+          !isSelf && me?.isHeadAdmin ? (
+            <AdminToggle
+              profile={profile}
+              onChange={(isAdmin) =>
+                setLoaded((current) =>
+                  current?.profile
+                    ? { ...current, profile: { ...current.profile, isAdmin } }
+                    : current,
+                )
+              }
+            />
+          ) : null
+        }
         actions={
           <>
             {isSelf ? (
@@ -653,18 +676,6 @@ export function UserProfile({ username }: { username: string }) {
             ) : (
               me && (
                 <>
-                  {me.isHeadAdmin && (
-                    <AdminToggle
-                      profile={profile}
-                      onChange={(isAdmin) =>
-                        setLoaded((current) =>
-                          current?.profile
-                            ? { ...current, profile: { ...current.profile, isAdmin } }
-                            : current,
-                        )
-                      }
-                    />
-                  )}
                   <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
                 </>
               )
