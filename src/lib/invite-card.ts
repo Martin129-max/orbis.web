@@ -288,5 +288,5 @@ export async function buildInviteCard({
   await drawLines(back, body, note.lines, note.size, 2.02, 1.62, 0.1, muted);
   await drawLines(back, display, ["o."], mark, markX, markY, 0, accent);
 
-  return pdf.save();
+  return new Uint8Array(await pdf.save());
 }
