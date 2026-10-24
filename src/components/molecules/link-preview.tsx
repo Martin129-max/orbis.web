@@ -4,13 +4,14 @@ import { X } from "lucide-react";
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import type { LinkPreview as Preview } from "@/lib/api";
-import { previewFor, youtubeVideo, type YouTubeVideo } from "@/lib/links";
+import { gifLink, previewFor, youtubeVideo, type YouTubeVideo } from "@/lib/links";
 import { useAuthStore } from "@/stores/auth-store";
 
 const external = { target: "_blank", rel: "noopener noreferrer nofollow" } as const;
 
 export function LinkPreview({ url, onRemove }: { url: string; onRemove?: () => void }) {
   const video = useMemo(() => youtubeVideo(url), [url]);
+  const gif = useMemo(() => gifLink(url), [url]);
   const [preview, setPreview] = useState<{ url: string; data: Preview | null } | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export function LinkPreview({ url, onRemove }: { url: string; onRemove?: () => v
       {video ? (
         <YouTubeEmbed link={url} video={video} preview={data} />
       ) : (
-        <LinkCard link={url} preview={data!} />
+        <LinkCard link={url} preview={data!} media={gif} />
       )}
       {onRemove && (
         <button
@@ -92,8 +93,42 @@ function YouTubeEmbed({
   );
 }
 
-function LinkCard({ link, preview }: { link: string; preview: Preview }) {
+function LinkCard({
+  link,
+  preview,
+  media = false,
+}: {
+  link: string;
+  preview: Preview;
+  media?: boolean;
+}) {
   const [imageFailed, setImageFailed] = useState(false);
+  const image = preview.image && !imageFailed && (
+    <span className="relative block aspect-[1.91/1] max-h-72 w-full bg-rail-item">
+      <Image
+        src={preview.image}
+        alt=""
+        fill
+        unoptimized
+        referrerPolicy="no-referrer"
+        onError={() => setImageFailed(true)}
+        className="object-cover"
+      />
+    </span>
+  );
+
+  if (media && image) {
+    return (
+      <a
+        href={link}
+        {...external}
+        aria-label={preview.title}
+        className="focus-ring block overflow-hidden rounded-xl border border-divider bg-rail-item/40 transition-opacity hover:opacity-90"
+      >
+        {image}
+      </a>
+    );
+  }
 
   return (
     <a
@@ -101,19 +136,7 @@ function LinkCard({ link, preview }: { link: string; preview: Preview }) {
       {...external}
       className="focus-ring flex flex-col overflow-hidden rounded-xl border border-divider bg-rail-item/40 transition-colors hover:bg-rail-item"
     >
-      {preview.image && !imageFailed && (
-        <span className="relative aspect-[1.91/1] max-h-72 w-full bg-rail-item">
-          <Image
-            src={preview.image}
-            alt=""
-            fill
-            unoptimized
-            referrerPolicy="no-referrer"
-            onError={() => setImageFailed(true)}
-            className="object-cover"
-          />
-        </span>
-      )}
+      {image}
       <span className="flex min-w-0 flex-col gap-0.5 px-3 py-2">
         <span className="truncate text-xs text-muted">{preview.siteName}</span>
         <span className="line-clamp-2 text-sm font-semibold">{preview.title}</span>

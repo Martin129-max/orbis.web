@@ -3,6 +3,7 @@
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Tooltip } from "antd";
+import { Link2 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -213,7 +214,7 @@ export function PostComposer({
     { label: "Inline code", glyph: "</>", active: state?.code, run: () => editor?.chain().focus().toggleCode().run() },
     { label: "Bulleted list", glyph: "≡", active: state?.bulletList, run: () => editor?.chain().focus().toggleBulletList().run() },
     { label: "Numbered list", glyph: "1.", active: state?.orderedList, run: () => editor?.chain().focus().toggleOrderedList().run() },
-    { label: state?.link ? "Remove link" : "Add link", glyph: "↗", active: state?.link, run: toggleLink },
+    { label: state?.link ? "Remove link" : "Add link", glyph: <Link2 size={14} aria-hidden />, active: state?.link, run: toggleLink },
   ];
 
   return (

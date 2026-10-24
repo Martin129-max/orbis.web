@@ -27,6 +27,13 @@ function seconds(value: string | null) {
   return Number(hours) * 3600 + Number(minutes) * 60 + Number(secs);
 }
 
+const GIF_HOSTS = /(^|\.)(giphy\.com|tenor\.com|klipy\.com)$/;
+
+export function gifLink(link: string) {
+  const url = new URL(link);
+  return GIF_HOSTS.test(url.hostname) || /\.gif$/i.test(url.pathname);
+}
+
 export function youtubeVideo(link: string): YouTubeVideo | null {
   const url = new URL(link);
   const host = url.hostname.replace(/^(www|m|music)\./, "");
