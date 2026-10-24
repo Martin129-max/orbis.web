@@ -7,8 +7,8 @@ import { searchPeople, type FriendUser } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
-import { MessageButton } from "./chat-dock";
 import { FriendAction } from "./member-list";
+import { PersonRow } from "./person-row";
 import { PanelHeading } from "./side-panel";
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
@@ -17,43 +17,6 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
       <h3 className="text-[11px] font-bold text-muted uppercase">{title}</h3>
       <ul className="flex flex-col">{children}</ul>
     </section>
-  );
-}
-
-function FriendRow({
-  user,
-  presence,
-  actions,
-  trailing,
-}: {
-  user: FriendUser;
-  presence?: "online" | "offline";
-  actions?: ReactNode;
-  trailing?: ReactNode;
-}) {
-  return (
-    <li className="group flex flex-col gap-2 py-2">
-      <div className="flex items-center gap-3">
-        <Atom.Avatar
-          size="sm"
-          label={displayName(user)}
-          src={user.avatarUrl}
-          seed={user.userId}
-          presence={presence}
-        />
-        <div className="flex min-w-0 flex-1 flex-col">
-          <Molecule.UserLink
-            username={user.username}
-            className="truncate text-[13px] font-semibold"
-          >
-            {displayName(user)}
-          </Molecule.UserLink>
-          <span className="truncate text-xs text-muted">@{user.username}</span>
-        </div>
-        {trailing}
-      </div>
-      {actions && <div className="flex gap-2 pl-11">{actions}</div>}
-    </li>
   );
 }
 
@@ -139,9 +102,9 @@ export function FriendsPanel() {
     requests > 0 && (
       <Section key="requests" title={`Requests / ${requests}`}>
         {incoming.map((user) => (
-          <FriendRow
+          <PersonRow
             key={user.userId}
-            user={user}
+            person={user}
             actions={
               <>
                 <Atom.Button
@@ -164,9 +127,9 @@ export function FriendsPanel() {
           />
         ))}
         {outgoing.map((user) => (
-          <FriendRow
+          <PersonRow
             key={user.userId}
-            user={user}
+            person={user}
             actions={
               <Atom.Button
                 size="small"
@@ -183,11 +146,10 @@ export function FriendsPanel() {
     online.length > 0 && (
       <Section key="online" title={`Online / ${online.length}`}>
         {online.map((friend) => (
-          <FriendRow
+          <PersonRow
             key={friend.userId}
-            user={friend}
+            person={friend}
             presence="online"
-            trailing={<MessageButton person={friend} compact />}
           />
         ))}
       </Section>
@@ -195,11 +157,10 @@ export function FriendsPanel() {
     offline.length > 0 && (
       <Section key="offline" title={`Offline / ${offline.length}`}>
         {offline.map((friend) => (
-          <FriendRow
+          <PersonRow
             key={friend.userId}
-            user={friend}
+            person={friend}
             presence="offline"
-            trailing={<MessageButton person={friend} compact />}
           />
         ))}
       </Section>

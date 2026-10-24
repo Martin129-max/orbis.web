@@ -5,6 +5,7 @@ import {
   BookOpen,
   Compass,
   FolderOpen,
+  Link2,
   MessageCircle,
   Moon,
   Send,
@@ -24,6 +25,7 @@ import { getPublicCommunities, type PublicCommunity } from "@/lib/api";
 const extras: { icon: ReactNode; label: string }[] = [
   { icon: <Compass size={18} />, label: "Explore public communities" },
   { icon: <SlidersHorizontal size={18} />, label: "Feed filters and compact view" },
+  { icon: <Link2 size={18} />, label: "Link previews and video embeds" },
   { icon: <FolderOpen size={18} />, label: "Folders for your communities" },
   { icon: <Moon size={18} />, label: "Light and dark themes" },
   { icon: <WifiOff size={18} />, label: "Appear offline anytime" },
@@ -129,7 +131,7 @@ const features = [
     icon: Send,
     label: "Messages",
     title: "Keep talking.",
-    text: "Chat one-on-one with anyone. New messages pop up as they arrive, and ones from strangers wait in your requests.",
+    text: "Chat one-on-one or start a group. New messages pop up as they arrive, and ones from strangers wait in your requests.",
   },
 ];
 

@@ -46,6 +46,7 @@ import { PostList } from "./post-list";
 import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
 import { PageTour } from "./onboarding";
+import { PersonRow } from "./person-row";
 
 const tabs = [
   { value: "posts", label: "Posts", icon: <Newspaper size={16} /> },
@@ -110,12 +111,14 @@ function ProfileHeader({
   online,
   collapsed,
   actions,
+  social,
   images,
 }: {
   profile: Profile;
   online: boolean;
   collapsed: boolean;
   actions: React.ReactNode;
+  social?: React.ReactNode;
   images?: ProfileImages;
 }) {
   const name = profile.name || profile.username;
@@ -176,6 +179,7 @@ function ProfileHeader({
               )}
             </p>
           )}
+          {!collapsed && social && <div className="mt-2 flex items-center gap-2">{social}</div>}
         </div>
       </div>
       <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
@@ -254,10 +258,10 @@ function Wall({
   );
   const name = displayName(profile);
 
-  async function handlePost(content: string) {
+  async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
-    feed.prepend(await createWallPost(token, profile.username, content));
+    feed.prepend(await createWallPost(token, profile.username, content, linkUrl));
   }
 
   return (
@@ -265,6 +269,7 @@ function Wall({
       {canPost && (
         <div data-tour="profile-wall">
           <PostComposer
+            linkPreview
             onPost={handlePost}
             placeholder={isSelf ? "What’s on your mind?" : `Write something to ${name}…`}
             target={
@@ -448,24 +453,11 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
         <div className="-mt-3 flex flex-col gap-2">
           <ul className="flex flex-col">
             {friends.slice(0, 8).map((friend) => (
-              <li key={friend.userId}>
-                <Link
-                  href={`/users/${friend.username}`}
-                  className={`focus-ring -mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-rail-item ${friend.online ? "" : "opacity-60"}`}
-                >
-                  <Atom.Avatar
-                    size="sm"
-                    label={displayName(friend)}
-                    src={friend.avatarUrl}
-                    seed={friend.userId}
-                    presence={friend.online ? "online" : "offline"}
-                  />
-                  <span className="flex min-w-0 flex-1 flex-col">
-                    <span className="truncate text-[13px] font-semibold">{displayName(friend)}</span>
-                    <span className="truncate text-xs text-muted">@{friend.username}</span>
-                  </span>
-                </Link>
-              </li>
+              <PersonRow
+                key={friend.userId}
+                person={friend}
+                presence={friend.online ? "online" : "offline"}
+              />
             ))}
           </ul>
           {friends.length > 8 && <SeeAll href={`${base}?tab=friends`}>See all friends</SeeAll>}
@@ -641,6 +633,19 @@ export function UserProfile({ username }: { username: string }) {
         online={online}
         collapsed={collapsed}
         images={images}
+        social={
+          !isSelf &&
+          me && (
+            <>
+              <MessageButton person={profile} />
+              <FriendAction
+                userId={profile.userId}
+                self={false}
+                buttonFor={displayName(profile)}
+              />
+            </>
+          )
+        }
         actions={
           <>
             {isSelf ? (
@@ -660,12 +665,6 @@ export function UserProfile({ username }: { username: string }) {
                       }
                     />
                   )}
-                  <MessageButton person={profile} />
-                  <FriendAction
-                    userId={profile.userId}
-                    self={false}
-                    removableName={displayName(profile)}
-                  />
                   <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
                 </>
               )

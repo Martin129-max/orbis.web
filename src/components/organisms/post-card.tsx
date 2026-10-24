@@ -59,10 +59,13 @@ export function PostCard({
         <ReportButton type="post" id={post.id} ownerId={post.author.id} className="-mr-1.5 self-start" />
       </header>
       {post.hiddenAt && <HiddenNotice />}
-      <div
-        className="rich-text"
-        dangerouslySetInnerHTML={{ __html: post.content }}
-      />
+      {post.content && (
+        <div
+          className="rich-text"
+          dangerouslySetInnerHTML={{ __html: post.content }}
+        />
+      )}
+      {post.linkUrl && <Molecule.LinkPreview url={post.linkUrl} />}
       <div className="flex items-center gap-4">
         <Molecule.LikeButton
           liked={post.liked}

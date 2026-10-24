@@ -14,7 +14,6 @@ import {
   type LibraryEntry,
   type MediaProfile as Profile,
 } from "@/lib/api";
-import { displayName } from "@/lib/display-name";
 import { statusLabel } from "@/lib/library";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
@@ -30,6 +29,7 @@ import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
 import { PageTour } from "./onboarding";
+import { PersonRow } from "./person-row";
 
 const detailLabels: Record<string, string> = {
   format: "Format",
@@ -300,15 +300,16 @@ function MediaWall({ profile }: { profile: Profile }) {
     { live: true, types: ["post"] },
   );
 
-  async function handlePost(content: string) {
+  async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
-    feed.prepend(await createMediaPost(token, profile.type, profile.sourceId, content));
+    feed.prepend(await createMediaPost(token, profile.type, profile.sourceId, content, linkUrl));
   }
 
   return (
     <section data-tour="media-wall" className="flex min-w-0 flex-col gap-3 md:col-start-1">
       <PostComposer
+        linkPreview
         onPost={handlePost}
         placeholder={`Share your thoughts on ${profile.title}…`}
         target={
@@ -346,20 +347,16 @@ function People({ profile }: { profile: Profile }) {
       ) : (
         <ul className="flex flex-col">
           {profile.members.map(({ user, status }) => (
-            <li key={user.id} className="flex items-center gap-3 py-2">
-              <Molecule.AuthorAvatar author={user} />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <Molecule.UserLink
-                  username={user.username}
-                  className="w-fit truncate text-[13px] font-semibold"
-                >
-                  {displayName(user)}
-                </Molecule.UserLink>
-                <span className="text-xs text-muted">
-                  {statusLabel(status, profile.type)}
-                </span>
-              </div>
-            </li>
+            <PersonRow
+              key={user.id}
+              person={{
+                userId: user.id,
+                username: user.username,
+                name: user.name,
+                avatarUrl: user.avatarUrl,
+              }}
+              subtitle={statusLabel(status, profile.type)}
+            />
           ))}
         </ul>
       )}

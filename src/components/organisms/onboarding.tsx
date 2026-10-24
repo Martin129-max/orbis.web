@@ -68,7 +68,7 @@ export const tourStops: TourStop[] = [
     placement: "bottom",
     title: "Messages",
     description:
-      "Chat one-on-one with anyone on Orbis. New messages pop up in the corner, and messages from people who aren’t your friends wait in Requests.",
+      "Chat one-on-one or in groups of up to 20. New messages pop up in the corner, and messages from people who aren’t your friends wait in Requests.",
   },
   {
     target: "add-friend",

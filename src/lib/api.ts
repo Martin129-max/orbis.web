@@ -140,6 +140,7 @@ export type Post = {
   id: number;
   communityId: number | null;
   content: string;
+  linkUrl: string | null;
   commentCount: number;
   likeCount: number;
   liked: boolean;
@@ -157,6 +158,7 @@ export type Thread = {
   communityId: number;
   title: string;
   content: string;
+  linkUrl: string | null;
   score: number;
   commentCount: number;
   myVote: number;
@@ -676,6 +678,7 @@ export async function createWallPost(
   token: string,
   username: string,
   content: string,
+  linkUrl?: string,
 ): Promise<Post> {
   const res = await api(`/users/${encodeURIComponent(username)}/posts`, {
     method: "POST",
@@ -683,7 +686,7 @@ export async function createWallPost(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, linkUrl }),
   });
 
   if (res.status === 400) throw new Error("Write something before posting.");
@@ -727,6 +730,7 @@ export async function createMediaPost(
   type: MediaType,
   sourceId: string,
   content: string,
+  linkUrl?: string,
 ): Promise<Post> {
   const res = await api(`/library/media/${type}/${encodeURIComponent(sourceId)}/posts`, {
     method: "POST",
@@ -734,7 +738,7 @@ export async function createMediaPost(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, linkUrl }),
   });
 
   if (res.status === 400) throw new Error("Write something before posting.");
@@ -746,6 +750,7 @@ export async function createPost(
   token: string,
   communityId: number,
   content: string,
+  linkUrl?: string,
 ): Promise<Post> {
   const res = await api(`/communities/${communityId}/posts`, {
     method: "POST",
@@ -753,7 +758,7 @@ export async function createPost(
       Authorization: `Bearer ${token}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({ content }),
+    body: JSON.stringify({ content, linkUrl }),
   });
 
   if (res.status === 400) throw new Error("Write something before posting.");
@@ -840,45 +845,82 @@ export async function removeFriend(token: string, userId: number): Promise<void>
   }
 }
 
+export type ChatPerson = FriendUser;
+
 export type ChatMessage = {
   id: number;
   senderId: number;
+  sender: ChatPerson;
   text: string;
+  system: boolean;
   sentAt: string;
 };
 
-export type Conversation = FriendUser & {
+export type Conversation = {
+  id: number;
+  isGroup: boolean;
+  name: string | null;
+  creatorId: number | null;
+  members: ChatPerson[];
   lastText: string;
   lastSenderId: number | null;
+  lastSystem: boolean;
   lastAt: string;
   unread: number;
   status: "accepted" | "request";
 };
 
+export type ChatMember = ChatPerson & { readAt: string | null };
+
 export type ChatHistory = {
   messages: ChatMessage[];
-  seenAt: string | null;
+  members: ChatMember[];
   hasMore: boolean;
 };
 
-export async function getConversations(token: string): Promise<Conversation[]> {
-  const res = await api("/messages", {
-    headers: { Authorization: `Bearer ${token}` },
+function messagesRequest(token: string, path: string, method = "POST", body?: unknown) {
+  return api(`/messages${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${token}`,
+      ...(body !== undefined && { "Content-Type": "application/json" }),
+    },
+    ...(body !== undefined && { body: JSON.stringify(body) }),
   });
+}
+
+export async function getConversations(token: string): Promise<Conversation[]> {
+  const res = await messagesRequest(token, "", "GET");
 
   if (!res.ok) throw new Error("Could not load your messages.");
   return res.json();
 }
 
+export async function openDirectChat(token: string, userId: number): Promise<Conversation> {
+  const res = await messagesRequest(token, `/direct/${userId}`);
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not open this chat."));
+  return res.json();
+}
+
+export async function createGroupChat(
+  token: string,
+  userIds: number[],
+  name?: string,
+): Promise<Conversation> {
+  const res = await messagesRequest(token, "/groups", "POST", { userIds, name });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not create the group."));
+  return res.json();
+}
+
 export async function getChatHistory(
   token: string,
-  userId: number,
+  id: number,
   before?: number,
 ): Promise<ChatHistory> {
   const query = before === undefined ? "" : `?before=${before}`;
-  const res = await api(`/messages/${userId}${query}`, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const res = await messagesRequest(token, `/${id}${query}`, "GET");
 
   if (!res.ok) throw new Error("Could not load this chat.");
   return res.json();
@@ -886,17 +928,10 @@ export async function getChatHistory(
 
 export async function sendMessage(
   token: string,
-  userId: number,
+  id: number,
   text: string,
 ): Promise<ChatMessage> {
-  const res = await api(`/messages/${userId}`, {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ text }),
-  });
+  const res = await messagesRequest(token, `/${id}`, "POST", { text });
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Could not send your message."));
@@ -904,42 +939,50 @@ export async function sendMessage(
   return res.json();
 }
 
-export async function markMessagesRead(
-  token: string,
-  userId: number,
-): Promise<void> {
-  await api(`/messages/${userId}/read`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function markMessagesRead(token: string, id: number): Promise<void> {
+  await messagesRequest(token, `/${id}/read`);
 }
 
-export async function acceptMessageRequest(
-  token: string,
-  userId: number,
-): Promise<void> {
-  const res = await api(`/messages/${userId}/accept`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function acceptMessageRequest(token: string, id: number): Promise<void> {
+  const res = await messagesRequest(token, `/${id}/accept`);
 
   if (!res.ok && res.status !== 404) {
     throw new Error("Could not accept the request. Please try again.");
   }
 }
 
-export async function declineMessageRequest(
-  token: string,
-  userId: number,
-): Promise<void> {
-  const res = await api(`/messages/${userId}`, {
-    method: "DELETE",
-    headers: { Authorization: `Bearer ${token}` },
-  });
+export async function declineMessageRequest(token: string, id: number): Promise<void> {
+  const res = await messagesRequest(token, `/${id}`, "DELETE");
 
   if (!res.ok && res.status !== 404) {
     throw new Error("Could not delete the request. Please try again.");
   }
+}
+
+export async function renameGroupChat(token: string, id: number, name: string): Promise<void> {
+  const res = await messagesRequest(token, `/${id}`, "PATCH", { name });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not rename the group."));
+}
+
+export async function addGroupMembers(
+  token: string,
+  id: number,
+  userIds: number[],
+): Promise<void> {
+  const res = await messagesRequest(token, `/${id}/members`, "POST", { userIds });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not add those people."));
+}
+
+export async function removeGroupMember(
+  token: string,
+  id: number,
+  userId: number,
+): Promise<void> {
+  const res = await messagesRequest(token, `/${id}/members/${userId}`, "DELETE");
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not update the group."));
 }
 
 export async function getThreads(
@@ -960,7 +1003,7 @@ export async function getThreads(
 export async function createThread(
   token: string,
   communityId: number,
-  thread: { title: string; content: string },
+  thread: { title: string; content: string; linkUrl?: string },
 ): Promise<Thread> {
   const res = await api(`/communities/${communityId}/threads`, {
     method: "POST",
@@ -1695,6 +1738,24 @@ export async function removeFromLibrary(token: string, id: number): Promise<void
 }
 
 export type PublicCommunity = Omit<CommunitySearchResult, "joined">;
+
+export type LinkPreview = {
+  url: string;
+  title: string;
+  description: string | null;
+  image: string | null;
+  siteName: string;
+};
+
+export async function getLinkPreview(token: string, url: string): Promise<LinkPreview | null> {
+  const res = await api(withQuery("/links/preview", { url }), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 404) return null;
+  if (!res.ok) throw new Error("Could not load the link preview.");
+  return res.json();
+}
 
 export async function getPublicCommunities(): Promise<PublicCommunity[]> {
   const res = await api("/public/communities", { cache: "no-store" });

@@ -263,7 +263,7 @@ function SortableFolder({
               fillOpacity={0.35}
             />
           ) : (
-            <span className="grid grid-cols-2 gap-0.5 sm:gap-1">
+            <span className="grid grid-cols-[repeat(2,0.875rem)] grid-rows-[repeat(2,0.875rem)] gap-0.5 sm:grid-cols-[repeat(2,18px)] sm:grid-rows-[repeat(2,18px)] sm:gap-1">
               {communities.slice(0, 4).map((community) => (
                 <span
                   key={community.id}

@@ -1,13 +1,58 @@
 "use client";
 
-import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Tooltip } from "antd";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
+import { previewFor, TEXT_LINK, trimLink, webUrl, youtubeVideo } from "@/lib/links";
+import { useAuthStore } from "@/stores/auth-store";
+
+const PREVIEW_DELAY_MS = 500;
+const BARE_LINK = /^(?:https?:\/\/|www\.)\S+$/i;
+
+type FoundLink = { url: string; from: number; to: number; removable: boolean };
+
+function findFirstLink(editor: Editor) {
+  let found = null as FoundLink | null;
+  editor.state.doc.descendants((node, pos) => {
+    if (found) return false;
+    if (!node.isText || !node.text) return true;
+
+    const mark = node.marks.find(({ type }) => type.name === "link");
+    if (mark) {
+      const url = webUrl(String(mark.attrs.href ?? ""));
+      if (url) {
+        found = { url, from: pos, to: pos + node.text.length, removable: BARE_LINK.test(node.text.trim()) };
+      }
+      return !found;
+    }
+
+    const match = node.text.match(TEXT_LINK);
+    if (match?.index !== undefined) {
+      const raw = trimLink(match[0]);
+      const url = webUrl(raw);
+      if (url) {
+        found = { url, from: pos + match.index, to: pos + match.index + raw.length, removable: true };
+      }
+    }
+    return !found;
+  });
+  return found;
+}
+
+function removeLinkText(editor: Editor, { from, to }: FoundLink) {
+  const { doc } = editor.state;
+  const after = doc.textBetween(to, Math.min(to + 1, doc.content.size));
+  const before = doc.textBetween(Math.max(from - 1, 0), from);
+  const range =
+    after === " " ? { from, to: to + 1 } : before === " " ? { from: from - 1, to } : { from, to };
+  editor.chain().deleteRange(range).run();
+}
 
 type PostComposerProps = {
-  onPost: (content: string) => Promise<void>;
+  onPost: (content: string, linkUrl?: string) => Promise<void>;
   target?: ReactNode;
   placeholder?: string;
   submitLabel?: string;
@@ -15,6 +60,7 @@ type PostComposerProps = {
   autoFocus?: boolean;
   onCancel?: () => void;
   onPosted?: () => void;
+  linkPreview?: boolean;
 };
 
 export function PostComposer({
@@ -26,9 +72,15 @@ export function PostComposer({
   autoFocus = false,
   onCancel,
   onPosted,
+  linkPreview = false,
 }: PostComposerProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [attachment, setAttachment] = useState<string | null>(null);
+  const attached = useRef<string | null>(null);
+  const dismissed = useRef(false);
+  const checking = useRef<string | null>(null);
+  const rejected = useRef(new Set<string>());
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -68,17 +120,67 @@ export function PostComposer({
       bulletList: editor?.isActive("bulletList") ?? false,
       orderedList: editor?.isActive("orderedList") ?? false,
       link: editor?.isActive("link") ?? false,
+      html: linkPreview ? (editor?.getHTML() ?? "") : "",
     }),
   });
+  const html = state?.html ?? "";
+
+  useEffect(() => {
+    if (!linkPreview || !editor || attachment) return;
+
+    const timer = setTimeout(async () => {
+      if (editor.isEmpty) {
+        dismissed.current = false;
+        return;
+      }
+      const { token } = useAuthStore.getState();
+      const found = findFirstLink(editor);
+      if (
+        !found ||
+        !token ||
+        dismissed.current ||
+        rejected.current.has(found.url) ||
+        checking.current === found.url
+      ) {
+        return;
+      }
+
+      checking.current = found.url;
+      const embeddable =
+        youtubeVideo(found.url) !== null || (await previewFor(token, found.url)) !== null;
+      checking.current = null;
+      if (!embeddable) {
+        rejected.current.add(found.url);
+        return;
+      }
+
+      const current = findFirstLink(editor);
+      if (dismissed.current || attached.current || current?.url !== found.url) return;
+      attached.current = found.url;
+      setAttachment(found.url);
+      if (current.removable) removeLinkText(editor, current);
+    }, PREVIEW_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [linkPreview, editor, attachment, html]);
+
+  function removeAttachment() {
+    attached.current = null;
+    dismissed.current = true;
+    setAttachment(null);
+  }
 
   async function submit() {
-    if (!editor || (editor.isEmpty && !allowEmpty) || pending) return;
+    if (!editor || (editor.isEmpty && !allowEmpty && !attachment) || pending) return;
     setError(null);
     setPending(true);
 
     try {
-      await onPost(editor.getHTML());
+      await onPost(editor.getHTML(), attachment ?? undefined);
       editor.commands.clearContent(true);
+      attached.current = null;
+      dismissed.current = false;
+      rejected.current.clear();
+      setAttachment(null);
       setPending(false);
       onPosted?.();
     } catch (e) {
@@ -134,6 +236,7 @@ export function PostComposer({
           )}
           <EditorContent editor={editor} />
         </div>
+        {attachment && <Molecule.LinkPreview url={attachment} onRemove={removeAttachment} />}
         <hr className="border-divider" />
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div
@@ -170,7 +273,7 @@ export function PostComposer({
               size="small"
               onClick={submit}
               loading={pending}
-              disabled={state?.empty && !allowEmpty}
+              disabled={state?.empty && !allowEmpty && !attachment}
             >
               {submitLabel}
             </Atom.Button>

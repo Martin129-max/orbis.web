@@ -103,6 +103,11 @@ export function ThreadCard({
             dangerouslySetInnerHTML={{ __html: thread.content }}
           />
         )}
+        {thread.linkUrl && (
+          <div onClick={(event) => event.stopPropagation()}>
+            <Molecule.LinkPreview url={thread.linkUrl} />
+          </div>
+        )}
         <div onClick={(event) => event.stopPropagation()}>
           <Molecule.CommentsButton count={thread.commentCount} onClick={onOpen} />
         </div>

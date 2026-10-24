@@ -18,17 +18,17 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
     { live: true, types: ["post", "activity"] },
   );
 
-  async function handlePost(content: string) {
+  async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
 
-    feed.prepend(await createPost(token, communityId, content));
+    feed.prepend(await createPost(token, communityId, content, linkUrl));
   }
 
   return (
     <div className="flex flex-col gap-3">
       <div data-tour="community-composer">
-        <PostComposer onPost={handlePost} />
+        <PostComposer linkPreview onPost={handlePost} />
       </div>
       <PostList
         feed={feed}

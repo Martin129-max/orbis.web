@@ -10,11 +10,16 @@ export const feedContentTypes: FeedContentType[] = [
 
 export type FeedViewMode = "card" | "compact";
 
+export function shownTypes(types: FeedContentType[], excluded: FeedContentType[]) {
+  const shown = types.filter((type) => !excluded.includes(type));
+  return shown.length > 0 ? shown : types;
+}
+
 type FeedPreferences = {
   view: FeedViewMode;
   setView: (view: FeedViewMode) => void;
   excludedTypes: FeedContentType[];
-  toggleType: (type: FeedContentType) => void;
+  setShown: (types: FeedContentType[], shown: FeedContentType[]) => void;
   showAll: () => void;
 };
 
@@ -24,11 +29,11 @@ export const useFeedPreferencesStore = create<FeedPreferences>()(
       view: "card",
       setView: (view) => set({ view }),
       excludedTypes: [],
-      toggleType: (type) =>
+      setShown: (types, shown) =>
         set((state) => ({
-          excludedTypes: state.excludedTypes.includes(type)
-            ? state.excludedTypes.filter((value) => value !== type)
-            : [...state.excludedTypes, type],
+          excludedTypes: feedContentTypes.filter((type) =>
+            types.includes(type) ? !shown.includes(type) : state.excludedTypes.includes(type),
+          ),
         })),
       showAll: () => set({ excludedTypes: [] }),
     }),

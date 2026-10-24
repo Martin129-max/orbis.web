@@ -52,6 +52,7 @@ function ThreadDetail({
             dangerouslySetInnerHTML={{ __html: thread.content }}
           />
         )}
+        {thread.linkUrl && <Molecule.LinkPreview url={thread.linkUrl} />}
       </div>
     </article>
   );

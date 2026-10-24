@@ -3,6 +3,7 @@ import Image from "next/image";
 const tones = ["bg-accent-soft", "bg-rail-item"];
 
 const sizes = {
+  "2xs": "h-3.5 w-3.5 text-[8px]",
   xs: "h-5 w-5 text-[11px]",
   sm: "h-8 w-8 text-[17.6px]",
   md: "h-9 w-9 text-[19.8px]",

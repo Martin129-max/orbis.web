@@ -22,12 +22,12 @@ export function HomeFeed() {
     communities.find((community) => community.id === selectedId) ??
     communities[0];
 
-  async function handlePost(content: string) {
+  async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
     if (!target) throw new Error("Choose a community to post in.");
 
-    const post = await createPost(token, target.id, content);
+    const post = await createPost(token, target.id, content, linkUrl);
     feed.prepend(post);
     useOnboardingStore.getState().refresh();
   }
@@ -39,6 +39,7 @@ export function HomeFeed() {
       {target && (
         <div data-tour="composer">
         <PostComposer
+          linkPreview
           onPost={handlePost}
           placeholder="Share an update with your community…"
           target={

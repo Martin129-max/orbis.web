@@ -44,18 +44,13 @@ export function usePaged<T extends FeedEntry>(
   }: { live?: boolean; types?: FeedContentType[] } = {},
 ): Paged<T> {
   const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
-  const filterKey = excluded.slice().sort().join(",");
-  const allHidden = types.every((type) => excluded.includes(type));
+  const remaining = types.filter((type) => !excluded.includes(type));
+  const visibleTypes = remaining.length > 0 ? remaining : types;
+  const filterKey = types.filter((type) => !visibleTypes.includes(type)).join(",");
   const fetchPage = useCallback<FetchPage<T>>(
-    (token, cursor) => {
-      if (allHidden) return Promise.resolve({ items: [], nextCursor: null });
-      return fetch(
-        token,
-        cursor,
-        filterKey ? (filterKey.split(",") as FeedContentType[]) : [],
-      );
-    },
-    [fetch, filterKey, allHidden],
+    (token, cursor) =>
+      fetch(token, cursor, filterKey ? (filterKey.split(",") as FeedContentType[]) : []),
+    [fetch, filterKey],
   );
   const [source, setSource] = useState<FetchPage<T> | null>(null);
   const activeFetcher = useRef(fetchPage);
@@ -150,7 +145,7 @@ export function usePaged<T extends FeedEntry>(
 
   const shown = new Set(items?.map(itemKey));
   const fresh = incoming.filter(
-    (item) => !excluded.includes(item.type) && !shown.has(itemKey(item)),
+    (item) => visibleTypes.includes(item.type) && !shown.has(itemKey(item)),
   );
 
   function loadMore() {
@@ -181,10 +176,10 @@ export function usePaged<T extends FeedEntry>(
 
   return {
     contentTypes: types,
-    filtered: types.some((type) => excluded.includes(type)),
+    filtered: filterKey !== "",
     items:
       source === fetchPage
-        ? (items?.filter((item) => !excluded.includes(item.type)) ?? null)
+        ? (items?.filter((item) => visibleTypes.includes(item.type)) ?? null)
         : null,
     failed: source === fetchPage && failed,
     retry: () => {
@@ -196,7 +191,7 @@ export function usePaged<T extends FeedEntry>(
     moreFailed: source === fetchPage && moreFailed,
     loadMore,
     prepend: (item) => {
-      if (!excluded.includes(item.type))
+      if (visibleTypes.includes(item.type))
         setItems((current) => [item, ...(current ?? [])]);
     },
     newCount: source === fetchPage ? fresh.length : 0,

@@ -1,7 +1,7 @@
 "use client";
 
 import { Popconfirm } from "antd";
-import { Check, Clock, UserRound } from "lucide-react";
+import { Check, Clock, UserPlus, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -10,16 +10,18 @@ import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
 
+const profileButton = "h-6 shrink-0 gap-1 border-transparent px-2 text-xs hover:opacity-90";
+
 export function FriendAction({
   userId,
   self,
   addLabel = "Add",
-  removableName,
+  buttonFor,
 }: {
   userId: number;
   self: boolean;
   addLabel?: string;
-  removableName?: string;
+  buttonFor?: string;
 }) {
   const status = useFriendsStore((state) =>
     self
@@ -39,23 +41,35 @@ export function FriendAction({
 
   if (status === "unknown") return null;
 
-  if (status === "friend" && removableName) {
+  if (buttonFor && (status === "friend" || status === "sent")) {
+    const friend = status === "friend";
     return (
       <Popconfirm
-        title={`Remove ${removableName} from your friends?`}
-        okText="Remove"
+        title={
+          friend
+            ? `Remove ${buttonFor} from your friends?`
+            : `Cancel your friend request to ${buttonFor}?`
+        }
+        okText={friend ? "Remove" : "Cancel request"}
+        cancelText={friend ? "Cancel" : "Keep"}
         okButtonProps={{ danger: true }}
         onConfirm={() => removeFriend(userId).catch(() => null)}
       >
-        <button
-          type="button"
-          aria-label={`Friends with ${removableName}. Remove friend`}
-          className="focus-ring shrink-0 cursor-pointer rounded-full"
+        <Atom.Button
+          size="small"
+          variant="secondary"
+          icon={friend ? <Check size={12} /> : <Clock size={12} />}
+          aria-label={
+            friend
+              ? `Friends with ${buttonFor}. Remove friend`
+              : `Friend request sent to ${buttonFor}. Cancel request`
+          }
+          className={`${profileButton} ${
+            friend ? "bg-success text-success-foreground" : "bg-rail-item text-foreground"
+          }`}
         >
-          <Atom.Pill tone="success" size="md" icon={<Check size={12} />}>
-            Friends
-          </Atom.Pill>
-        </button>
+          {friend ? "Friends" : "Requested"}
+        </Atom.Button>
       </Popconfirm>
     );
   }
@@ -82,10 +96,19 @@ export function FriendAction({
       variant={status === "incoming" ? "primary" : "secondary"}
       title={title}
       aria-label={title}
+      icon={buttonFor ? <UserPlus size={12} /> : undefined}
       onClick={() => addFriend({ userId }).catch(() => null)}
-      className="shrink-0"
+      className={
+        buttonFor
+          ? `${profileButton} ${
+              status === "incoming"
+                ? "bg-success text-success-foreground"
+                : "bg-info text-info-foreground"
+            }`
+          : "shrink-0"
+      }
     >
-      {status === "incoming" ? "Accept" : addLabel}
+      {status === "incoming" ? "Accept" : buttonFor ? "Add friend" : addLabel}
     </Atom.Button>
   );
 }

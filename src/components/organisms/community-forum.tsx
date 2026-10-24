@@ -69,12 +69,12 @@ function NewThreadModal({
         ?.name,
   );
 
-  async function handlePost(content: string) {
+  async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
     if (!token) throw new Error("Please log in again.");
     if (!title.trim()) throw new Error("Add a title for your thread.");
 
-    await createThread(token, communityId, { title: title.trim(), content });
+    await createThread(token, communityId, { title: title.trim(), content, linkUrl });
   }
 
   function close() {
@@ -110,6 +110,7 @@ function NewThreadModal({
           <p className="text-[13px] font-semibold">Body (optional)</p>
           <PostComposer
             allowEmpty
+            linkPreview
             onCancel={close}
             placeholder="Add details or context…"
             submitLabel="Post thread"

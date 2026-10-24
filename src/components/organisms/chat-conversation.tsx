@@ -11,10 +11,12 @@ import {
   type KeyboardEvent,
 } from "react";
 import * as Atom from "@atom";
+import type { ChatMember, ChatMessage, Conversation as Chat } from "@/lib/api";
+import { chatTitle } from "@/lib/chat";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { emitTyping } from "@/stores/friends-store";
-import { markViewing, useMessagesStore, type ChatPerson } from "@/stores/messages-store";
+import { markViewing, useMessagesStore } from "@/stores/messages-store";
 
 const TYPING_IDLE_MS = 3000;
 const TYPING_REPEAT_MS = 2000;
@@ -42,16 +44,26 @@ function formatTime(sentAt: string) {
   });
 }
 
-export function ChatConversation({
-  person,
-  active,
-}: {
-  person: ChatPerson;
-  active: boolean;
-}) {
+function readersByMessage(messages: ChatMessage[], members: ChatMember[]) {
+  const readers = new Map<number, ChatMember[]>();
+  for (const member of members) {
+    if (!member.readAt) continue;
+    const readAt = new Date(member.readAt).getTime();
+    const last = messages.findLast(
+      (message) => !message.system && new Date(message.sentAt).getTime() <= readAt,
+    );
+    if (last) readers.set(last.id, [...(readers.get(last.id) ?? []), member]);
+  }
+  return readers;
+}
+
+export function ChatConversation({ id, active }: { id: number; active: boolean }) {
   const me = useAuthStore((state) => state.profile?.userId);
   const loaded = useMessagesStore((state) => state.loaded);
   const failed = useMessagesStore((state) => state.failed);
+  const conversation = useMessagesStore((state) =>
+    state.conversations.find((current) => current.id === id),
+  );
 
   if (!me || !loaded) {
     return (
@@ -60,31 +72,30 @@ export function ChatConversation({
       </div>
     );
   }
-  if (failed) {
+  if (failed || !conversation) {
     return (
       <p className="m-auto max-w-[240px] p-4 text-center text-[13px] text-muted">
-        Messages aren’t available right now. Try again in a little while.
+        {failed
+          ? "Messages aren’t available right now. Try again in a little while."
+          : "This chat isn’t available anymore."}
       </p>
     );
   }
-  return <Conversation key={person.userId} me={me} person={person} active={active} />;
+  return <Conversation key={id} me={me} conversation={conversation} active={active} />;
 }
 
 function Conversation({
   me,
-  person,
+  conversation,
   active,
 }: {
   me: number;
-  person: ChatPerson;
+  conversation: Chat;
   active: boolean;
 }) {
-  const { userId } = person;
-  const history = useMessagesStore((state) => state.histories[userId]);
-  const conversation = useMessagesStore((state) =>
-    state.conversations.find((current) => current.userId === userId),
-  );
-  const typing = useMessagesStore((state) => state.typing[userId] ?? false);
+  const { id, isGroup, members, unread } = conversation;
+  const history = useMessagesStore((state) => state.histories[id]);
+  const typers = useMessagesStore((state) => state.typing[id]);
   const loadHistory = useMessagesStore((state) => state.loadHistory);
   const loadOlder = useMessagesStore((state) => state.loadOlder);
   const markRead = useMessagesStore((state) => state.markRead);
@@ -93,25 +104,26 @@ function Conversation({
   const content = useRef<HTMLDivElement>(null);
   const atBottom = useRef(true);
   const restoreFrom = useRef<number | null>(null);
-  const name = displayName(person);
   const viewing = active && visible;
-  const unread = conversation?.unread ?? 0;
-  const request = conversation?.status === "request";
+  const request = conversation.status === "request";
   const messages = history?.messages;
   const missing = history === undefined;
+  const typing = members.filter(({ userId }) => typers?.includes(userId));
+  const nameOf = (userId: number, fallback: string) =>
+    userId === me ? "You" : fallback;
 
   useEffect(() => {
-    if (missing) loadHistory(userId);
-  }, [missing, loadHistory, userId]);
+    if (missing) loadHistory(id);
+  }, [missing, loadHistory, id]);
 
   useEffect(() => {
-    markViewing(userId, viewing);
-    return () => markViewing(userId, false);
-  }, [userId, viewing]);
+    markViewing(id, viewing);
+    return () => markViewing(id, false);
+  }, [id, viewing]);
 
   useEffect(() => {
-    if (viewing && unread > 0) markRead(userId);
-  }, [viewing, unread, markRead, userId]);
+    if (viewing && unread > 0) markRead(id);
+  }, [viewing, unread, markRead, id]);
 
   useEffect(() => {
     const element = list.current!;
@@ -137,16 +149,19 @@ function Conversation({
     atBottom.current = element.scrollHeight - element.scrollTop - element.clientHeight < 48;
     if (element.scrollTop < 48 && history?.hasMore && !history.loadingOlder) {
       restoreFrom.current = element.scrollHeight - element.scrollTop;
-      loadOlder(userId);
+      loadOlder(id);
     }
   }
 
-  const latest = messages?.at(-1);
-  const seen =
-    latest !== undefined &&
-    latest.senderId === me &&
-    history?.seenAt != null &&
-    new Date(history.seenAt) >= new Date(latest.sentAt);
+  const chatted = messages?.filter((message) => !message.system) ?? [];
+  const latest = chatted.at(-1);
+  const otherReadAt = history?.members[0]?.readAt;
+  const seenDirect =
+    !isGroup &&
+    latest?.senderId === me &&
+    otherReadAt != null &&
+    new Date(otherReadAt) >= new Date(latest.sentAt);
+  const readers = isGroup && messages && history ? readersByMessage(messages, history.members) : null;
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -162,10 +177,17 @@ function Conversation({
             <p className="m-auto text-center text-[13px] text-muted">
               Couldn’t load this chat. Try again in a little while.
             </p>
-          ) : messages.length === 0 ? (
+          ) : !isGroup && messages.length === 0 ? (
             <div className="m-auto flex flex-col items-center gap-2 py-6 text-center">
-              <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="lg" />
-              <p className="font-semibold">{name}</p>
+              {members[0] && (
+                <Atom.Avatar
+                  label={displayName(members[0])}
+                  src={members[0].avatarUrl}
+                  seed={members[0].userId}
+                  size="lg"
+                />
+              )}
+              <p className="font-semibold">{chatTitle(conversation)}</p>
               <p className="text-[13px] text-muted">Say hi to start the conversation.</p>
             </div>
           ) : (
@@ -173,29 +195,54 @@ function Conversation({
               {messages.map((message, index) => {
                 const previous = messages[index - 1];
                 const next = messages[index + 1];
-                const mine = message.senderId === me;
                 const sentAt = new Date(message.sentAt).getTime();
                 const showTime =
                   !previous || sentAt - new Date(previous.sentAt).getTime() > TIME_GAP_MS;
+
+                if (message.system) {
+                  return (
+                    <li key={message.id} className="flex flex-col">
+                      {showTime && <TimeLabel sentAt={message.sentAt} />}
+                      <p className="my-1.5 text-center text-xs text-muted">
+                        {nameOf(message.senderId, displayName(message.sender))} {message.text}
+                      </p>
+                    </li>
+                  );
+                }
+
+                const mine = message.senderId === me;
+                const sameAsPrevious =
+                  previous &&
+                  !previous.system &&
+                  previous.senderId === message.senderId &&
+                  !showTime;
                 const endsGroup =
                   !next ||
+                  next.system ||
                   next.senderId !== message.senderId ||
                   new Date(next.sentAt).getTime() - sentAt > TIME_GAP_MS;
+                const seenBy = readers?.get(message.id);
+                const senderName = displayName(message.sender);
+
                 return (
                   <li key={message.id} className="flex flex-col">
-                    {showTime && (
-                      <p className="my-2 text-center text-[11px] text-muted">
-                        {formatTime(message.sentAt)}
-                      </p>
+                    {showTime && <TimeLabel sentAt={message.sentAt} />}
+                    {isGroup && !mine && !sameAsPrevious && (
+                      <p className="mt-1 mb-0.5 pl-9 text-[11px] text-muted">{senderName}</p>
                     )}
                     <div
                       className={`flex items-end gap-2 ${mine ? "justify-end" : ""} ${
-                        endsGroup ? "mb-1.5" : ""
+                        endsGroup && !seenBy?.length ? "mb-1.5" : ""
                       }`}
                     >
                       {!mine && (
-                        <span className={`w-5 shrink-0 ${endsGroup ? "" : "invisible"}`}>
-                          <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="xs" />
+                        <span className={`w-7 shrink-0 ${endsGroup ? "" : "invisible"}`}>
+                          <Atom.Avatar
+                            label={senderName}
+                            src={message.sender.avatarUrl}
+                            seed={message.senderId}
+                            size="xs"
+                          />
                         </span>
                       )}
                       <p
@@ -207,14 +254,46 @@ function Conversation({
                         {message.text}
                       </p>
                     </div>
+                    {seenBy && seenBy.length > 0 && (
+                      <div
+                        className="mt-0.5 mb-1.5 flex justify-end gap-0.5"
+                        aria-label={`Seen by ${seenBy.map(displayName).join(", ")}`}
+                      >
+                        {seenBy.map((reader) => (
+                          <span key={reader.userId} title={displayName(reader)}>
+                            <Atom.Avatar
+                              label={displayName(reader)}
+                              src={reader.avatarUrl}
+                              seed={reader.userId}
+                              size="2xs"
+                            />
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </li>
                 );
               })}
-              {seen && <li className="-mt-0.5 mb-1 text-right text-[11px] text-muted">Seen</li>}
-              {typing && (
-                <li className="flex items-end gap-2" aria-label={`${name} is typing`}>
-                  <span className="w-5 shrink-0">
-                    <Atom.Avatar label={name} src={person.avatarUrl} seed={userId} size="xs" />
+              {seenDirect && (
+                <li className="-mt-0.5 mb-1 text-right text-[11px] text-muted">Seen</li>
+              )}
+              {typing.length > 0 && (
+                <li
+                  className="flex items-end gap-2"
+                  aria-label={`${typing.map(displayName).join(", ")} ${
+                    typing.length === 1 ? "is" : "are"
+                  } typing`}
+                >
+                  <span className="flex w-7 shrink-0 -space-x-2">
+                    {typing.slice(0, 2).map((typer) => (
+                      <Atom.Avatar
+                        key={typer.userId}
+                        label={displayName(typer)}
+                        src={typer.avatarUrl}
+                        seed={typer.userId}
+                        size="xs"
+                      />
+                    ))}
                   </span>
                   <span className="flex gap-1 rounded-2xl bg-rail-item px-3 py-2.5">
                     {[0, 150, 300].map((delay) => (
@@ -231,27 +310,32 @@ function Conversation({
           )}
         </div>
       </div>
-      {request && <RequestBanner person={person} />}
-      <Composer person={person} />
+      {request && <RequestBanner conversation={conversation} />}
+      <Composer conversation={conversation} />
     </div>
   );
 }
 
-function RequestBanner({ person }: { person: ChatPerson }) {
+function TimeLabel({ sentAt }: { sentAt: string }) {
+  return <p className="my-2 text-center text-[11px] text-muted">{formatTime(sentAt)}</p>;
+}
+
+function RequestBanner({ conversation }: { conversation: Chat }) {
   const acceptRequest = useMessagesStore((state) => state.acceptRequest);
   const declineRequest = useMessagesStore((state) => state.declineRequest);
   const [error, setError] = useState<string | null>(null);
 
-  function run(action: (userId: number) => Promise<void>) {
+  function run(action: (id: number) => Promise<void>) {
     setError(null);
-    action(person.userId).catch((cause: Error) => setError(cause.message));
+    action(conversation.id).catch((cause: Error) => setError(cause.message));
   }
 
   return (
     <div className="flex flex-col gap-2 border-t border-divider px-3 py-3 text-[13px]">
       <p className="text-muted">
-        {displayName(person)} isn’t one of your friends. Accept to move this chat into your chats,
-        or delete the request.
+        {conversation.isGroup
+          ? "You were added to this group by someone who isn’t one of your friends. Accept to join the chat, or delete it."
+          : `${chatTitle(conversation)} isn’t one of your friends. Accept to move this chat into your chats, or delete the request.`}
       </p>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       <div className="flex gap-2">
@@ -266,8 +350,8 @@ function RequestBanner({ person }: { person: ChatPerson }) {
   );
 }
 
-function Composer({ person }: { person: ChatPerson }) {
-  const { userId } = person;
+function Composer({ conversation }: { conversation: Chat }) {
+  const { id } = conversation;
   const send = useMessagesStore((state) => state.send);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -278,7 +362,7 @@ function Composer({ person }: { person: ChatPerson }) {
     clearTimeout(idle.current);
     if (lastTyping.current === 0) return;
     lastTyping.current = 0;
-    emitTyping(userId, false);
+    emitTyping(id, false);
   }
 
   useEffect(() => {
@@ -286,9 +370,9 @@ function Composer({ person }: { person: ChatPerson }) {
     const timer = idle;
     return () => {
       clearTimeout(timer.current);
-      if (sent.current !== 0) emitTyping(userId, false);
+      if (sent.current !== 0) emitTyping(id, false);
     };
-  }, [userId]);
+  }, [id]);
 
   function handleChange(value: string) {
     setText(value);
@@ -298,7 +382,7 @@ function Composer({ person }: { person: ChatPerson }) {
     }
     if (Date.now() - lastTyping.current > TYPING_REPEAT_MS) {
       lastTyping.current = Date.now();
-      emitTyping(userId, true);
+      emitTyping(id, true);
     }
     clearTimeout(idle.current);
     idle.current = setTimeout(stopTyping, TYPING_IDLE_MS);
@@ -313,7 +397,7 @@ function Composer({ person }: { person: ChatPerson }) {
     setError(null);
     stopTyping();
     try {
-      await send(userId, message);
+      await send(id, message);
     } catch (cause) {
       setText((current) => current || message);
       setError((cause as Error).message);
@@ -337,7 +421,7 @@ function Composer({ person }: { person: ChatPerson }) {
           onKeyDown={handleKeyDown}
           rows={1}
           maxLength={MESSAGE_MAX_LENGTH}
-          aria-label={`Message ${displayName(person)}`}
+          aria-label={`Message ${chatTitle(conversation)}`}
           placeholder="Aa"
           className="focus-ring max-h-32 min-h-9 flex-1 resize-none rounded-2xl bg-rail-item px-3 py-2 text-sm [field-sizing:content] placeholder:text-muted"
         />

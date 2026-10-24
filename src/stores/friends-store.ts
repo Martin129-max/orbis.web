@@ -28,8 +28,8 @@ const empty = {
 
 let socket: Socket | null = null;
 
-export function emitTyping(userId: number, typing: boolean) {
-  socket?.emit("typing", { userId, typing });
+export function emitTyping(conversationId: number, typing: boolean) {
+  socket?.emit("typing", { conversationId, typing });
 }
 
 export const useFriendsStore = create<FriendsState>()((set, get) => ({
@@ -49,11 +49,11 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     );
     socket.on("friends:changed", () => get().fetchFriends());
     socket.on("message", (event) => useMessagesStore.getState().receive(event));
-    socket.on("conversation:changed", (event) =>
-      useMessagesStore.getState().changed(event),
+    socket.on("conversation", ({ conversation }) =>
+      useMessagesStore.getState().upsert(conversation),
     );
-    socket.on("conversation:removed", ({ userId }: { userId: number }) =>
-      useMessagesStore.getState().removed(userId),
+    socket.on("conversation:removed", ({ id }: { id: number }) =>
+      useMessagesStore.getState().removed(id),
     );
     socket.on("messages:read", (event) => useMessagesStore.getState().seen(event));
     socket.on("typing", (event) => useMessagesStore.getState().setTyping(event));

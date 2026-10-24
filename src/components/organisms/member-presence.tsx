@@ -1,12 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import { getMembers, type Member } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
+import { PersonRow } from "./person-row";
 import { PanelHeading } from "./side-panel";
 
 function PresenceGroup({
@@ -29,36 +29,19 @@ function PresenceGroup({
         <p className="py-2 text-xs text-muted">{emptyText}</p>
       ) : (
         <ul className="flex flex-col">
-          {members.map((member) => {
-            const label = member.nickname ?? displayName(member);
-            return (
-              <li key={member.userId}>
-                <Link
-                  href={`/users/${member.username}`}
-                  className={`focus-ring -mx-2 flex items-center gap-3 rounded-md px-2 py-2 transition-colors hover:bg-rail-item ${online ? "" : "opacity-60"}`}
-                >
-                <Atom.Avatar
-                  size="sm"
-                  label={label}
-                  src={member.avatarUrl}
-                  seed={member.userId}
-                  presence={online ? "online" : "offline"}
-                />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="flex min-w-0 items-center gap-1.5">
-                    <span className="truncate text-[13px] font-semibold">{label}</span>
-                    {(member.isOwner || member.isAdmin) && (
-                      <Atom.RoleBadge role={member.isOwner ? "owner" : "admin"} />
-                    )}
-                  </span>
-                  <span className="truncate text-xs text-muted">
-                    @{member.username}
-                  </span>
-                </div>
-                </Link>
-              </li>
-            );
-          })}
+          {members.map((member) => (
+            <PersonRow
+              key={member.userId}
+              person={member}
+              label={member.nickname ?? displayName(member)}
+              presence={online ? "online" : "offline"}
+              badge={
+                (member.isOwner || member.isAdmin) && (
+                  <Atom.RoleBadge role={member.isOwner ? "owner" : "admin"} />
+                )
+              }
+            />
+          ))}
         </ul>
       )}
     </section>

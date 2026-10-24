@@ -54,6 +54,7 @@ import { ticketNumber } from "@/lib/ticket";
 import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
+import { PersonRow } from "./person-row";
 import { PanelHeading } from "./side-panel";
 
 export const categoryStyle: Record<
@@ -1170,27 +1171,18 @@ export function AdminsPanel({ admins }: { admins: ReportAdmin[] | null }) {
             </h3>
             <ul className="flex flex-col">
               {members.map((admin) => (
-                <li key={admin.id} className="flex items-center gap-3 py-2">
-                  <Atom.Avatar
-                    size="sm"
-                    label={displayName(admin)}
-                    src={admin.avatarUrl}
-                    seed={admin.id}
-                    presence={online ? "online" : "offline"}
-                  />
-                  <div className="flex min-w-0 flex-1 flex-col">
-                    <span className="flex min-w-0 items-center gap-1.5">
-                      <Molecule.UserLink username={admin.username} className="truncate text-[13px] font-semibold">
-                        {displayName(admin)}
-                      </Molecule.UserLink>
-                      <Atom.RoleBadge role={admin.isHeadAdmin ? "head-admin" : "site-admin"} />
-                    </span>
-                    <span className="truncate text-xs text-muted">
-                      @{admin.username}
-                      {admin.id === myId ? " · you" : ""}
-                    </span>
-                  </div>
-                </li>
+                <PersonRow
+                  key={admin.id}
+                  person={{
+                    userId: admin.id,
+                    username: admin.username,
+                    name: admin.name,
+                    avatarUrl: admin.avatarUrl,
+                  }}
+                  presence={online ? "online" : "offline"}
+                  badge={<Atom.RoleBadge role={admin.isHeadAdmin ? "head-admin" : "site-admin"} />}
+                  subtitle={`@${admin.username}${admin.id === myId ? " · you" : ""}`}
+                />
               ))}
             </ul>
           </section>

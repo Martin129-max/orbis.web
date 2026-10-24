@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 import * as Atom from "@atom";
 import type { FeedContentType } from "@/lib/api";
-import { useFeedPreferencesStore } from "@/stores/feed-preferences-store";
+import { shownTypes, useFeedPreferencesStore } from "@/stores/feed-preferences-store";
 
 const labels = {
   post: "Posts",
@@ -20,8 +20,17 @@ const labels = {
 
 export function FeedFilters({ types }: { types: FeedContentType[] }) {
   const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
-  const toggle = useFeedPreferencesStore((state) => state.toggleType);
+  const setShown = useFeedPreferencesStore((state) => state.setShown);
   const showAll = useFeedPreferencesStore((state) => state.showAll);
+  const shown = shownTypes(types, excluded);
+  const filtered = shown.length < types.length;
+
+  function toggle(type: FeedContentType) {
+    setShown(
+      types,
+      shown.includes(type) ? shown.filter((value) => value !== type) : [...shown, type],
+    );
+  }
   const view = useFeedPreferencesStore((state) => state.view);
   const setView = useFeedPreferencesStore((state) => state.setView);
 
@@ -56,45 +65,53 @@ export function FeedFilters({ types }: { types: FeedContentType[] }) {
           <ChevronDown size={12} aria-hidden />
         </Atom.Button>
       </Dropdown>
-      <div className="ml-auto flex items-center gap-2">
-        {excluded.length > 0 && (
-          <Atom.Button size="small" variant="secondary" icon={<RotateCcw size={14} />} onClick={showAll}>
-            Reset Filters
-          </Atom.Button>
-        )}
-        <Popover
-          trigger="click"
-          placement="bottomRight"
-          content={
-            <div
-              className="flex min-w-48 flex-col gap-3"
-              aria-label="Feed content types"
+      {types.length > 1 && (
+        <div className="ml-auto flex items-center gap-2">
+          {filtered && (
+            <Atom.Button
+              size="small"
+              variant="secondary"
+              icon={<RotateCcw size={14} />}
+              onClick={showAll}
             >
-              <p className="text-[13px] font-semibold">Show in feeds</p>
-              {types.map((type) => (
-                <Checkbox
-                  key={type}
-                  checked={!excluded.includes(type)}
-                  onChange={() => toggle(type)}
-                >
-                  {labels[type]}
-                </Checkbox>
-              ))}
-              <p className="max-w-56 text-xs text-muted">
-                Your choices apply across feeds on this browser.
-              </p>
-            </div>
-          }
-        >
-          <Atom.Button
-            size="small"
-            variant="secondary"
-            icon={<SlidersHorizontal size={14} />}
+              Reset Filters
+            </Atom.Button>
+          )}
+          <Popover
+            trigger="click"
+            placement="bottomRight"
+            content={
+              <div
+                className="flex min-w-48 flex-col gap-3"
+                aria-label="Feed content types"
+              >
+                <p className="text-[13px] font-semibold">Show in feeds</p>
+                {types.map((type) => (
+                  <Checkbox
+                    key={type}
+                    checked={shown.includes(type)}
+                    disabled={shown.length === 1 && shown.includes(type)}
+                    onChange={() => toggle(type)}
+                  >
+                    {labels[type]}
+                  </Checkbox>
+                ))}
+                <p className="max-w-56 text-xs text-muted">
+                  Your choices apply across feeds on this browser.
+                </p>
+              </div>
+            }
           >
-            Filter feed
-          </Atom.Button>
-        </Popover>
-      </div>
+            <Atom.Button
+              size="small"
+              variant="secondary"
+              icon={<SlidersHorizontal size={14} />}
+            >
+              Filter feed
+            </Atom.Button>
+          </Popover>
+        </div>
+      )}
     </div>
   );
 }

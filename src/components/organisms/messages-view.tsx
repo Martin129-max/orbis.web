@@ -1,36 +1,41 @@
 "use client";
 
-import { Segmented } from "antd";
-import { ArrowLeft, MessageCircle } from "lucide-react";
-import Link from "next/link";
+import { Segmented, Tooltip } from "antd";
+import { ArrowLeft, MessageCircle, UsersRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
-import { displayName } from "@/lib/display-name";
+import * as Molecule from "@molecule";
+import type { Conversation } from "@/lib/api";
+import { chatPreview, chatTitle } from "@/lib/chat";
 import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
-import type { Conversation } from "@/lib/api";
-import { personOf, useMessagesStore } from "@/stores/messages-store";
+import { useMessagesStore } from "@/stores/messages-store";
+import { AddPeopleButton, ChatHeading, GroupSettingsButton } from "./chat-dock";
 import { ChatConversation } from "./chat-conversation";
+import { NewGroupModal } from "./group-chat-modals";
 
 type Folder = "chats" | "requests";
 
 export function MessagesView() {
   const conversations = useMessagesStore((state) => state.conversations);
   const loaded = useMessagesStore((state) => state.loaded);
-  const selected = useMessagesStore((state) => state.selected);
+  const selectedId = useMessagesStore((state) => state.selected);
   const select = useMessagesStore((state) => state.select);
   const setPageOpen = useMessagesStore((state) => state.setPageOpen);
   const [folder, setFolder] = useState<Folder>("chats");
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     setPageOpen(true);
     return () => setPageOpen(false);
   }, [setPageOpen]);
 
-  const requests = conversations.filter(({ status }) => status === "request");
-  const shown = folder === "requests" ? requests : conversations.filter(({ status }) => status === "accepted");
-  const selectedName = selected && displayName(selected);
+  const listed = conversations.filter(({ lastSenderId }) => lastSenderId !== null);
+  const requests = listed.filter(({ status }) => status === "request");
+  const shown =
+    folder === "requests" ? requests : listed.filter(({ status }) => status === "accepted");
+  const selected = conversations.find(({ id }) => id === selectedId);
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1">
@@ -39,19 +44,32 @@ export function MessagesView() {
           selected ? "hidden" : "flex"
         }`}
       >
-        <div className="shrink-0 px-4 pt-4 pb-3">
-          <Segmented<Folder>
-            block
-            value={folder}
-            onChange={setFolder}
-            options={[
-              { value: "chats", label: "Chats" },
-              {
-                value: "requests",
-                label: requests.length > 0 ? `Requests (${requests.length})` : "Requests",
-              },
-            ]}
-          />
+        <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-3">
+          <div className="min-w-0 flex-1">
+            <Segmented<Folder>
+              block
+              value={folder}
+              onChange={setFolder}
+              options={[
+                { value: "chats", label: "Chats" },
+                {
+                  value: "requests",
+                  label: requests.length > 0 ? `Requests (${requests.length})` : "Requests",
+                },
+              ]}
+            />
+          </div>
+          <Tooltip title="New group">
+            <button
+              type="button"
+              aria-label="New group"
+              data-tour="new-group"
+              onClick={() => setCreating(true)}
+              className="icon-button"
+            >
+              <UsersRound size={18} />
+            </button>
+          </Tooltip>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 pb-4">
           {!loaded ? (
@@ -62,16 +80,16 @@ export function MessagesView() {
             <p className="px-2 py-6 text-center text-[13px] text-muted">
               {folder === "requests"
                 ? "No message requests. Messages from people who aren’t your friends land here first."
-                : "No chats yet. Message someone from their profile or your friends list."}
+                : "No chats yet. Message someone from their profile or your friends list, or start a group."}
             </p>
           ) : (
             <ul className="flex flex-col gap-0.5">
               {shown.map((conversation) => (
                 <ConversationRow
-                  key={conversation.userId}
+                  key={conversation.id}
                   conversation={conversation}
-                  active={selected?.userId === conversation.userId}
-                  onSelect={() => select(personOf(conversation))}
+                  active={selectedId === conversation.id}
+                  onSelect={() => select(conversation.id)}
                 />
               ))}
             </ul>
@@ -81,7 +99,7 @@ export function MessagesView() {
       <div className={`min-h-0 min-w-0 flex-1 flex-col ${selected ? "flex" : "hidden sm:flex"}`}>
         {selected ? (
           <>
-            <div className="flex shrink-0 items-center gap-3 border-b border-divider px-4 py-3">
+            <div className="flex shrink-0 items-center gap-2 border-b border-divider px-4 py-2">
               <button
                 type="button"
                 aria-label="Back to chats"
@@ -90,23 +108,12 @@ export function MessagesView() {
               >
                 <ArrowLeft size={18} />
               </button>
-              <Link
-                href={`/users/${selected.username}`}
-                className="focus-ring flex min-w-0 items-center gap-3 rounded-lg"
-              >
-                <Atom.Avatar
-                  label={selectedName!}
-                  src={selected.avatarUrl}
-                  seed={selected.userId}
-                  size="md"
-                />
-                <span className="flex min-w-0 flex-col">
-                  <span className="truncate text-sm font-semibold">{selectedName}</span>
-                  <span className="truncate text-xs text-muted">@{selected.username}</span>
-                </span>
-              </Link>
+              <ChatHeading conversation={selected} size="md" subtitle />
+              <span className="flex-1" />
+              <AddPeopleButton conversation={selected} />
+              <GroupSettingsButton conversation={selected} />
             </div>
-            <ChatConversation person={selected} active />
+            <ChatConversation id={selected.id} active />
           </>
         ) : (
           <div className="m-auto flex flex-col items-center gap-3 p-6 text-center text-muted">
@@ -115,6 +122,14 @@ export function MessagesView() {
           </div>
         )}
       </div>
+      <NewGroupModal
+        open={creating}
+        onClose={() => setCreating(false)}
+        onCreated={(id) => {
+          setFolder("chats");
+          select(id);
+        }}
+      />
     </div>
   );
 }
@@ -129,10 +144,10 @@ function ConversationRow({
   onSelect: () => void;
 }) {
   const me = useAuthStore((state) => state.profile?.userId);
+  const direct = conversation.isGroup ? undefined : conversation.members[0];
   const online = useFriendsStore(
-    (state) => state.friends.find(({ userId }) => userId === conversation.userId)?.online,
+    (state) => state.friends.find(({ userId }) => userId === direct?.userId)?.online,
   );
-  const name = displayName(conversation);
   const unread = conversation.unread > 0;
 
   return (
@@ -145,22 +160,16 @@ function ConversationRow({
           active ? "bg-rail-item" : "hover:bg-rail-item/60"
         }`}
       >
-        <Atom.Avatar
-          label={name}
-          src={conversation.avatarUrl}
-          seed={conversation.userId}
-          size="md"
+        <Molecule.ConversationAvatar
+          conversation={conversation}
           presence={online === undefined ? undefined : online ? "online" : "offline"}
         />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className={`truncate text-sm ${unread ? "font-bold" : "font-semibold"}`}>
-            {name}
+            {chatTitle(conversation)}
           </span>
           <span className={`flex gap-1 text-xs ${unread ? "font-semibold text-foreground" : "text-muted"}`}>
-            <span className="truncate">
-              {conversation.lastSenderId === me ? "You: " : ""}
-              {conversation.lastText}
-            </span>
+            <span className="truncate">{chatPreview(conversation, me)}</span>
             <span aria-hidden>·</span>
             <span className="shrink-0">{timeAgo(conversation.lastAt)}</span>
           </span>
