@@ -182,10 +182,16 @@ export default function CommunityPage() {
               )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
-              <Organism.InviteButton
-                key={`invite-${current.community.id}`}
-                community={current.community}
-              />
+              <div className="flex gap-2">
+                <Organism.InviteButton
+                  key={`invite-${current.community.id}`}
+                  community={current.community}
+                />
+                <Organism.InviteCardButton
+                  key={`card-${current.community.id}`}
+                  community={current.community}
+                />
+              </div>
               <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}

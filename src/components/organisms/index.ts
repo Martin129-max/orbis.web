@@ -1,6 +1,7 @@
 export * from "./appear-offline-switch";
 export * from "./activity-card";
 export * from "./auth-form";
+export * from "./invite-card-button";
 export * from "./chat-conversation";
 export * from "./chat-dock";
 export * from "./comment-section";

@@ -301,8 +301,14 @@ export const pageTours = {
     {
       target: "invite",
       placement: "left",
-      title: "Invite people",
+      title: "Invite",
       description: "Make an invite link to bring friends in. You can set when it expires and how many times it works.",
+    },
+    {
+      target: "invite-card",
+      placement: "bottom",
+      title: "Invite Card",
+      description: "Print a card with the community’s pictures and a permanent QR code that opens it when scanned.",
     },
     {
       target: "community-settings",

@@ -143,7 +143,7 @@ export function InviteButton({ community }: { community: Community }) {
   const [error, setError] = useState<string | null>(null);
   const now = useNow(open);
 
-  const active = invites?.filter((invite) => inviteActive(invite, now)) ?? null;
+  const active = invites?.filter((invite) => !invite.permanent && inviteActive(invite, now)) ?? null;
   const invite = active?.find((item) => item.code === current) ?? null;
 
   async function generate() {
@@ -177,7 +177,7 @@ export function InviteButton({ community }: { community: Community }) {
       const list = await getInvites(token, community.id);
       setInvites(list);
       const mine = list.find(
-        (item) => item.creator.id === myId && inviteActive(item, Date.now()),
+        (item) => !item.permanent && item.creator.id === myId && inviteActive(item, Date.now()),
       );
       if (mine) setCurrent(mine.code);
       else await generate();
@@ -215,13 +215,12 @@ export function InviteButton({ community }: { community: Community }) {
   return (
     <>
       <Atom.Button
-        block
         data-tour="invite"
         icon={<UserPlus size={16} />}
         onClick={handleOpen}
-        className="shrink-0"
+        className="flex-1"
       >
-        Invite people
+        Invite
       </Atom.Button>
       <Modal
         open={open}
@@ -233,7 +232,7 @@ export function InviteButton({ community }: { community: Community }) {
       >
         <div className="flex flex-col gap-6">
           <Molecule.ModalHeader
-            eyebrow="Invite people"
+            eyebrow="Invite"
             title={`Invite friends to ${community.name}.`}
             description="Send this link to anyone you want to join. They’ll be asked to log in or sign up first if they don’t have an account."
           />

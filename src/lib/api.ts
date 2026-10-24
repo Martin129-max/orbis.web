@@ -559,6 +559,8 @@ export type Invite = {
   maxUses: number | null;
   uses: number;
   expiresAt: string | null;
+  permanent: boolean;
+  disabledAt: string | null;
   createdAt: string;
   creator: InviteCreator;
 };
@@ -592,6 +594,38 @@ export async function createInvite(
   });
 
   if (!res.ok) throw new Error("Could not create an invite link. Please try again.");
+  return res.json();
+}
+
+export async function createPermanentInvite(
+  token: string,
+  communityId: number,
+): Promise<Invite> {
+  const res = await api(`/communities/${communityId}/invites/permanent`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Couldn’t create the permanent QR. Please try again.");
+  return res.json();
+}
+
+export async function setInviteEnabled(
+  token: string,
+  communityId: number,
+  code: string,
+  enabled: boolean,
+): Promise<Invite> {
+  const res = await api(`/communities/${communityId}/invites/${encodeURIComponent(code)}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ enabled }),
+  });
+
+  if (!res.ok) throw new Error("Couldn’t update this QR. Please try again.");
   return res.json();
 }
 

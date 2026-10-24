@@ -23,6 +23,10 @@ export function inviteUrl(code: string) {
   return `${window.location.origin}/invite/${code}`;
 }
 
+export function qrUrl(code: string) {
+  return `${window.location.origin}/qr/${code}`;
+}
+
 export function inviteExpiry(invite: Pick<Invite, "expiresAt">) {
   return invite.expiresAt ? `Expires ${timeAgo(invite.expiresAt)}` : "Never expires";
 }
@@ -33,8 +37,12 @@ export function inviteUses(invite: Pick<Invite, "uses" | "maxUses">) {
     : `${invite.uses} ${invite.uses === 1 ? "use" : "uses"}`;
 }
 
-export function inviteActive(invite: Pick<Invite, "expiresAt" | "uses" | "maxUses">, now: number) {
+export function inviteActive(
+  invite: Pick<Invite, "expiresAt" | "uses" | "maxUses" | "disabledAt">,
+  now: number,
+) {
   return (
+    !invite.disabledAt &&
     (!invite.expiresAt || new Date(invite.expiresAt).getTime() > now) &&
     (invite.maxUses === null || invite.uses < invite.maxUses)
   );
