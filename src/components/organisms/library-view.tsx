@@ -16,6 +16,7 @@ import {
   MoreHorizontal,
   Pause,
   Plus,
+  Search,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -419,6 +420,112 @@ export function LibraryCard({
   );
 }
 
+const LIBRARY_SEARCH_ID = "library-search";
+const SEARCH_SUGGESTIONS = ["Frieren", "One Piece", "Chainsaw Man", "Stardew Valley", "Berserk"];
+
+const emptyCopy = {
+  all: {
+    title: "Nothing here yet.",
+    description: "There’s nothing of this type in your library yet. Search for a title to add it.",
+  },
+  current: {
+    title: "Nothing in progress.",
+    description: "Start something from your plan list, or find something new to dive into.",
+  },
+  completed: {
+    title: "Nothing finished yet.",
+    description: "Everything you complete lands here, so you can look back on it.",
+  },
+  on_hold: {
+    title: "Nothing on hold.",
+    description: "Pause a title to park it here until you’re ready to pick it back up.",
+  },
+  dropped: {
+    title: "Nothing dropped.",
+    description: "Titles you stop watching, reading, or playing end up here.",
+  },
+  planned: {
+    title: "Nothing planned.",
+    description: "Save titles you want to get to next, and they’ll wait for you here.",
+  },
+} satisfies Record<StatusFilter, { title: string; description: string }>;
+
+let focusSearchOnMount = false;
+
+export function focusLibrarySearch() {
+  document.getElementById(LIBRARY_SEARCH_ID)?.focus();
+}
+
+export function openLibrarySearch() {
+  focusSearchOnMount = true;
+}
+
+export function LibraryEmptyState({
+  entries,
+  onSearch,
+  onSuggest,
+  compact = false,
+}: {
+  entries: LibraryEntry[];
+  onSearch: () => void;
+  onSuggest?: (query: string) => void;
+  compact?: boolean;
+}) {
+  const status = useLibraryPreferencesStore((state) => state.status);
+  const type = useLibraryPreferencesStore((state) => state.type);
+  const setStatus = useLibraryPreferencesStore((state) => state.setStatus);
+  const empty = entries.length === 0;
+  const planned = filterLibrary(entries, type, "planned").length;
+  const { title, description } = empty
+    ? {
+        title: "Your library is empty.",
+        description:
+          "Track the anime, manga, and games you love, and share your progress with your communities. Search for a title to add it.",
+      }
+    : emptyCopy[status];
+  const Icon = statusIcons[empty ? "all" : status];
+
+  return (
+    <div
+      className={`flex flex-col items-center gap-3 text-center ${compact ? "m-auto px-4" : "py-8"}`}
+    >
+      <span
+        aria-hidden
+        className="flex h-12 w-12 items-center justify-center rounded-full bg-rail-item text-muted"
+      >
+        <Icon size={22} strokeWidth={1.75} />
+      </span>
+      <h3 className={`font-display font-bold ${compact ? "text-xl" : "text-2xl"}`}>{title}</h3>
+      <p className="max-w-sm text-[13px] text-muted">{description}</p>
+      <div className="mt-1 flex flex-wrap items-center justify-center gap-2">
+        <Atom.Button size="small" icon={<Search size={14} />} onClick={onSearch}>
+          Search titles
+        </Atom.Button>
+        {status === "current" && planned > 0 && (
+          <Atom.Button size="small" variant="secondary" onClick={() => setStatus("planned")}>
+            Pick from your plan list · {planned}
+          </Atom.Button>
+        )}
+      </div>
+      {empty && onSuggest && (
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-1.5">
+          <span className="text-xs text-muted">Try</span>
+          {SEARCH_SUGGESTIONS.map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              onClick={() => onSuggest(suggestion)}
+              className="focus-ring cursor-pointer rounded-full border border-divider px-2.5 py-1 text-xs font-semibold transition-colors hover:border-accent hover:text-accent"
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function filterLibrary(
   entries: LibraryEntry[],
   type: TypeFilter,
@@ -657,10 +764,12 @@ function LibraryShelf({
   entries,
   onChange,
   onRemove,
+  onSuggest,
 }: {
   entries: LibraryEntry[];
   onChange: (entry: LibraryEntry) => void;
   onRemove: (id: number) => void;
+  onSuggest: (query: string) => void;
 }) {
   const status = useLibraryPreferencesStore((state) => state.status);
   const type = useLibraryPreferencesStore((state) => state.type);
@@ -675,11 +784,11 @@ function LibraryShelf({
       className={`flex flex-col gap-4 ${boxed ? "rounded-lg border border-divider bg-surface p-5" : ""}`}
     >
       {shown.length === 0 ? (
-        <p className="py-6 text-center text-sm text-muted">
-          {entries.length === 0
-            ? "Nothing here yet. Search above to add your first anime, manga, or game."
-            : "Nothing here yet."}
-        </p>
+        <LibraryEmptyState
+          entries={entries}
+          onSearch={focusLibrarySearch}
+          onSuggest={onSuggest}
+        />
       ) : view === "list" ? (
         <ListView entries={shown} onChange={onChange} onRemove={onRemove} />
       ) : (
@@ -698,15 +807,29 @@ function LibraryShelf({
 function LibrarySearch({
   entries,
   onAdded,
+  query,
+  onQueryChange,
 }: {
   entries: LibraryEntry[];
   onAdded: (entry: LibraryEntry) => void;
+  query?: string;
+  onQueryChange?: (query: string) => void;
 }) {
+  useEffect(() => {
+    const input = document.getElementById(LIBRARY_SEARCH_ID);
+    if (!focusSearchOnMount || !input) return;
+    focusSearchOnMount = false;
+    input.focus();
+  }, []);
+
   return (
     <div data-tour="library-search">
       <Molecule.HeaderSearch
+        id={LIBRARY_SEARCH_ID}
         label="Search anime, manga, and games"
         placeholder="Search anime, manga, and games…"
+        query={query}
+        onQueryChange={onQueryChange}
         renderResults={(search) => (
           <SearchResults query={search} entries={entries} onAdded={onAdded} />
         )}
@@ -715,9 +838,32 @@ function LibrarySearch({
   );
 }
 
+export function TitleSearch({ onAdded }: { onAdded: (entry: LibraryEntry) => void }) {
+  const [entries, setEntries] = useState<LibraryEntry[]>([]);
+
+  useEffect(() => {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    getLibrary(token)
+      .then(setEntries)
+      .catch(() => null);
+  }, []);
+
+  return (
+    <LibrarySearch
+      entries={entries}
+      onAdded={(entry) => {
+        setEntries((current) => [entry, ...current]);
+        onAdded(entry);
+      }}
+    />
+  );
+}
+
 export function LibraryView() {
   const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
+  const [query, setQuery] = useState("");
 
   useEffect(() => {
     useLibraryPreferencesStore.persist.rehydrate();
@@ -742,6 +888,8 @@ export function LibraryView() {
           <LibrarySearch
             entries={entries ?? []}
             onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
+            query={query}
+            onQueryChange={setQuery}
           />
         }
       >
@@ -758,6 +906,10 @@ export function LibraryView() {
             ) : (
               <LibraryShelf
                 entries={entries}
+                onSuggest={(suggestion) => {
+                  setQuery(suggestion);
+                  focusLibrarySearch();
+                }}
                 onChange={replace}
                 onRemove={(id) =>
                   setEntries((current) => current?.filter((item) => item.id !== id) ?? null)

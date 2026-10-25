@@ -24,7 +24,9 @@ import {
   ProgressControl,
   StatusBadge,
   StatusSelect,
+  TitleSearch,
 } from "./library-view";
+import { PageSearch } from "./page-search";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { PanelHeading, SidePanel } from "./side-panel";
@@ -414,6 +416,15 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
+      <PageSearch>
+        <TitleSearch
+          onAdded={(entry) => {
+            if (entry.mediaType === profile.type && entry.sourceId === profile.sourceId) {
+              setEntry(entry);
+            }
+          }}
+        />
+      </PageSearch>
       <PageTour name="media" />
       <MediaHeader profile={profile} collapsed={collapsed} onChange={setEntry} />
       <MetaBar profile={profile} />

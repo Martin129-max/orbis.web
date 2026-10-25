@@ -8,12 +8,20 @@ export function HeaderSearch({
   label,
   placeholder,
   renderResults,
+  id,
+  query: controlledQuery,
+  onQueryChange,
 }: {
   label: string;
   placeholder: string;
   renderResults: (search: string) => ReactNode;
+  id?: string;
+  query?: string;
+  onQueryChange?: (query: string) => void;
 }) {
-  const [query, setQuery] = useState("");
+  const [ownQuery, setOwnQuery] = useState("");
+  const query = controlledQuery ?? ownQuery;
+  const setQuery = onQueryChange ?? setOwnQuery;
   const [search, setSearch] = useState("");
   const [open, setOpen] = useState(false);
   const container = useRef<HTMLDivElement>(null);
@@ -48,6 +56,7 @@ export function HeaderSearch({
       }}
     >
       <Atom.Input
+        id={id}
         aria-label={label}
         aria-expanded={expanded}
         className={expanded ? "relative z-[51]" : undefined}

@@ -1,15 +1,20 @@
 "use client";
 
 import { ChevronUp } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import * as Atom from "@atom";
 import { getLibrary, type LibraryEntry } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useLayoutStore } from "@/stores/layout-store";
 import { useLibraryPreferencesStore } from "@/stores/library-preferences-store";
-import { filterLibrary, LibraryCard, LibraryTabs } from "./library-view";
+import {
+  filterLibrary,
+  LibraryCard,
+  LibraryEmptyState,
+  LibraryTabs,
+  openLibrarySearch,
+} from "./library-view";
 
 const PANEL_HEIGHT = 352;
 const PULL_DISTANCE = 40;
@@ -31,6 +36,7 @@ function DockShelf({
 }) {
   const status = useLibraryPreferencesStore((state) => state.status);
   const type = useLibraryPreferencesStore((state) => state.type);
+  const router = useRouter();
 
   if (!entries) {
     return (
@@ -44,14 +50,14 @@ function DockShelf({
 
   if (shown.length === 0) {
     return (
-      <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
-        <p className="text-sm text-muted">Nothing here yet.</p>
-        {entries.length === 0 && (
-          <Link href="/library" className="focus-ring rounded-sm text-sm text-accent hover:underline">
-            Add your first anime, manga, or game
-          </Link>
-        )}
-      </div>
+      <LibraryEmptyState
+        compact
+        entries={entries}
+        onSearch={() => {
+          openLibrarySearch();
+          router.push("/library");
+        }}
+      />
     );
   }
 

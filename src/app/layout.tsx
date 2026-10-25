@@ -1,6 +1,7 @@
 import { Analytics } from "@vercel/analytics/next";
 import type { Metadata } from "next";
 import { Barlow_Condensed, Inter } from "next/font/google";
+import { TopLoadingBar } from "@/components/organisms/top-loading-bar";
 import { authScript } from "@/stores/auth-store";
 import { themeScript } from "@/stores/theme-store";
 import { AntdProvider } from "./antd-provider";
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         />
       </head>
       <body className="min-h-full flex flex-col">
+        <TopLoadingBar />
         <AntdProvider>{children}</AntdProvider>
         <Analytics />
       </body>
