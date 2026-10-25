@@ -21,6 +21,7 @@ type CommunityState = {
   ) => Promise<Community>;
   deleteCommunity: (communityId: number) => Promise<void>;
   updateLayout: (layout: RailItem[]) => Promise<void>;
+  setLive: (communityId: number, live: boolean) => void;
 };
 
 function withJoined(state: CommunityState, community: Community) {
@@ -33,6 +34,12 @@ function withJoined(state: CommunityState, community: Community) {
 }
 
 export const useCommunityStore = create<CommunityState>()((set, get) => ({
+  setLive: (communityId, live) =>
+    set((state) => ({
+      communities: state.communities.map((community) =>
+        community.id === communityId ? { ...community, live } : community,
+      ),
+    })),
   communities: [],
   layout: [],
   fetchCommunities: async () => {

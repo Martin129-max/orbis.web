@@ -1,11 +1,13 @@
 "use client";
 
+import { Switch } from "antd";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import {
   disconnectOAuth,
   getOAuthConnections,
   getOAuthProviders,
+  setShowLive,
   type OAuthConnections as Connections,
   type OAuthProvider,
 } from "@/lib/api";
@@ -42,6 +44,28 @@ export function OAuthConnections() {
     }
   }
 
+  async function toggleLive(showLive: boolean) {
+    const { token } = useAuthStore.getState();
+    if (!token || !data) return;
+    setError(null);
+    const before = data;
+    setData({
+      ...data,
+      connections: {
+        ...data.connections,
+        connections: data.connections.connections.map((item) =>
+          item.provider === "twitch" ? { ...item, showLive } : item,
+        ),
+      },
+    });
+    try {
+      await setShowLive(token, "twitch", showLive);
+    } catch (e) {
+      setData(before);
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    }
+  }
+
   async function disconnect(provider: OAuthProvider) {
     const { token } = useAuthStore.getState();
     if (!token) return;
@@ -72,7 +96,8 @@ export function OAuthConnections() {
           const locked = Boolean(connection) && onlyWay;
 
           return (
-            <li key={provider} className="flex items-center gap-3 py-3">
+            <li key={provider} className="flex flex-col gap-3 py-3">
+              <div className="flex items-center gap-3">
               <span
                 aria-hidden
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${oauthColors[provider]}`}
@@ -108,6 +133,13 @@ export function OAuthConnections() {
                 >
                   Connect
                 </Atom.Button>
+              )}
+              </div>
+              {provider === "twitch" && connection && (
+                <label className="flex items-center justify-between gap-3 pl-11 text-xs">
+                  <span className="text-muted">Show when I’m live on Twitch</span>
+                  <Switch size="small" checked={connection.showLive} onChange={toggleLive} />
+                </label>
               )}
             </li>
           );

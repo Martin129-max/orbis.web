@@ -8,9 +8,9 @@ export type SignupDetails = { email: string; username: string; password: string 
 
 export type Credentials = LoginCredentials | SignupDetails;
 
-export type PresenceStatus = "online" | "idle" | "busy" | "offline";
+export type PresenceStatus = "online" | "idle" | "busy" | "streaming" | "offline";
 
-export type UserStatus = Exclude<PresenceStatus, "offline">;
+export type UserStatus = Exclude<PresenceStatus, "offline" | "streaming">;
 
 export type Profile = {
   userId: number;
@@ -42,6 +42,8 @@ export type Community = {
   createdAt: string;
   role?: CommunityRole | null;
   memberCount?: number;
+  twitchLogin?: string | null;
+  live?: boolean;
 };
 
 export type CommunityPerson = {
@@ -1892,12 +1894,17 @@ export type OAuthProvider = "discord" | "twitch";
 export type OAuthConnection = {
   provider: OAuthProvider;
   username: string;
+  showLive: boolean;
   connectedAt: string;
 };
 
 export type OAuthConnections = { hasPassword: boolean; connections: OAuthConnection[] };
 
-export type OAuthResult = { access_token?: string; linked?: OAuthProvider };
+export type OAuthResult = {
+  access_token?: string;
+  linked?: OAuthProvider;
+  communityId?: number;
+};
 
 export async function getOAuthProviders(): Promise<OAuthProvider[]> {
   const res = await api("/auth/oauth/providers");
@@ -1910,9 +1917,13 @@ export async function getOAuthUrl(
   provider: OAuthProvider,
   nonce: string,
   token?: string,
+  communityId?: number,
 ): Promise<string> {
+  const params = new URLSearchParams({ nonce });
+  if (communityId !== undefined) params.set("communityId", String(communityId));
+  const path = communityId !== undefined ? "community-url" : token ? "link-url" : "url";
   const res = await api(
-    `/auth/oauth/${provider}/${token ? "link-url" : "url"}?nonce=${encodeURIComponent(nonce)}`,
+    `/auth/oauth/${provider}/${path}?${params}`,
     token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
   );
 
@@ -1946,6 +1957,32 @@ export async function getOAuthConnections(token: string): Promise<OAuthConnectio
 
   if (!res.ok) throw new Error("Could not load your connections.");
   return res.json();
+}
+
+export async function setShowLive(
+  token: string,
+  provider: OAuthProvider,
+  showLive: boolean,
+): Promise<void> {
+  const res = await api(`/auth/oauth/connections/${provider}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ showLive }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not update this setting."));
+}
+
+export async function disconnectCommunityTwitch(token: string, communityId: number): Promise<void> {
+  const res = await api(`/communities/${communityId}/twitch`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect Twitch."));
 }
 
 export async function disconnectOAuth(token: string, provider: OAuthProvider): Promise<void> {

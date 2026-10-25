@@ -3,6 +3,7 @@ import { create } from "zustand";
 import * as api from "@/lib/api";
 import type { Friend, FriendTarget, FriendUser, Notification, PresenceStatus } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
+import { useCommunityStore } from "./community-store";
 import { useMessagesStore } from "./messages-store";
 import { useNotificationsStore } from "./notifications-store";
 
@@ -98,6 +99,9 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
       },
     );
     socket.on("friends:changed", () => get().fetchFriends());
+    socket.on("community:live", ({ communityId, live }: { communityId: number; live: boolean }) =>
+      useCommunityStore.getState().setLive(communityId, live),
+    );
     socket.on("message", (event) => useMessagesStore.getState().receive(event));
     socket.on("message:updated", (event) => useMessagesStore.getState().updated(event));
     socket.on("conversation", ({ conversation }) =>

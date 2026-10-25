@@ -1,17 +1,17 @@
 "use client";
 
 import { Check } from "lucide-react";
-import { updatePreferences, type PresenceStatus } from "@/lib/api";
+import { updatePreferences, type UserStatus } from "@/lib/api";
 import { presenceDot, presenceLabel } from "@/lib/presence";
 import { useAuthStore } from "@/stores/auth-store";
 
-const choices: PresenceStatus[] = ["online", "idle", "busy", "offline"];
+const choices: (UserStatus | "offline")[] = ["online", "idle", "busy", "offline"];
 
 export function StatusPicker() {
   const profile = useAuthStore((state) => state.profile);
   const current = profile && (profile.appearOffline ? "offline" : profile.status);
 
-  async function choose(choice: PresenceStatus) {
+  async function choose(choice: UserStatus | "offline") {
     const { token, profile: before } = useAuthStore.getState();
     if (!token || !before) return;
 

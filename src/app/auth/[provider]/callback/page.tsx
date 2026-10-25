@@ -38,6 +38,8 @@ function Callback() {
       if (result.access_token) {
         loginWithToken(result.access_token);
         router.replace("/");
+      } else if (result.communityId) {
+        router.replace(`/communities/${result.communityId}/settings`);
       } else {
         router.replace("/settings");
       }

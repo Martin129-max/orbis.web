@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
+  disconnectCommunityTwitch,
   getInvites,
   getMembers,
+  getOAuthProviders,
   revokeInvite,
   setCommunityAdmin,
   type Community,
@@ -16,8 +18,10 @@ import {
 } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { inviteExpiry, inviteUses } from "@/lib/invites";
+import { oauthColors, startOAuth } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
+import { OAuthIcon } from "./oauth-buttons";
 
 function GeneralSettings({ community }: { community: Community }) {
   const updateCommunity = useCommunityStore((state) => state.updateCommunity);
@@ -361,6 +365,81 @@ function DangerZone({ community }: { community: Community }) {
   );
 }
 
+function TwitchSettings({ community }: { community: Community }) {
+  const [login, setLogin] = useState(community.twitchLogin ?? null);
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getOAuthProviders()
+      .then((providers) => setEnabled(providers.includes("twitch")))
+      .catch(() => setEnabled(false));
+  }, []);
+
+  if (!login && enabled === false) return null;
+
+  async function connect() {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    setPending(true);
+    setError(null);
+    try {
+      await startOAuth("twitch", token, community.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setPending(false);
+    }
+  }
+
+  async function disconnect() {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    setPending(true);
+    setError(null);
+    try {
+      await disconnectCommunityTwitch(token, community.id);
+      setLogin(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Molecule.SettingsSection
+      title="Twitch"
+      description="Connect the community’s Twitch channel. While it’s live, members see a LIVE badge on the community."
+    >
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${oauthColors.twitch}`}
+        >
+          <OAuthIcon provider="twitch" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="text-sm font-semibold">Twitch</span>
+          <span className="truncate text-xs text-muted">
+            {login ? `Connected to twitch.tv/${login}` : "Not connected"}
+          </span>
+        </div>
+        {login ? (
+          <Atom.Button size="small" variant="secondary" loading={pending} onClick={disconnect}>
+            Disconnect
+          </Atom.Button>
+        ) : (
+          <Atom.Button size="small" loading={pending} disabled={enabled !== true} onClick={connect}>
+            Connect
+          </Atom.Button>
+        )}
+      </div>
+      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+    </Molecule.SettingsSection>
+  );
+}
+
 export function CommunitySettings({ community }: { community: Community }) {
   return (
     <div className="flex flex-col gap-8">
@@ -372,6 +451,7 @@ export function CommunitySettings({ community }: { community: Community }) {
       <GeneralSettings community={community} />
       <AdminSettings community={community} />
       <InviteSettings community={community} />
+      <TwitchSettings community={community} />
       {community.role === "owner" && <DangerZone community={community} />}
     </div>
   );

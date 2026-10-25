@@ -18,10 +18,10 @@ export function isOAuthProvider(value: string): value is OAuthProvider {
   return (OAUTH_PROVIDERS as string[]).includes(value);
 }
 
-export async function startOAuth(provider: OAuthProvider, token?: string) {
+export async function startOAuth(provider: OAuthProvider, token?: string, communityId?: number) {
   const nonce = crypto.randomUUID().replaceAll("-", "");
   sessionStorage.setItem(NONCE_KEY, nonce);
-  window.location.assign(await getOAuthUrl(provider, nonce, token));
+  window.location.assign(await getOAuthUrl(provider, nonce, token, communityId));
 }
 
 export function takeOAuthNonce() {

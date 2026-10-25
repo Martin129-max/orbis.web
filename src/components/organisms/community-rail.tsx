@@ -168,10 +168,14 @@ function SortableCommunity({
         {...listeners}
         role={undefined}
         href={`/communities/${community.id}`}
-        aria-label={community.name}
+        aria-label={community.live ? `${community.name}, live` : community.name}
         aria-current={active ? "page" : undefined}
         className={`${itemClass(active)} ${
-          active || target ? "ring-2 ring-accent ring-offset-2 ring-offset-rail" : ""
+          active || target
+            ? "ring-2 ring-accent ring-offset-2 ring-offset-rail"
+            : community.live
+              ? "ring-2 ring-danger ring-offset-2 ring-offset-rail"
+              : ""
         } ${target ? "scale-110" : ""} ${
           isDragging
             ? "cursor-grabbing border-2 border-dashed border-accent opacity-50"
@@ -179,6 +183,14 @@ function SortableCommunity({
         }`}
       >
         <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
+        {community.live && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-sm bg-danger px-1 py-px font-sans text-[8px] leading-none font-bold tracking-wide text-white sm:text-[9px]"
+          >
+            LIVE
+          </span>
+        )}
       </Link>
     </RailSlot>
   );
