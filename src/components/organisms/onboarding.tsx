@@ -104,6 +104,13 @@ export const tourStops: TourStop[] = [
       "Switch between light and dark, appear offline, open your profile to change your picture, cover, and wallpaper, or log out.",
   },
   {
+    target: "library-dock",
+    placement: "top",
+    title: "Your library",
+    description:
+      "Pull this up from the bottom of any page to check your library and update what you’re watching, reading, or playing.",
+  },
+  {
     target: "feedback",
     placement: "leftBottom",
     title: "Send feedback",

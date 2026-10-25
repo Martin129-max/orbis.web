@@ -1,6 +1,7 @@
 import { create } from "zustand";
 
 const PANEL_KEY = "panel-collapsed";
+const DOCK_KEY = "library-dock-open";
 
 function savedPanel() {
   try {
@@ -18,14 +19,33 @@ function savePanel(collapsed: boolean) {
   }
 }
 
+function savedDock() {
+  try {
+    return localStorage.getItem(DOCK_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+function saveDock(open: boolean) {
+  try {
+    localStorage.setItem(DOCK_KEY, String(open));
+  } catch {
+    return;
+  }
+}
+
 type LayoutState = {
   panelCollapsed: boolean;
+  dockOpen: boolean;
   drawerOpen: boolean;
   searchSlot: HTMLElement | null;
   pageSearches: number;
   panelLabel: string | null;
   togglePanel: (isDesktop: boolean) => void;
   restorePanel: () => void;
+  setDockOpen: (open: boolean) => void;
+  restoreDock: () => void;
   closeDrawer: () => void;
   setSearchSlot: (slot: HTMLElement | null) => void;
   registerPageSearch: () => () => void;
@@ -34,6 +54,7 @@ type LayoutState = {
 
 export const useLayoutStore = create<LayoutState>()((set, get) => ({
   panelCollapsed: false,
+  dockOpen: false,
   drawerOpen: false,
   searchSlot: null,
   pageSearches: 0,
@@ -48,6 +69,11 @@ export const useLayoutStore = create<LayoutState>()((set, get) => ({
     set({ panelCollapsed });
   },
   restorePanel: () => set({ panelCollapsed: savedPanel() }),
+  setDockOpen: (dockOpen) => {
+    saveDock(dockOpen);
+    set({ dockOpen });
+  },
+  restoreDock: () => set({ dockOpen: savedDock() }),
   closeDrawer: () => set({ drawerOpen: false }),
   setSearchSlot: (searchSlot) => set({ searchSlot }),
   setPanelLabel: (panelLabel) => set({ panelLabel }),

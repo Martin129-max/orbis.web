@@ -1,9 +1,10 @@
 "use client";
 
-import { App, InputNumber, Select, Tooltip } from "antd";
+import { App, Dropdown, InputNumber, Select, Tooltip } from "antd";
 import {
   Bookmark,
   Check,
+  ChevronDown,
   CirclePlay,
   CircleX,
   LayoutGrid,
@@ -17,7 +18,7 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Template from "@template";
@@ -226,6 +227,198 @@ const statusIcons = {
   planned: Bookmark,
 } satisfies Record<StatusFilter, typeof Library>;
 
+const statusTones = {
+  current: "info",
+  completed: "success",
+  on_hold: "warning",
+  dropped: "neutral",
+  planned: "special",
+} as const satisfies Record<LibraryStatus, Atom.PillTone>;
+
+function StatusPill({
+  entry,
+  onChange,
+}: {
+  entry: LibraryEntry;
+  onChange: (entry: LibraryEntry) => void;
+}) {
+  const { message } = App.useApp();
+  const label = statusLabel(entry.status, entry.mediaType);
+
+  async function change(status: LibraryStatus) {
+    const { token } = useAuthStore.getState();
+    if (!token || status === entry.status) return;
+    try {
+      onChange(await updateLibraryEntry(token, entry.id, { status }));
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    }
+  }
+
+  return (
+    <Dropdown
+      trigger={["click"]}
+      menu={{
+        items: libraryStatuses.map((status) => ({
+          key: status,
+          label: statusLabel(status, entry.mediaType),
+          icon: (
+            <span className="flex w-4 justify-center">
+              {status === entry.status && <Check size={14} />}
+            </span>
+          ),
+        })),
+        onClick: ({ key }) => change(key as LibraryStatus),
+      }}
+    >
+      <button
+        type="button"
+        aria-label={`${label}. Change status of ${entry.title}`}
+        className="focus-ring w-fit max-w-full cursor-pointer rounded-full"
+      >
+        <Atom.Pill tone={statusTones[entry.status]} className="max-w-full">
+          <span className="truncate">{label}</span>
+          <ChevronDown size={11} aria-hidden className="shrink-0" />
+        </Atom.Pill>
+      </button>
+    </Dropdown>
+  );
+}
+
+function CoverProgress({
+  entry,
+  onChange,
+}: {
+  entry: LibraryEntry;
+  onChange: (entry: LibraryEntry) => void;
+}) {
+  const { message } = App.useApp();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<number | null>(entry.progress);
+  const [saving, setSaving] = useState(false);
+
+  if (entry.mediaType === "game") return null;
+
+  const unit = entry.mediaType === "manga" ? "chapter" : "episode";
+  const max = entry.total ?? undefined;
+  const finished = max !== undefined && entry.progress >= max;
+
+  async function save(value: number) {
+    setEditing(false);
+    const next = Math.max(0, max === undefined ? value : Math.min(value, max));
+    const { token } = useAuthStore.getState();
+    if (!token || next === entry.progress) return;
+    setSaving(true);
+    try {
+      onChange(await updateLibraryEntry(token, entry.id, { progress: next }));
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1">
+      {editing ? (
+        <InputNumber
+          size="small"
+          autoFocus
+          min={0}
+          max={max}
+          value={draft}
+          controls={false}
+          aria-label={`${unit}s done`}
+          onChange={setDraft}
+          onPressEnter={() => draft !== null && save(draft)}
+          onBlur={() => (draft !== null ? save(draft) : setEditing(false))}
+          className="w-16"
+        />
+      ) : (
+        <button
+          type="button"
+          aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}s. Change`}
+          onClick={() => {
+            setDraft(entry.progress);
+            setEditing(true);
+          }}
+          className="focus-ring cursor-pointer rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold text-foreground shadow-sm"
+        >
+          {entry.progress} / {entry.total ?? "?"} {entry.mediaType === "manga" ? "ch" : "ep"}
+        </button>
+      )}
+      {!finished && !editing && (
+        <Tooltip title={`+1 ${unit}`}>
+          <button
+            type="button"
+            aria-label={`One more ${unit}`}
+            disabled={saving}
+            onClick={() => save(entry.progress + 1)}
+            className="focus-ring flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm disabled:cursor-wait disabled:opacity-60"
+          >
+            <Plus size={14} />
+          </button>
+        </Tooltip>
+      )}
+    </div>
+  );
+}
+
+export function LibraryCard({
+  entry,
+  onChange,
+  onRemove,
+  className = "",
+}: {
+  entry: LibraryEntry;
+  onChange: (entry: LibraryEntry) => void;
+  onRemove: (id: number) => void;
+  className?: string;
+}) {
+  const href = mediaPath(entry.mediaType, entry.sourceId);
+
+  return (
+    <div className={`flex flex-col gap-2 ${className}`}>
+      <div className="relative">
+        <Link href={href} className="focus-ring block rounded-md">
+          <MediaCover src={entry.coverImage} className="w-full" />
+        </Link>
+        {!entry.isPublic && (
+          <span
+            title="Private"
+            className="absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm"
+          >
+            <Lock size={13} />
+          </span>
+        )}
+        <div className="absolute top-2 right-2">
+          <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
+        </div>
+        <CoverProgress entry={entry} onChange={onChange} />
+      </div>
+      <Link
+        href={href}
+        className="focus-ring line-clamp-2 min-h-[2lh] rounded-sm text-sm leading-snug font-semibold hover:underline"
+      >
+        {entry.title}
+      </Link>
+      <StatusPill entry={entry} onChange={onChange} />
+    </div>
+  );
+}
+
+export function filterLibrary(
+  entries: LibraryEntry[],
+  type: TypeFilter,
+  status: StatusFilter,
+) {
+  return entries.filter(
+    (entry) =>
+      (type === "all" || entry.mediaType === type) &&
+      (status === "all" || entry.status === status),
+  );
+}
+
 export function MediaCover({
   src,
   className = "",
@@ -249,17 +442,7 @@ export function StatusBadge({
   status: LibraryStatus;
   type?: MediaType;
 }) {
-  const tone = (
-    {
-      current: "info",
-      completed: "success",
-      on_hold: "warning",
-      dropped: "neutral",
-      planned: "special",
-    } as const
-  )[status];
-
-  return <Atom.Pill tone={tone}>{statusLabel(status, type)}</Atom.Pill>;
+  return <Atom.Pill tone={statusTones[status]}>{statusLabel(status, type)}</Atom.Pill>;
 }
 
 function SearchResults({
@@ -354,13 +537,49 @@ function SearchResults({
   );
 }
 
-function LibraryTabs({ entries }: { entries: LibraryEntry[] | null }) {
+function ViewToggle() {
+  const view = useLibraryPreferencesStore((state) => state.view);
+  const setView = useLibraryPreferencesStore((state) => state.setView);
+
+  return (
+    <div role="group" aria-label="Library view" className="flex items-center gap-0.5">
+      {(
+        [
+          { value: "cards", label: "Cards", icon: <LayoutGrid size={16} /> },
+          { value: "list", label: "List", icon: <List size={16} /> },
+        ] as const
+      ).map((option) => (
+        <Tooltip key={option.value} title={option.label}>
+          <button
+            type="button"
+            aria-label={option.label}
+            aria-pressed={view === option.value}
+            onClick={() => setView(option.value)}
+            className={`icon-button cursor-pointer ${
+              view === option.value ? "bg-rail-item text-foreground" : ""
+            }`}
+          >
+            {option.icon}
+          </button>
+        </Tooltip>
+      ))}
+    </div>
+  );
+}
+
+export function LibraryTabs({
+  entries,
+  actions,
+  bordered = true,
+}: {
+  entries: LibraryEntry[] | null;
+  actions?: ReactNode;
+  bordered?: boolean;
+}) {
   const status = useLibraryPreferencesStore((state) => state.status);
   const type = useLibraryPreferencesStore((state) => state.type);
-  const view = useLibraryPreferencesStore((state) => state.view);
   const setStatus = useLibraryPreferencesStore((state) => state.setStatus);
   const setType = useLibraryPreferencesStore((state) => state.setType);
-  const setView = useLibraryPreferencesStore((state) => state.setView);
 
   const ofType = (entries ?? []).filter((entry) => type === "all" || entry.mediaType === type);
   const count = (value: StatusFilter) =>
@@ -370,7 +589,7 @@ function LibraryTabs({ entries }: { entries: LibraryEntry[] | null }) {
   return (
     <nav
       aria-label="Library sections"
-      className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+      className={`flex shrink-0 items-end gap-6 px-4 sm:px-8 ${bordered ? "border-b border-divider" : ""}`}
     >
       <div
         data-tour="library-tabs"
@@ -416,28 +635,7 @@ function LibraryTabs({ entries }: { entries: LibraryEntry[] | null }) {
             ),
           }))}
         />
-        <div role="group" aria-label="Library view" className="flex items-center gap-0.5">
-          {(
-            [
-              { value: "cards", label: "Cards", icon: <LayoutGrid size={16} /> },
-              { value: "list", label: "List", icon: <List size={16} /> },
-            ] as const
-          ).map((option) => (
-            <Tooltip key={option.value} title={option.label}>
-              <button
-                type="button"
-                aria-label={option.label}
-                aria-pressed={view === option.value}
-                onClick={() => setView(option.value)}
-                className={`icon-button cursor-pointer ${
-                  view === option.value ? "bg-rail-item text-foreground" : ""
-                }`}
-              >
-                {option.icon}
-              </button>
-            </Tooltip>
-          ))}
-        </div>
+        {actions}
       </div>
     </nav>
   );
@@ -456,11 +654,7 @@ function LibraryShelf({
   const type = useLibraryPreferencesStore((state) => state.type);
   const view = useLibraryPreferencesStore((state) => state.view);
 
-  const shown = entries.filter(
-    (entry) =>
-      (type === "all" || entry.mediaType === type) &&
-      (status === "all" || entry.status === status),
-  );
+  const shown = filterLibrary(entries, type, status);
 
   const boxed = shown.length === 0 || view === "list";
 
@@ -479,43 +673,8 @@ function LibraryShelf({
       ) : (
         <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {shown.map((entry) => (
-            <li key={entry.id} className="flex flex-col gap-2">
-              <div className="relative">
-                <Link
-                  href={mediaPath(entry.mediaType, entry.sourceId)}
-                  className="focus-ring block rounded-md"
-                >
-                  <MediaCover src={entry.coverImage} className="w-full" />
-                </Link>
-                {!entry.isPublic && (
-                  <span
-                    title="Private"
-                    className="absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm"
-                  >
-                    <Lock size={13} />
-                  </span>
-                )}
-                <div className="absolute top-2 right-2">
-                  <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
-                </div>
-              </div>
-              <div className="flex min-w-0 flex-col gap-1">
-                <Link
-                  href={mediaPath(entry.mediaType, entry.sourceId)}
-                  className="focus-ring line-clamp-2 rounded-sm text-sm leading-snug font-semibold hover:underline"
-                >
-                  {entry.title}
-                </Link>
-                <span className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={entry.status} type={entry.mediaType} />
-                  {entry.mediaType !== "game" && (
-                    <span className="text-[11px] text-muted">
-                      {entry.progress} / {entry.total ?? "?"}{" "}
-                      {entry.mediaType === "manga" ? "ch" : "ep"}
-                    </span>
-                  )}
-                </span>
-              </div>
+            <li key={entry.id}>
+              <LibraryCard entry={entry} onChange={onChange} onRemove={onRemove} />
             </li>
           ))}
         </ul>
@@ -576,7 +735,7 @@ export function LibraryView() {
       >
         <Atom.Heading>Library</Atom.Heading>
       </Template.PageHeader>
-      <LibraryTabs entries={entries} />
+      <LibraryTabs entries={entries} actions={<ViewToggle />} />
       <div className="flex min-h-0 flex-1">
         <Template.PageColumn>
           <div className="flex flex-col gap-6">

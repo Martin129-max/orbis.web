@@ -169,7 +169,7 @@ export function FeedbackDock() {
     <>
       <div
         ref={dock}
-        className="fixed right-4 bottom-4 z-40 flex flex-col items-center gap-3 sm:right-6 sm:bottom-6"
+        className="fixed right-4 bottom-[calc(1rem+var(--library-dock-height,0px))] z-40 flex flex-col items-center gap-3 sm:right-6 sm:bottom-[calc(1.5rem+var(--library-dock-height,0px))]"
       >
         {profile.isAdmin && (
           <Tooltip title="Directory" placement="left">
