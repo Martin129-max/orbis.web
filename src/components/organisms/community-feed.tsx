@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, type ReactNode } from "react";
 import { createPost, getPosts } from "@/lib/api";
 import type { FeedContentType } from "@/lib/api";
 import { usePaged } from "@/lib/use-paged";
@@ -8,14 +8,20 @@ import { useAuthStore } from "@/stores/auth-store";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 
-export function CommunityFeed({ communityId }: { communityId: number }) {
+export function CommunityFeed({
+  communityId,
+  joinPrompt,
+}: {
+  communityId: number;
+  joinPrompt?: ReactNode;
+}) {
   const feed = usePaged(
     useCallback(
-      (token: string, cursor?: string, excluded?: FeedContentType[]) =>
+      (token: string | null, cursor?: string, excluded?: FeedContentType[]) =>
         getPosts(token, communityId, cursor, excluded),
       [communityId],
     ),
-    { live: true, types: ["post", "activity"] },
+    { live: true, guest: true, types: ["post", "activity"] },
   );
 
   async function handlePost(content: string, linkUrl?: string) {
@@ -27,9 +33,11 @@ export function CommunityFeed({ communityId }: { communityId: number }) {
 
   return (
     <div className="flex flex-col gap-3">
-      <div data-tour="community-composer">
-        <PostComposer linkPreview onPost={handlePost} />
-      </div>
+      {joinPrompt ?? (
+        <div data-tour="community-composer">
+          <PostComposer linkPreview onPost={handlePost} />
+        </div>
+      )}
       <PostList
         feed={feed}
         empty={{

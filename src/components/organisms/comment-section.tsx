@@ -47,11 +47,13 @@ function buildTree(comments: Comment[]) {
 function CommentItem({
   node,
   depth,
+  canReply,
   onReply,
   onChange,
 }: {
   node: CommentNode;
   depth: number;
+  canReply: boolean;
   onReply: (content: string, parentId: number, linkUrl?: string) => Promise<void>;
   onChange: (comment: Comment) => void;
 }) {
@@ -97,6 +99,7 @@ function CommentItem({
         )}
         <div className="flex items-center gap-2">
           <Molecule.VoteControl
+            symbols="thumbs"
             orientation="horizontal"
             score={node.score}
             myVote={node.myVote}
@@ -106,14 +109,16 @@ function CommentItem({
               )
             }
           />
-          <button
-            type="button"
-            onClick={() => setReplying((open) => !open)}
-            aria-expanded={replying}
-            className="focus-ring rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-foreground"
-          >
-            Reply
-          </button>
+          {canReply && (
+            <button
+              type="button"
+              onClick={() => setReplying((open) => !open)}
+              aria-expanded={replying}
+              className="focus-ring rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-foreground"
+            >
+              Reply
+            </button>
+          )}
           <ReportButton type="comment" id={node.id} ownerId={node.author.id} variant="text" />
         </div>
         {replying && (
@@ -144,6 +149,7 @@ function CommentItem({
               key={child.id}
               node={child}
               depth={depth + 1}
+              canReply={canReply}
               onReply={onReply}
               onChange={onChange}
             />
@@ -156,19 +162,21 @@ function CommentItem({
 
 export function CommentSection({
   target,
+  canComment = true,
   onCommentsChange,
 }: {
   target: Commentable;
+  canComment?: boolean;
   onCommentsChange: (comments: Comment[]) => void;
 }) {
   const [comments, setComments] = useState<Comment[] | null>(null);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
+  const signedIn = useAuthStore((state) => Boolean(state.token));
   const { type, id } = target;
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (!token) return;
 
     getComments(token, { type, id })
       .then((result) => {
@@ -207,15 +215,24 @@ export function CommentSection({
         </h3>
         <span className="text-xs text-muted">Oldest first</span>
       </div>
-      <div className="flex flex-col gap-2">
-        <p className="text-[13px] font-semibold">Add a comment</p>
-        <PostComposer
-          linkPreview
-          placeholder="Write a comment…"
-          submitLabel="Comment"
-          onPost={(content, linkUrl) => handleReply(content, undefined, linkUrl)}
-        />
-      </div>
+      {canComment ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-[13px] font-semibold">Add a comment</p>
+          <PostComposer
+            linkPreview
+            placeholder="Write a comment…"
+            submitLabel="Comment"
+            onPost={(content, linkUrl) => handleReply(content, undefined, linkUrl)}
+          />
+        </div>
+      ) : signedIn ? (
+        <p className="text-sm text-muted">Join this community to comment.</p>
+      ) : (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm text-muted">Log in to join the conversation.</p>
+          <Molecule.LoginLink>Log in</Molecule.LoginLink>
+        </div>
+      )}
       {failed && !comments ? (
         <Molecule.ConnectionError
           onRetry={() => {
@@ -239,6 +256,7 @@ export function CommentSection({
                 key={node.id}
                 node={node}
                 depth={0}
+                canReply={canComment}
                 onReply={handleReply}
                 onChange={handleChange}
               />

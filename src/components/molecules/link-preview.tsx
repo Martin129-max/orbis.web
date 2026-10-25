@@ -16,7 +16,6 @@ export function LinkPreview({ url, onRemove }: { url: string; onRemove?: () => v
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (!token) return;
 
     let current = true;
     previewFor(token, url).then((data) => {

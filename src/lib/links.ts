@@ -54,7 +54,7 @@ export function youtubeVideo(link: string): YouTubeVideo | null {
 
 const previews = new Map<string, Promise<LinkPreview | null>>();
 
-export function previewFor(token: string, link: string) {
+export function previewFor(token: string | null, link: string) {
   let preview = previews.get(link);
   if (!preview) {
     preview = getLinkPreview(token, link).catch(() => null);

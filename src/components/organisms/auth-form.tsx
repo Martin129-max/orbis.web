@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
+import { safeNext } from "@/lib/login";
 import { useAuthStore } from "@/stores/auth-store";
 
 type Mode = "login" | "signup";
@@ -81,7 +82,10 @@ export function AuthForm({
         });
       }
       if (onAuthenticated) onAuthenticated();
-      else router.push("/");
+      else
+        router.push(
+          safeNext(new URLSearchParams(window.location.search).get("next")) ?? "/",
+        );
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
       setPending(false);

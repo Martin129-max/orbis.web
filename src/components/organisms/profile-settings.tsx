@@ -8,6 +8,7 @@ import * as Molecule from "@molecule";
 import type { Profile } from "@/lib/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
+import { PrivateProfileSwitch } from "./private-profile-switch";
 import { ThemeToggle } from "./theme-toggle";
 
 function RestartTours() {
@@ -66,6 +67,15 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           </label>
           <p className="text-xs text-muted">
             Friends see you as offline. You can still post as usual.
+          </p>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-center justify-between gap-4">
+            <span className="text-sm font-semibold">Private profile</span>
+            <PrivateProfileSwitch />
+          </label>
+          <p className="text-xs text-muted">
+            Only your friends can see your posts, friends, communities, and library. Everyone else sees just your name and picture.
           </p>
         </div>
         <RestartTours />

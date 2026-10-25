@@ -17,6 +17,7 @@ export type Profile = {
   backgroundUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
+  isPublic: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
   createdAt: string;
@@ -69,6 +70,10 @@ export async function api(path: string, init?: RequestInit) {
     throw new Error("You’re doing that too often. Try again in a minute.");
   }
   return res;
+}
+
+function authHeaders(token: string | null): Record<string, string> {
+  return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
 async function errorMessage(res: Response, fallback: string) {
@@ -296,7 +301,7 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: Partial<Pick<Profile, "theme" | "appearOffline">>,
+  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "isPublic">>,
 ): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",
@@ -354,11 +359,11 @@ export function canManage(community: Community) {
 }
 
 export async function getCommunity(
-  token: string,
+  token: string | null,
   id: string,
 ): Promise<Community | null> {
   const res = await api(`/communities/${encodeURIComponent(id)}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   return res.ok ? res.json() : null;
@@ -684,13 +689,13 @@ function withQuery(path: string, query: Record<string, string | undefined>) {
 }
 
 export async function getPosts(
-  token: string,
+  token: string | null,
   communityId: number,
   cursor?: string,
   excludedTypes: FeedContentType[] = [],
 ): Promise<Page<Post | Activity>> {
   const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor, exclude: excludedTypes.join(",") }), {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (!res.ok) throw new Error("Could not load posts.");
@@ -698,12 +703,12 @@ export async function getPosts(
 }
 
 export async function getFeed(
-  token: string,
+  token: string | null,
   cursor?: string,
   excludedTypes: FeedContentType[] = [],
 ): Promise<Page<FeedEntry>> {
   const res = await api(withQuery("/feed", { cursor, exclude: excludedTypes.join(",") }), {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (!res.ok) throw new Error("Could not load your feed.");
@@ -732,13 +737,13 @@ export async function createWallPost(
 }
 
 export async function getUserPosts(
-  token: string,
+  token: string | null,
   username: string,
   cursor?: string,
   excludedTypes: FeedContentType[] = [],
 ): Promise<Page<FeedEntry>> {
   const res = await api(withQuery(`/users/${encodeURIComponent(username)}/posts`, { cursor, exclude: excludedTypes.join(",") }), {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (!res.ok) throw new Error("Could not load these posts.");
@@ -746,7 +751,7 @@ export async function getUserPosts(
 }
 
 export async function getMediaPosts(
-  token: string,
+  token: string | null,
   type: MediaType,
   sourceId: string,
   cursor?: string,
@@ -754,7 +759,7 @@ export async function getMediaPosts(
 ): Promise<Page<FeedEntry>> {
   const res = await api(
     withQuery(`/library/media/${type}/${encodeURIComponent(sourceId)}/posts`, { cursor, exclude: excludedTypes.join(",") }),
-    { headers: { Authorization: `Bearer ${token}` } },
+    { headers: authHeaders(token) },
   );
 
   if (!res.ok) throw new Error("Could not load these posts.");
@@ -803,11 +808,11 @@ export async function createPost(
 }
 
 export async function getMembers(
-  token: string,
+  token: string | null,
   communityId: number,
 ): Promise<Member[]> {
   const res = await api(`/communities/${communityId}/members`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   return res.ok ? res.json() : [];
@@ -1022,14 +1027,14 @@ export async function removeGroupMember(
 }
 
 export async function getThreads(
-  token: string,
+  token: string | null,
   communityId: number,
   sort: ThreadSort,
   cursor?: string,
 ): Promise<Page<Thread>> {
   const res = await api(
     withQuery(`/communities/${communityId}/threads`, { sort, cursor }),
-    { headers: { Authorization: `Bearer ${token}` } },
+    { headers: authHeaders(token) },
   );
 
   if (!res.ok) throw new Error("Could not load threads.");
@@ -1056,11 +1061,11 @@ export async function createThread(
 }
 
 export async function getComments(
-  token: string,
+  token: string | null,
   { type, id }: Commentable,
 ): Promise<Comment[]> {
   const res = await api(withQuery("/comments", { type, id: String(id) }), {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (!res.ok) throw new Error("Could not load comments.");
@@ -1533,6 +1538,8 @@ export type PublicProfile = {
   backgroundUrl: string | null;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  isPublic: boolean;
+  restricted: boolean;
   createdAt: string;
   online: boolean;
   friendCount: number;
@@ -1567,11 +1574,11 @@ export type PublicProfile = {
 };
 
 export async function getPublicProfile(
-  token: string,
+  token: string | null,
   username: string,
 ): Promise<PublicProfile | null> {
   const res = await api(`/users/${encodeURIComponent(username)}`, {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (res.status === 404) return null;
@@ -1776,6 +1783,22 @@ export async function removeFromLibrary(token: string, id: number): Promise<void
 
 export type PublicCommunity = Omit<CommunitySearchResult, "joined">;
 
+export type PublicUser = {
+  userId: number;
+  username: string;
+  name: string | null;
+  avatarUrl: string | null;
+  coverUrl: string | null;
+  online: boolean;
+  activity: number;
+};
+
+export async function getPublicUsers(): Promise<PublicUser[]> {
+  const res = await api("/public/users", { cache: "no-store" });
+  if (!res.ok) throw new Error("Could not load people.");
+  return res.json();
+}
+
 export type LinkPreview = {
   url: string;
   title: string;
@@ -1784,9 +1807,9 @@ export type LinkPreview = {
   siteName: string;
 };
 
-export async function getLinkPreview(token: string, url: string): Promise<LinkPreview | null> {
+export async function getLinkPreview(token: string | null, url: string): Promise<LinkPreview | null> {
   const res = await api(withQuery("/links/preview", { url }), {
-    headers: { Authorization: `Bearer ${token}` },
+    headers: authHeaders(token),
   });
 
   if (res.status === 404) return null;

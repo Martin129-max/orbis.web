@@ -9,7 +9,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 
 export type FetchPage<T extends FeedEntry> = (
-  token: string,
+  token: string | null,
   cursor?: string,
   excludedTypes?: FeedContentType[],
 ) => Promise<Page<T>>;
@@ -40,8 +40,9 @@ export function usePaged<T extends FeedEntry>(
   fetch: FetchPage<T>,
   {
     live = false,
+    guest = false,
     types = feedContentTypes,
-  }: { live?: boolean; types?: FeedContentType[] } = {},
+  }: { live?: boolean; guest?: boolean; types?: FeedContentType[] } = {},
 ): Paged<T> {
   const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
   const remaining = types.filter((type) => !excluded.includes(type));
@@ -71,7 +72,7 @@ export function usePaged<T extends FeedEntry>(
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (!token) return;
+    if (!token && !guest) return;
 
     let ignore = false;
     fetchPage(token)
@@ -99,7 +100,7 @@ export function usePaged<T extends FeedEntry>(
     return () => {
       ignore = true;
     };
-  }, [fetchPage, attempt]);
+  }, [fetchPage, attempt, guest]);
 
   useEffect(() => {
     loaded.current = source === fetchPage ? items : null;
@@ -111,7 +112,7 @@ export function usePaged<T extends FeedEntry>(
     let ignore = false;
     async function check() {
       const { token } = useAuthStore.getState();
-      if (!token || !loaded.current || document.hidden) return;
+      if ((!token && !guest) || !loaded.current || document.hidden) return;
 
       try {
         const page = await fetchPage(token);
@@ -141,7 +142,7 @@ export function usePaged<T extends FeedEntry>(
       clearInterval(timer);
       document.removeEventListener("visibilitychange", check);
     };
-  }, [live, fetchPage, filterKey]);
+  }, [live, guest, fetchPage, filterKey]);
 
   const shown = new Set(items?.map(itemKey));
   const fresh = incoming.filter(
@@ -150,7 +151,7 @@ export function usePaged<T extends FeedEntry>(
 
   function loadMore() {
     const { token } = useAuthStore.getState();
-    if (!token || !nextCursor || loadingMore || source !== fetchPage) return;
+    if ((!token && !guest) || !nextCursor || loadingMore || source !== fetchPage) return;
 
     setLoadingMore(true);
     setMoreFailed(false);

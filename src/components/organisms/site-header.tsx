@@ -40,6 +40,7 @@ export function SiteHeader({ sticky = false }: { sticky?: boolean }) {
           {[
             { id: "statistics", label: "Statistics" },
             { id: "communities", label: "Communities" },
+            { id: "people", label: "People" },
             { id: "features", label: "Features" },
             { id: "also-in-orbis", label: "Also in Orbis" },
           ].map(({ id, label }) =>

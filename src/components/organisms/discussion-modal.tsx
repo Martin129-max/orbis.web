@@ -7,6 +7,8 @@ import type { FeedEntry, Thread } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
+import { useAuthStore } from "@/stores/auth-store";
+import { useCommunityStore } from "@/stores/community-store";
 import { ActivityCard } from "./activity-card";
 import { CommentSection } from "./comment-section";
 import { PostCard } from "./post-card";
@@ -68,6 +70,15 @@ export function DiscussionModal({
   onClose: () => void;
   onChange: (item: FeedEntry) => void;
 }) {
+  const communityId = item && item.type !== "activity" ? item.communityId : null;
+  const signedIn = useAuthStore((state) => Boolean(state.token));
+  const member = useCommunityStore(
+    (state) =>
+      communityId === null ||
+      state.communities.some(({ id }) => id === communityId),
+  );
+  const canComment = signedIn && member;
+
   return (
     <Modal
       open={item !== null}
@@ -100,6 +111,7 @@ export function DiscussionModal({
           <CommentSection
             key={`${item.type}-${item.id}`}
             target={{ type: item.type, id: item.id }}
+            canComment={canComment}
             onCommentsChange={(comments) =>
               onChange({
                 ...item,

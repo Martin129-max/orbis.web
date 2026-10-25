@@ -16,11 +16,18 @@ import {
   Users,
   WifiOff,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { LandingReveal } from "./landing-reveal";
-import { getPublicCommunities, type PublicCommunity } from "@/lib/api";
+import {
+  getPublicCommunities,
+  getPublicUsers,
+  type PublicCommunity,
+  type PublicUser,
+} from "@/lib/api";
+import { displayName } from "@/lib/display-name";
 
 const extras: { icon: ReactNode; label: string }[] = [
   { icon: <Compass size={18} />, label: "Explore public communities" },
@@ -72,18 +79,19 @@ export function LandingCommunities() {
           {communities.map((community) => (
             <li key={community.id}>
               <LandingReveal>
-                <Molecule.CommunityCard
-                  {...community}
-                  action={
-                    <Atom.ButtonLink
-                      href="/register"
-                      size="small"
-                      variant="secondary"
-                    >
-                      Sign up to join
-                    </Atom.ButtonLink>
-                  }
-                />
+                <Link
+                  href={`/communities/${community.id}`}
+                  className="focus-ring block h-full rounded-lg"
+                >
+                  <Molecule.CommunityCard
+                    {...community}
+                    action={
+                      <span className="flex items-center gap-1 text-xs font-semibold text-accent">
+                        View community <ArrowRight size={14} aria-hidden />
+                      </span>
+                    }
+                  />
+                </Link>
               </LandingReveal>
             </li>
           ))}
@@ -93,6 +101,58 @@ export function LandingCommunities() {
           Start your community <ArrowRight size={16} aria-hidden />
         </Atom.ButtonLink>
       )}
+    </section>
+  );
+}
+
+export function LandingPeople() {
+  const [people, setPeople] = useState<PublicUser[] | null>(null);
+
+  useEffect(() => {
+    let ignore = false;
+    getPublicUsers()
+      .then((results) => {
+        if (!ignore) setPeople(results);
+      })
+      .catch(() => null);
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
+  if (!people || people.length === 0) return null;
+
+  return (
+    <section id="people" className="flex flex-col gap-8">
+      <div className="flex flex-col gap-3">
+        <p className="text-xs font-bold tracking-wide text-accent uppercase">
+          People
+        </p>
+        <h2 className="font-display text-4xl leading-[1.02] font-bold tracking-tight sm:text-5xl lg:text-6xl">
+          Meet the regulars.
+        </h2>
+        <p className="max-w-xl text-[17px] text-muted">
+          Who’s online and who’s been busiest lately. Open a profile to see what
+          they’re into.
+        </p>
+      </div>
+      <ul
+        aria-label="Public profiles"
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3"
+      >
+        {people.map((person) => (
+          <li key={person.userId}>
+            <Molecule.PersonCard
+              userId={person.userId}
+              username={person.username}
+              label={displayName(person)}
+              avatarUrl={person.avatarUrl}
+              coverUrl={person.coverUrl}
+              presence={person.online ? "online" : "offline"}
+            />
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }

@@ -32,11 +32,11 @@ function ForumThreads({
 }) {
   const feed = usePaged(
     useCallback(
-      (token: string, cursor?: string) =>
+      (token: string | null, cursor?: string) =>
         getThreads(token, communityId, sort, cursor),
       [communityId, sort],
     ),
-    { types: ["thread"] },
+    { guest: true, types: ["thread"] },
   );
 
   return (
@@ -96,19 +96,27 @@ function ThreadComposer({
   );
 }
 
-export function CommunityForum({ communityId }: { communityId: number }) {
+export function CommunityForum({
+  communityId,
+  joinPrompt,
+}: {
+  communityId: number;
+  joinPrompt?: ReactNode;
+}) {
   const [sort, setSort] = useState<ThreadSort>("hot");
   const [version, setVersion] = useState(0);
 
   return (
     <div className="flex flex-col gap-3">
-      <ThreadComposer
-        communityId={communityId}
-        onCreated={() => {
-          setSort("new");
-          setVersion((count) => count + 1);
-        }}
-      />
+      {joinPrompt ?? (
+        <ThreadComposer
+          communityId={communityId}
+          onCreated={() => {
+            setSort("new");
+            setVersion((count) => count + 1);
+          }}
+        />
+      )}
       <ForumThreads
         key={`${sort}-${version}`}
         communityId={communityId}

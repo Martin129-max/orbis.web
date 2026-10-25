@@ -16,6 +16,7 @@ export * from "./invite-summary";
 export * from "./like-button";
 export * from "./link-preview";
 export * from "./load-more";
+export * from "./login-link";
 export * from "./modal-header";
 export * from "./page-intro";
 export * from "./page-wallpaper";

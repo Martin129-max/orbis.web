@@ -293,7 +293,7 @@ function YourLibrary({
 function MediaWall({ profile }: { profile: Profile }) {
   const feed = usePaged(
     useCallback(
-      (token: string, cursor?: string, excluded?: FeedContentType[]) =>
+      (token: string | null, cursor?: string, excluded?: FeedContentType[]) =>
         getMediaPosts(token, profile.type, profile.sourceId, cursor, excluded),
       [profile.type, profile.sourceId],
     ),

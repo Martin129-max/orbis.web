@@ -8,7 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import Link from "next/link";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useEffect, useState, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -35,7 +35,6 @@ type Tab = (typeof tabs)[number]["value"];
 
 export default function CommunityPage() {
   const { communityId } = useParams<{ communityId: string }>();
-  const router = useRouter();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const requested = useSearchParams().get("tab");
   const tab: Tab =
@@ -84,19 +83,26 @@ export default function CommunityPage() {
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (!token) {
-      router.replace("/login");
-      return;
-    }
 
     getCommunity(token, communityId)
       .then((community) => setLoaded({ id: communityId, community }))
       .catch(() =>
         setLoaded({ id: communityId, community: null, failed: true }),
       );
-  }, [communityId, router]);
+  }, [communityId]);
 
   const current = loaded?.id === communityId ? loaded : null;
+  const signedIn = useAuthStore((state) => Boolean(state.token));
+  const joinPrompt =
+    current?.community && !current.community.role ? (
+      <Organism.JoinCommunityPrompt
+        guest={!signedIn}
+        description={current.community.description}
+        joining={joining}
+        error={joinError}
+        onJoin={handleJoin}
+      />
+    ) : undefined;
 
   return (
     <Template.AppTemplate>
@@ -115,51 +121,6 @@ export default function CommunityPage() {
             It doesn&apos;t exist, or it isn&apos;t public.
           </p>
         </Template.CenteredTemplate>
-      ) : !current.community.role ? (
-        <main className="flex min-h-0 flex-1 flex-col">
-          <Organism.CommunityHeader
-            community={current.community}
-            collapsed={false}
-            actions={null}
-          />
-          <div className="relative isolate flex min-h-0 flex-1">
-            <Molecule.PageWallpaper src={current.community.backgroundUrl} />
-            <Template.PageColumn>
-              <section className="flex flex-col gap-4 rounded-xl border border-divider bg-surface p-5 sm:p-6">
-                <p className="flex items-center gap-2 text-xs text-muted">
-                  <Globe size={14} aria-hidden />
-                  Public community
-                  {current.community.memberCount !== undefined &&
-                    ` · ${current.community.memberCount.toLocaleString()} ${
-                      current.community.memberCount === 1
-                        ? "member"
-                        : "members"
-                    }`}
-                </p>
-                <p className="whitespace-pre-wrap text-sm">
-                  {current.community.description || "No description yet."}
-                </p>
-                <div className="flex flex-col gap-3 border-t border-divider pt-4">
-                  <div>
-                    <h2 className="font-display text-xl font-bold">
-                      Join to participate
-                    </h2>
-                    <p className="mt-1 text-sm text-muted">
-                      Join this community to post, comment, and take part in
-                      discussions.
-                    </p>
-                  </div>
-                  {joinError && <Atom.ErrorMessage>{joinError}</Atom.ErrorMessage>}
-                  <div>
-                    <Atom.Button loading={joining} onClick={handleJoin}>
-                      Join community
-                    </Atom.Button>
-                  </div>
-                </div>
-              </section>
-            </Template.PageColumn>
-          </div>
-        </main>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
           <Organism.CommunityHeader
@@ -180,7 +141,7 @@ export default function CommunityPage() {
               </>
             }
           />
-          <Organism.PageTour name="community" />
+          {!joinPrompt && <Organism.PageTour name="community" />}
           <nav
             aria-label="Community sections"
             data-tour="community-tabs"
@@ -242,25 +203,29 @@ export default function CommunityPage() {
                 <Organism.CommunityForum
                   key={current.community.id}
                   communityId={current.community.id}
+                  joinPrompt={joinPrompt}
                 />
               ) : (
                 <Organism.CommunityFeed
                   key={current.community.id}
                   communityId={current.community.id}
+                  joinPrompt={joinPrompt}
                 />
               )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
-              <div className="flex gap-2">
-                <Organism.InviteButton
-                  key={`invite-${current.community.id}`}
-                  community={current.community}
-                />
-                <Organism.InviteCardButton
-                  key={`card-${current.community.id}`}
-                  community={current.community}
-                />
-              </div>
+              {!joinPrompt && (
+                <div className="flex gap-2">
+                  <Organism.InviteButton
+                    key={`invite-${current.community.id}`}
+                    community={current.community}
+                  />
+                  <Organism.InviteCardButton
+                    key={`card-${current.community.id}`}
+                    community={current.community}
+                  />
+                </div>
+              )}
               <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}

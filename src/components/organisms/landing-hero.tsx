@@ -4,6 +4,7 @@ import * as Atom from "@atom";
 import {
   LandingCallToAction,
   LandingCommunities,
+  LandingPeople,
   LandingExtras,
   LandingShowcase,
 } from "./landing-showcase";
@@ -89,6 +90,9 @@ export function LandingHero() {
         <SiteStats />
         <LandingReveal>
           <LandingCommunities />
+        </LandingReveal>
+        <LandingReveal>
+          <LandingPeople />
         </LandingReveal>
         <LandingShowcase />
         <LandingReveal>

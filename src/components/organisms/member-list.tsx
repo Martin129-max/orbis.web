@@ -167,11 +167,9 @@ export function MemberList({ communityId }: { communityId: number }) {
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (token) {
-      getMembers(token, communityId)
-        .then(setMembers)
-        .catch(() => null);
-    }
+    getMembers(token, communityId)
+      .then(setMembers)
+      .catch(() => null);
   }, [communityId]);
 
   const staff = members.filter((member) => member.isOwner || member.isAdmin);

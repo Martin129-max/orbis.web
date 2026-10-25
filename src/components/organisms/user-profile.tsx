@@ -4,6 +4,7 @@ import {
   Boxes,
   CalendarDays,
   Library,
+  Lock,
   Newspaper,
   ShieldCheck,
   ShieldOff,
@@ -260,10 +261,10 @@ function Wall({
 }) {
   const feed = usePaged(
     useCallback(
-      (token: string, cursor?: string, excluded?: FeedContentType[]) => getUserPosts(token, profile.username, cursor, excluded),
+      (token: string | null, cursor?: string, excluded?: FeedContentType[]) => getUserPosts(token, profile.username, cursor, excluded),
       [profile.username],
     ),
-    { live: true },
+    { live: true, guest: true },
   );
   const name = displayName(profile);
 
@@ -556,7 +557,6 @@ export function UserProfile({ username }: { username: string }) {
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
-    if (!token) return;
     getPublicProfile(token, username)
       .then((profile) => setLoaded({ username, profile }))
       .catch(() => setLoaded({ username, profile: null, failed: true }));
@@ -633,6 +633,47 @@ export function UserProfile({ username }: { username: string }) {
   const online = isSelf
     ? !me?.appearOffline
     : (livePresence[profile.userId] ?? profile.online);
+  const social = !isSelf && me && (
+    <>
+      <MessageButton person={profile} />
+      <FriendAction
+        userId={profile.userId}
+        self={false}
+        buttonFor={displayName(profile)}
+      />
+    </>
+  );
+
+  if (profile.restricted) {
+    return (
+      <main className="flex min-h-0 flex-1 flex-col">
+        <ProfileHeader
+          profile={profile}
+          online={false}
+          collapsed={false}
+          social={social}
+          actions={null}
+        />
+        <Template.PageColumn>
+          <Molecule.FeedState
+            eyebrow="Private profile"
+            icon={<Lock size={24} strokeWidth={1.5} />}
+            title="This profile is private."
+            description={
+              me
+                ? `Only ${displayName(profile)}’s friends can see their posts, friends, communities, and library.`
+                : `Only ${displayName(profile)}’s friends can see their posts, friends, communities, and library. Log in to add them as a friend.`
+            }
+            action={
+              !me && (
+                <Molecule.LoginLink>Log in</Molecule.LoginLink>
+              )
+            }
+          />
+        </Template.PageColumn>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
@@ -642,19 +683,7 @@ export function UserProfile({ username }: { username: string }) {
         online={online}
         collapsed={collapsed}
         images={images}
-        social={
-          !isSelf &&
-          me && (
-            <>
-              <MessageButton person={profile} />
-              <FriendAction
-                userId={profile.userId}
-                self={false}
-                buttonFor={displayName(profile)}
-              />
-            </>
-          )
-        }
+        social={social}
         adminAction={
           !isSelf && me?.isHeadAdmin ? (
             <AdminToggle
