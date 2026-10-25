@@ -10,6 +10,8 @@ export type Credentials = LoginCredentials | SignupDetails;
 
 export type PresenceStatus = "online" | "idle" | "busy" | "offline";
 
+export type UserStatus = Exclude<PresenceStatus, "offline">;
+
 export type Profile = {
   userId: number;
   email: string;
@@ -19,7 +21,7 @@ export type Profile = {
   backgroundUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
-  busy: boolean;
+  status: UserStatus;
   isPublic: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
@@ -305,7 +307,7 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "busy" | "isPublic">>,
+  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic">>,
 ): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",

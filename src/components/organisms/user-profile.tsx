@@ -11,7 +11,7 @@ import {
   Users,
   UserX,
 } from "lucide-react";
-import { App } from "antd";
+import { App, Tooltip } from "antd";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -159,11 +159,15 @@ function ProfileHeader({
           }`}
         >
           <ProfileAvatar profile={profile} name={name} editor={images?.avatar} />
-          <span
-            className={`pointer-events-none absolute right-[14.6%] bottom-[14.6%] translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white ${
-              presenceDot[status]
-            } ${collapsed ? "h-2.5 w-2.5" : "h-4 w-4"}`}
-          />
+          <Tooltip title={presenceLabel[status]}>
+            <span
+              role="img"
+              aria-label={presenceLabel[status]}
+              className={`absolute right-[14.6%] bottom-[14.6%] translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white ${
+                presenceDot[status]
+              } ${collapsed ? "h-2.5 w-2.5" : "h-4 w-4"}`}
+            />
+          </Tooltip>
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
           <Atom.Heading
@@ -176,7 +180,6 @@ function ProfileHeader({
           {!collapsed && (
             <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
               <span>@{profile.username}</span>
-              <span>· {presenceLabel[status]}</span>
               {profile.isHeadAdmin ? (
                 <Atom.RoleBadge role="head-admin" />
               ) : (
@@ -667,9 +670,7 @@ export function UserProfile({ username }: { username: string }) {
   const status: PresenceStatus = !online
     ? "offline"
     : isSelf
-      ? me?.busy
-        ? "busy"
-        : "online"
+      ? (me?.status ?? "online")
       : (liveStatuses[profile.userId] ?? profile.status);
   const social = !isSelf && me && (
     <>

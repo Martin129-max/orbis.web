@@ -67,7 +67,7 @@ export function MemberPresence({ communityId }: { communityId: number }) {
       : (presence[member.userId] ?? member.online);
   const statusOf = (member: Member): PresenceStatus => {
     if (member.userId !== profile?.userId) return statuses[member.userId] ?? member.status;
-    return profile.appearOffline ? "offline" : profile.busy ? "busy" : "online";
+    return profile.appearOffline ? "offline" : profile.status;
   };
   const online = members.filter(isOnline).map((member) => ({ ...member, status: statusOf(member) }));
   const offline = members.filter((member) => !isOnline(member));

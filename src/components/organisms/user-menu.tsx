@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import { useAuthStore } from "@/stores/auth-store";
-import { AppearOfflineSwitch, BusySwitch } from "./appear-offline-switch";
+import { StatusPicker } from "./status-picker";
 import { ThemeToggle } from "./theme-toggle";
 
 export function UserMenu() {
@@ -49,33 +49,26 @@ export function UserMenu() {
       }}
       content={
         <div className="flex w-[300px] flex-col gap-4">
-          <div className="flex items-center gap-3">
-            {profile && (
-              <>
-                <Atom.Avatar
-                  label={profile.username}
-                  src={profile.avatarUrl}
-                  seed={profile.userId}
-                />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate">{profile.username}</span>
-                  <span className="truncate text-xs text-muted">{username}</span>
-                </div>
-              </>
-            )}
-          </div>
+          {profile && (
+            <Link
+              href={`/users/${profile.username}`}
+              onClick={() => setOpen(false)}
+              className="focus-ring -mx-2 flex min-w-0 items-center gap-3 rounded-md px-2 py-1.5 transition-colors hover:bg-rail-item"
+            >
+              <Atom.Avatar
+                label={profile.username}
+                src={profile.avatarUrl}
+                seed={profile.userId}
+              />
+              <div className="flex min-w-0 flex-1 flex-col">
+                <span className="truncate">{profile.username}</span>
+                <span className="truncate text-xs text-muted">{username}</span>
+              </div>
+            </Link>
+          )}
           <hr className="border-divider" />
           <p className="text-xs text-muted uppercase">Status</p>
-          <div className="flex flex-col gap-2">
-            <label className="flex items-center justify-between gap-2 text-sm">
-              Busy
-              <BusySwitch size="small" />
-            </label>
-            <label className="flex items-center justify-between gap-2 text-sm">
-              Appear offline
-              <AppearOfflineSwitch size="small" />
-            </label>
-          </div>
+          <StatusPicker />
           <hr className="border-divider" />
           <p className="text-xs text-muted uppercase">Theme</p>
           <ThemeToggle block />
@@ -115,7 +108,7 @@ export function UserMenu() {
           label={profile?.username ?? "?"}
           src={profile?.avatarUrl}
           seed={profile?.userId ?? 0}
-          presence={profile?.appearOffline ? "offline" : profile?.busy ? "busy" : "online"}
+          presence={profile?.appearOffline ? "offline" : (profile?.status ?? "online")}
         />
       </button>
     </Popover>
