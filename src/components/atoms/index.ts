@@ -12,4 +12,3 @@ export * from "./logo-mark";
 export * from "./pill";
 export * from "./role-badge";
 export * from "./text-link";
-export * from "./status-dot";

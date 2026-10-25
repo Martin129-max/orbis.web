@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { PresenceStatus } from "@/lib/api";
-import { StatusDot } from "./status-dot";
+import { presenceDot } from "@/lib/presence";
 
 const tones = ["bg-accent-soft", "bg-rail-item"];
 
@@ -51,9 +51,11 @@ export function Avatar({
         Array.from(label)[0]?.toUpperCase()
       )}
       {presence && (
-        <span className="absolute -right-px -bottom-px flex h-3 w-3 rounded-full border-2 border-surface bg-surface">
-          <StatusDot status={presence} />
-        </span>
+        <span
+          className={`absolute -right-px -bottom-px h-3 w-3 rounded-full border-2 border-surface ${
+            presenceDot[presence]
+          }`}
+        />
       )}
     </span>
   );
