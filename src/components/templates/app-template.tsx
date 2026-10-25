@@ -15,7 +15,7 @@ export function AppTemplate({ children }: { children: ReactNode }) {
           <div className="hidden authenticated:contents">
             <Organism.TopBar />
           </div>
-          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background transition-[border-radius] duration-300 authenticated:rounded-tl-2xl authenticated:border-t authenticated:border-l authenticated:border-divider [&:has(+[data-dock=open])]:rounded-bl-2xl [&:has(+[data-dock=open])]:border-b">
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background transition-[border-radius] duration-300 authenticated:rounded-tl-2xl authenticated:border-t authenticated:border-l authenticated:border-divider [&:has(+[data-dock])]:rounded-bl-2xl [&:has(+[data-dock])]:border-b">
             {children}
           </div>
           <Organism.LibraryDock />

@@ -17,6 +17,7 @@ import {
 } from "./library-view";
 
 const PANEL_HEIGHT = 352;
+const CLOSED_HEIGHT = 12;
 const PULL_DISTANCE = 40;
 const notchCorners = [
   "before:pointer-events-none before:absolute before:right-full before:bottom-0 before:size-2.5 before:content-['']",
@@ -92,7 +93,10 @@ export function LibraryDock() {
   const dock = useRef<HTMLElement>(null);
   const shown = profile !== null && pathname !== "/library";
   const height = shown
-    ? Math.min(PANEL_HEIGHT, Math.max(0, (open ? PANEL_HEIGHT : 0) - (drag ?? 0)))
+    ? Math.min(
+        PANEL_HEIGHT,
+        Math.max(CLOSED_HEIGHT, (open ? PANEL_HEIGHT : CLOSED_HEIGHT) - (drag ?? 0)),
+      )
     : 0;
 
   useLayoutEffect(() => {
@@ -132,7 +136,11 @@ export function LibraryDock() {
     };
   }, [shown]);
 
-  if (!shown) return null;
+  if (!shown) {
+    return profile ? (
+      <div aria-hidden data-dock="" style={{ height: CLOSED_HEIGHT }} className="shrink-0" />
+    ) : null;
+  }
 
   function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
@@ -165,7 +173,7 @@ export function LibraryDock() {
     <section
       ref={dock}
       aria-label="Your library"
-      data-dock={height > 0 ? "open" : undefined}
+      data-dock=""
       style={{ height }}
       className={`relative z-10 shrink-0 bg-rail ${
         drag === null
@@ -198,7 +206,13 @@ export function LibraryDock() {
           className={`transition-transform duration-300 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
         />
       </button>
-      <div id="library-dock-panel" inert={!open} className="h-full overflow-hidden">
+      <div
+        id="library-dock-panel"
+        inert={!open}
+        className={`h-full overflow-hidden transition-[visibility] ${
+          open || drag !== null ? "visible" : "invisible delay-300"
+        }`}
+      >
         <div style={{ height: PANEL_HEIGHT }} className="flex flex-col">
           <LibraryTabs entries={entries} bordered={false} />
           <div className="flex min-h-0 flex-1 flex-col rounded-tl-2xl border-t border-l border-divider bg-background">
