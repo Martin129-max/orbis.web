@@ -49,7 +49,7 @@ import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
 import type { PresenceStatus } from "@/lib/api";
-import { presenceDot, presenceLabel } from "@/lib/presence";
+import { presenceLabel } from "@/lib/presence";
 
 const tabs = [
   { value: "posts", label: "Posts", icon: <Newspaper size={16} /> },
@@ -163,10 +163,12 @@ function ProfileHeader({
             <span
               role="img"
               aria-label={presenceLabel[status]}
-              className={`absolute right-[14.6%] bottom-[14.6%] translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white ${
-                presenceDot[status]
-              } ${collapsed ? "h-2.5 w-2.5" : "h-4 w-4"}`}
-            />
+              className={`absolute right-[14.6%] bottom-[14.6%] flex translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white bg-white ${
+                collapsed ? "h-2.5 w-2.5" : "h-4 w-4"
+              }`}
+            >
+              <Atom.StatusDot status={status} cutout="bg-white" />
+            </span>
           </Tooltip>
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">

@@ -55,7 +55,7 @@ export const tourStops: TourStop[] = [
     placement: "bottom",
     title: "Share something",
     description:
-      "Write a post and pick which community it goes to. Use the forum tab inside a community for longer discussions with votes.",
+      "Write a post for your wall, or pick one of your communities to share it there. Use the forum tab inside a community for longer discussions with votes.",
   },
   {
     target: "feed-filters",

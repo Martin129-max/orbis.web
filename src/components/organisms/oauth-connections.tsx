@@ -11,6 +11,7 @@ import {
 } from "@/lib/api";
 import { OAUTH_PROVIDERS, oauthColors, oauthLabels, startOAuth } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
+import { OAuthIcon } from "./oauth-buttons";
 
 export function OAuthConnections() {
   const [data, setData] = useState<{ enabled: OAuthProvider[]; connections: Connections } | null>(null);
@@ -72,7 +73,12 @@ export function OAuthConnections() {
 
           return (
             <li key={provider} className="flex items-center gap-3 py-3">
-              <span aria-hidden className={`h-3 w-3 shrink-0 rounded-full ${oauthColors[provider]}`} />
+              <span
+                aria-hidden
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${oauthColors[provider]}`}
+              >
+                <OAuthIcon provider={provider} />
+              </span>
               <div className="flex min-w-0 flex-1 flex-col">
                 <span className="text-sm font-semibold">{oauthLabels[provider]}</span>
                 <span className="truncate text-xs text-muted">

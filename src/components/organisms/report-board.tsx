@@ -1031,14 +1031,13 @@ export function ReportModal({
 export function DiscordWebhookButton() {
   const { message } = App.useApp();
   const [open, setOpen] = useState(false);
-  const [saved, setSaved] = useState<ReportWebhook>({ url: null, siteUrl: null });
+  const [saved, setSaved] = useState<ReportWebhook>({ url: null });
   const [url, setUrl] = useState("");
   const [pending, setPending] = useState<"save" | "remove" | null>(null);
   const [error, setError] = useState<string | null>(null);
   const webhook = url.trim();
   const webhookValid = DISCORD_WEBHOOK.test(webhook);
-  const site = () => window.location.origin;
-  const unchanged = () => webhook === saved.url && site() === saved.siteUrl;
+  const unchanged = webhook === saved.url;
 
   async function handleOpen() {
     setOpen(true);
@@ -1060,7 +1059,7 @@ export function DiscordWebhookButton() {
     setError(null);
     setPending(remove ? "remove" : "save");
     try {
-      const result = await setReportWebhook(token, remove ? null : { url: webhook, siteUrl: site() });
+      const result = await setReportWebhook(token, remove ? null : { url: webhook });
       setSaved(result);
       setOpen(false);
       message.success(remove ? "Discord posting turned off." : "New reports will be posted to Discord.");
@@ -1131,7 +1130,7 @@ export function DiscordWebhookButton() {
             <Atom.Button
               type="submit"
               loading={pending === "save"}
-              disabled={!webhookValid || unchanged() || pending === "remove"}
+              disabled={!webhookValid || unchanged || pending === "remove"}
             >
               Save
             </Atom.Button>

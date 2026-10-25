@@ -2,7 +2,8 @@
 
 import { Check } from "lucide-react";
 import { updatePreferences, type PresenceStatus } from "@/lib/api";
-import { presenceDot, presenceLabel } from "@/lib/presence";
+import * as Atom from "@atom";
+import { presenceLabel } from "@/lib/presence";
 import { useAuthStore } from "@/stores/auth-store";
 
 const choices: PresenceStatus[] = ["online", "idle", "busy", "offline"];
@@ -37,7 +38,9 @@ export function StatusPicker() {
           onClick={() => choose(choice)}
           className="focus-ring flex cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm transition-colors hover:bg-rail-item disabled:cursor-default"
         >
-          <span aria-hidden className={`h-2.5 w-2.5 shrink-0 rounded-full ${presenceDot[choice]}`} />
+          <span aria-hidden className="flex h-3.5 w-3.5 shrink-0">
+            <Atom.StatusDot status={choice} />
+          </span>
           <span className="flex-1">{choice === "offline" ? "Appear offline" : presenceLabel[choice]}</span>
           {current === choice && <Check size={16} aria-hidden className="text-accent" />}
         </button>

@@ -923,6 +923,7 @@ export type ChatMessage = {
   text: string;
   system: boolean;
   sentAt: string;
+  editedAt: string | null;
   replyTo: ChatReply | null;
   reactions: ChatReaction[];
 };
@@ -1007,6 +1008,20 @@ export async function sendMessage(
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Could not send your message."));
+  }
+  return res.json();
+}
+
+export async function editMessage(
+  token: string,
+  id: number,
+  messageId: number,
+  text: string,
+): Promise<ChatMessage> {
+  const res = await messagesRequest(token, `/${id}/messages/${messageId}`, "PATCH", { text });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not edit your message."));
   }
   return res.json();
 }
@@ -1408,7 +1423,7 @@ export async function getReport(token: string, reportId: number): Promise<Report
   return res.json();
 }
 
-export type ReportWebhook = { url: string | null; siteUrl: string | null };
+export type ReportWebhook = { url: string | null };
 
 export async function getReportWebhook(token: string): Promise<ReportWebhook> {
   const res = await api("/reports/webhook", {
@@ -1421,7 +1436,7 @@ export async function getReportWebhook(token: string): Promise<ReportWebhook> {
 
 export async function setReportWebhook(
   token: string,
-  webhook: { url: string; siteUrl: string } | null,
+  webhook: { url: string } | null,
 ): Promise<ReportWebhook> {
   const res = await api("/reports/webhook", {
     method: webhook ? "PUT" : "DELETE",

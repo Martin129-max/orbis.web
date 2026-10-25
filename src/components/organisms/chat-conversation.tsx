@@ -1,15 +1,17 @@
 "use client";
 
 import { Popover } from "antd";
-import { CornerUpLeft, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
+import { Check, CornerUpLeft, Pencil, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
 import {
   useEffect,
   useLayoutEffect,
   useRef,
   useState,
   useSyncExternalStore,
+  type Dispatch,
   type FormEvent,
   type KeyboardEvent,
+  type SetStateAction,
 } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -122,6 +124,8 @@ function Conversation({
   const markRead = useMessagesStore((state) => state.markRead);
   const react = useMessagesStore((state) => state.react);
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
+  const [editing, setEditing] = useState<ChatMessage | null>(null);
+  const [draft, setDraft] = useState("");
   const visible = usePageVisible();
   const list = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -176,7 +180,19 @@ function Conversation({
     }
   }
 
+  function startEdit(message: ChatMessage) {
+    setReplyTo(null);
+    setEditing(message);
+    setDraft(message.text);
+  }
+
+  function stopEdit() {
+    setEditing(null);
+    setDraft("");
+  }
+
   const chatted = messages?.filter((message) => !message.system) ?? [];
+  const lastOwn = chatted.findLast((message) => message.senderId === me);
   const latest = chatted.at(-1);
   const otherReadAt = history?.members[0]?.readAt;
   const seenDirect =
@@ -281,9 +297,17 @@ function Conversation({
                           title={formatTime(message.sentAt)}
                           className={`relative max-w-full rounded-2xl px-3 py-1.5 text-sm whitespace-pre-wrap [overflow-wrap:anywhere] ${
                             mine ? "bg-accent text-accent-foreground" : "bg-rail-item text-foreground"
-                          }`}
+                          } ${editing?.id === message.id ? "ring-2 ring-foreground/25" : ""}`}
                         >
                           {message.text}
+                          {message.editedAt && (
+                            <span
+                              title={`Edited ${formatTime(message.editedAt)}`}
+                              className="ml-1.5 text-[11px] opacity-70"
+                            >
+                              (edited)
+                            </span>
+                          )}
                         </p>
                         {link && (
                           <div className="mt-1 w-64 max-w-full">
@@ -303,7 +327,11 @@ function Conversation({
                         <MessageActions
                           mine={mine}
                           onReact={reactWith}
-                          onReply={() => setReplyTo(message)}
+                          onReply={() => {
+                            if (editing) stopEdit();
+                            setReplyTo(message);
+                          }}
+                          onEdit={mine ? () => startEdit(message) : undefined}
                         />
                       )}
                     </div>
@@ -364,7 +392,18 @@ function Conversation({
         </div>
       </div>
       {request && <RequestBanner conversation={conversation} />}
-      <Composer conversation={conversation} me={me} replyTo={replyTo} onReply={setReplyTo} />
+      <Composer
+        conversation={conversation}
+        me={me}
+        text={draft}
+        setText={setDraft}
+        replyTo={replyTo}
+        onReply={setReplyTo}
+        editing={editing}
+        lastOwn={lastOwn}
+        onEdit={startEdit}
+        onCancelEdit={stopEdit}
+      />
     </div>
   );
 }
@@ -427,10 +466,12 @@ function MessageActions({
   mine,
   onReact,
   onReply,
+  onEdit,
 }: {
   mine: boolean;
   onReact: (emoji: string) => void;
   onReply: () => void;
+  onEdit?: () => void;
 }) {
   const [picking, setPicking] = useState(false);
 
@@ -471,6 +512,11 @@ function MessageActions({
       <button type="button" aria-label="Reply" onClick={onReply} className="icon-button">
         <CornerUpLeft size={16} />
       </button>
+      {onEdit && (
+        <button type="button" aria-label="Edit" onClick={onEdit} className="icon-button">
+          <Pencil size={16} />
+        </button>
+      )}
     </div>
   );
 }
@@ -512,17 +558,29 @@ function RequestBanner({ conversation }: { conversation: Chat }) {
 function Composer({
   conversation,
   me,
+  text,
+  setText,
   replyTo,
   onReply,
+  editing,
+  lastOwn,
+  onEdit,
+  onCancelEdit,
 }: {
   conversation: Chat;
   me: number;
+  text: string;
+  setText: Dispatch<SetStateAction<string>>;
   replyTo: ChatMessage | null;
   onReply: (message: ChatMessage | null) => void;
+  editing: ChatMessage | null;
+  lastOwn: ChatMessage | undefined;
+  onEdit: (message: ChatMessage) => void;
+  onCancelEdit: () => void;
 }) {
   const { id } = conversation;
   const send = useMessagesStore((state) => state.send);
-  const [text, setText] = useState("");
+  const edit = useMessagesStore((state) => state.edit);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const [picking, setPicking] = useState(false);
@@ -546,11 +604,15 @@ function Composer({
   }, [id]);
 
   useEffect(() => {
-    if (replyTo) input.current?.focus();
-  }, [replyTo]);
+    const element = input.current;
+    if (!element || (!replyTo && !editing)) return;
+    element.focus();
+    element.setSelectionRange(element.value.length, element.value.length);
+  }, [replyTo, editing]);
 
   function handleChange(value: string) {
     setText(value);
+    if (editing) return;
     if (!value.trim()) {
       stopTyping();
       return;
@@ -581,6 +643,21 @@ function Composer({
     const message = text.trim();
     if (!message) return;
 
+    if (editing) {
+      setError(null);
+      if (message === editing.text) {
+        onCancelEdit();
+        return;
+      }
+      try {
+        await edit(id, editing.id, message);
+        onCancelEdit();
+      } catch (cause) {
+        setError((cause as Error).message);
+      }
+      return;
+    }
+
     setText("");
     setError(null);
     stopTyping();
@@ -596,8 +673,17 @@ function Composer({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Escape" && editing) {
+      onCancelEdit();
+      return;
+    }
     if (event.key === "Escape" && replyTo) {
       onReply(null);
+      return;
+    }
+    if (event.key === "ArrowUp" && !text && !editing && lastOwn) {
+      event.preventDefault();
+      onEdit(lastOwn);
       return;
     }
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
@@ -609,6 +695,22 @@ function Composer({
   return (
     <form onSubmit={submit} className="flex flex-col gap-2 border-t border-divider p-2">
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      {editing && (
+        <div className="flex items-start gap-2 rounded-lg bg-rail-item/60 px-3 py-2 text-xs">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">Editing message</p>
+            <p className="truncate text-muted">Enter to save · Esc to cancel</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Cancel editing"
+            onClick={onCancelEdit}
+            className="icon-button -m-1"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
       {replyTo && (
         <div className="flex items-start gap-2 rounded-lg bg-rail-item/60 px-3 py-2 text-xs">
           <div className="min-w-0 flex-1">
@@ -670,11 +772,11 @@ function Composer({
         </Popover>
         <button
           type="submit"
-          aria-label="Send"
+          aria-label={editing ? "Save edit" : "Send"}
           disabled={!text.trim()}
           className="focus-ring flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-accent transition-colors hover:bg-rail-item disabled:cursor-default disabled:opacity-40 disabled:hover:bg-transparent"
         >
-          <SendHorizontal size={18} />
+          {editing ? <Check size={18} /> : <SendHorizontal size={18} />}
         </button>
       </div>
     </form>
