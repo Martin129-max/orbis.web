@@ -14,9 +14,14 @@ export function PageWallpaper({
   return (
     <>
       {src && (
-        <div aria-hidden className="pointer-events-none absolute inset-0 -z-10">
-          <Image src={src} alt="" fill unoptimized className="object-cover" />
-          <div className="absolute inset-0 bg-background/55" />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 -z-10 [clip-path:inset(0)]"
+        >
+          <div className="fixed inset-0">
+            <Image src={src} alt="" fill unoptimized className="object-cover" />
+            <div className="absolute inset-0 bg-background/55" />
+          </div>
         </div>
       )}
       {onUpload && onRemove && (
