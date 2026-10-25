@@ -225,7 +225,7 @@ export function EntryMenu({
         <button
           type="button"
           aria-label={`Options for ${entry.title}`}
-          className="focus-ring flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm"
+          className="focus-ring flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm pointer-coarse:h-9 pointer-coarse:w-9"
         >
           <MoreHorizontal size={15} />
         </button>

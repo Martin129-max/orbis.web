@@ -200,6 +200,7 @@ export function LibraryDock() {
         }}
         className={`focus-ring absolute bottom-full left-1/2 flex h-7 -translate-x-1/2 cursor-grab touch-none items-center rounded-t-lg border border-b-0 border-divider bg-rail px-5 select-none active:cursor-grabbing ${notchCorners}`}
       >
+        <span aria-hidden className="absolute -inset-x-3 -inset-y-2" />
         <ChevronUp
           size={16}
           aria-hidden

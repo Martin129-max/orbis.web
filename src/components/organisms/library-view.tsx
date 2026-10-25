@@ -279,7 +279,10 @@ function StatusPill({
         aria-label={`${label}. Change status of ${entry.title}`}
         className="focus-ring w-full cursor-pointer rounded-full"
       >
-        <Atom.Pill tone={statusTones[entry.status]} className="h-7 w-full! justify-between px-3">
+        <Atom.Pill
+          tone={statusTones[entry.status]}
+          className="h-7 w-full! justify-between px-3 pointer-coarse:h-9"
+        >
           <span className="flex min-w-0 items-center gap-1.5">
             <Icon size={13} aria-hidden className="shrink-0" />
             <span className="truncate">{label}</span>
@@ -327,7 +330,7 @@ export function LibraryCard({
   }
 
   return (
-    <div className={`relative overflow-hidden rounded-md ${className}`}>
+    <div className={`@container relative overflow-hidden rounded-md ${className}`}>
       <Link
         href={mediaPath(entry.mediaType, entry.sourceId)}
         aria-label={entry.title}
@@ -335,8 +338,8 @@ export function LibraryCard({
       >
         <MediaCover src={entry.coverImage} className="w-full" />
       </Link>
-      <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 via-black/50 to-transparent p-2 pb-8">
-        <span className="line-clamp-2 text-sm leading-snug font-semibold text-white">
+      <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start gap-2 bg-gradient-to-b from-black/85 via-black/50 to-transparent p-2 pb-8">
+        <span className="line-clamp-2 min-w-0 flex-1 text-sm leading-snug font-semibold text-white">
           {!entry.isPublic && (
             <Lock
               size={12}
@@ -346,20 +349,23 @@ export function LibraryCard({
           )}
           {entry.title}
         </span>
+        <div className="pointer-events-auto hidden shrink-0 pointer-coarse:@max-[11rem]:block">
+          <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
+        </div>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-2 pt-8">
         {tracksProgress && (
           <div className="flex items-center gap-1">
             <div
               aria-label={`Progress in ${unit}s`}
-              className="pointer-events-auto flex h-7 min-w-0 flex-1 items-center justify-between rounded-full bg-surface/90 text-foreground shadow-sm"
+              className="pointer-events-auto flex h-7 min-w-0 flex-1 items-center justify-between rounded-full bg-surface/90 text-foreground shadow-sm pointer-coarse:h-9"
             >
               <button
                 type="button"
                 aria-label={`One fewer ${unit}`}
                 disabled={saving || entry.progress <= 0}
                 onClick={() => save(entry.progress - 1)}
-                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
               >
                 <ChevronDown size={15} />
               </button>
@@ -395,12 +401,12 @@ export function LibraryCard({
                 aria-label={`One more ${unit}`}
                 disabled={saving || finished}
                 onClick={() => save(entry.progress + 1)}
-                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
               >
                 <ChevronUp size={15} />
               </button>
             </div>
-            <div className="pointer-events-auto shrink-0">
+            <div className="pointer-events-auto shrink-0 pointer-coarse:@max-[11rem]:hidden">
               <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
             </div>
           </div>
@@ -410,7 +416,7 @@ export function LibraryCard({
             <StatusPill entry={entry} onChange={onChange} />
           </div>
           {!tracksProgress && (
-            <div className="pointer-events-auto shrink-0">
+            <div className="pointer-events-auto shrink-0 pointer-coarse:@max-[11rem]:hidden">
               <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
             </div>
           )}
@@ -686,6 +692,17 @@ function ViewToggle() {
   );
 }
 
+function typeLabel(value: TypeFilter, compact = false) {
+  return (
+    <span className="flex items-center gap-1.5">
+      {value === "all" ? <Library size={12} /> : mediaTypes[value].icon}
+      <span className={compact ? "hidden sm:inline" : undefined}>
+        {value === "all" ? "All types" : value === "game" ? "Games" : mediaTypes[value].label}
+      </span>
+    </span>
+  );
+}
+
 export function LibraryTabs({
   entries,
   actions,
@@ -743,15 +760,11 @@ export function LibraryTabs({
           value={type}
           onChange={setType}
           popupMatchSelectWidth={false}
-          className="w-32"
+          className="w-16 sm:w-32"
+          labelRender={({ value }) => typeLabel(value as TypeFilter, true)}
           options={(["all", "anime", "manga", "game"] as const).map((value) => ({
             value,
-            label: (
-              <span className="flex items-center gap-1.5">
-                {value === "all" ? <Library size={12} /> : mediaTypes[value].icon}
-                {value === "all" ? "All types" : value === "game" ? "Games" : mediaTypes[value].label}
-              </span>
-            ),
+            label: typeLabel(value),
           }))}
         />
         {actions}
@@ -792,7 +805,7 @@ function LibraryShelf({
       ) : view === "list" ? (
         <ListView entries={shown} onChange={onChange} onRemove={onRemove} />
       ) : (
-        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
+        <ul className="grid grid-cols-[repeat(auto-fill,minmax(8.5rem,1fr))] gap-3 sm:grid-cols-3 md:grid-cols-4">
           {shown.map((entry) => (
             <li key={entry.id}>
               <LibraryCard entry={entry} onChange={onChange} onRemove={onRemove} />
