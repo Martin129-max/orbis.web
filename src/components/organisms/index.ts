@@ -50,3 +50,6 @@ export * from "./site-stats";
 export * from "./theme-toggle";
 export * from "./thread-card";
 export * from "./user-profile";
+export * from "./page-search";
+export * from "./top-bar";
+export * from "./user-menu";

@@ -18,7 +18,7 @@ export function NotificationBell({
     unreadCount > 0 ? `Notifications, ${unreadCount} unread` : "Notifications";
 
   return (
-    <Tooltip title="Notifications" placement="right">
+    <Tooltip title="Notifications" placement="bottom">
       <Link
         href="/notifications"
         aria-label={label}
@@ -30,7 +30,7 @@ export function NotificationBell({
         {unreadCount > 0 && (
           <span
             aria-hidden
-            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-rail bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
+            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
           >
             {unreadCount > 99 ? "99+" : unreadCount}
           </span>

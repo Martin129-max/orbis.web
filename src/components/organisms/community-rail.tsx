@@ -26,14 +26,11 @@ import {
   Folder,
   House,
   LibraryBig,
-  LogOut,
   Plus,
-  Settings,
-  User,
 } from "lucide-react";
-import { Dropdown, Popover, Tooltip } from "antd";
+import { Dropdown, Tooltip } from "antd";
 import Link from "next/link";
-import { useParams, usePathname, useRouter } from "next/navigation";
+import { useParams, usePathname } from "next/navigation";
 import {
   useEffect,
   useMemo,
@@ -53,14 +50,10 @@ import {
   ungroup,
   type RailDrop,
 } from "@/lib/rail-layout";
-import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
 import { CreateCommunityModal } from "./create-community-modal";
 import { FolderSettingsModal } from "./folder-settings-modal";
-import { AppearOfflineSwitch } from "./appear-offline-switch";
-import { ThemeToggle } from "./theme-toggle";
-import { NotificationBell } from "./notification-bell";
 
 function itemClass(active: boolean) {
   return `focus-ring relative flex h-9 w-9 cursor-pointer items-center justify-center rounded-full font-display text-[17px] leading-none font-bold sm:h-12 sm:w-12 sm:text-[23px] transition-colors motion-reduce:transition-none ${
@@ -293,103 +286,6 @@ function RailEndDrop({ highlighted }: { highlighted: boolean }) {
         highlighted ? "bg-accent/15 ring-1 ring-inset ring-accent/50" : ""
       }`}
     />
-  );
-}
-
-function UserButton() {
-  const router = useRouter();
-  const profile = useAuthStore((state) => state.profile);
-  const fetchProfile = useAuthStore((state) => state.fetchProfile);
-  const logout = useAuthStore((state) => state.logout);
-  const [open, setOpen] = useState(false);
-
-  useEffect(() => {
-    if (!useAuthStore.getState().profile) fetchProfile().catch(() => null);
-  }, [fetchProfile]);
-
-  function handleLogout() {
-    setOpen(false);
-    logout();
-    router.push("/login");
-  }
-
-  const username = profile ? `@${profile.username}` : "Account";
-  const menuRow =
-    "focus-ring -mx-2 flex w-[calc(100%+1rem)] cursor-pointer items-center gap-3 rounded-md px-2 py-1.5 text-left text-sm text-foreground transition-colors hover:bg-rail-item hover:text-foreground";
-
-  return (
-    <Popover
-      open={open}
-      onOpenChange={setOpen}
-      trigger="click"
-      placement="rightBottom"
-      arrow={false}
-      align={{ offset: [12, 0] }}
-      styles={{ container: { padding: 20, borderRadius: 12 } }}
-      content={
-        <div className="flex w-[300px] flex-col gap-4">
-          <div className="flex items-center gap-3">
-            {profile && (
-              <>
-                <Atom.Avatar
-                  label={profile.username}
-                  src={profile.avatarUrl}
-                  seed={profile.userId}
-                />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate">{profile.username}</span>
-                  <span className="truncate text-xs text-muted">{username}</span>
-                </div>
-              </>
-            )}
-            <label className="ml-auto flex shrink-0 items-center gap-2">
-              <span className="text-xs text-muted">Appear offline</span>
-              <AppearOfflineSwitch size="small" />
-            </label>
-          </div>
-          <hr className="border-divider" />
-          <p className="text-xs text-muted uppercase">Theme</p>
-          <ThemeToggle block />
-          <hr className="border-divider" />
-          <Link
-            href={profile ? `/users/${profile.username}` : "/profile"}
-            onClick={() => setOpen(false)}
-            className={menuRow}
-          >
-            <User size={18} />
-            View profile
-          </Link>
-          <Link href="/settings" onClick={() => setOpen(false)} className={menuRow}>
-            <Settings size={18} />
-            Settings
-          </Link>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className={menuRow}
-          >
-            <LogOut size={18} />
-            Log out
-          </button>
-        </div>
-      }
-    >
-      <button
-        type="button"
-        aria-label={`Account: ${username}`}
-        data-tour="account"
-        aria-expanded={open}
-        className="focus-ring rounded-full"
-      >
-        <Atom.Avatar
-          size="rail"
-          label={profile?.username ?? "?"}
-          src={profile?.avatarUrl}
-          seed={profile?.userId ?? 0}
-          presence={profile?.appearOffline ? "offline" : "online"}
-        />
-      </button>
-    </Popover>
   );
 }
 
@@ -809,7 +705,23 @@ export function CommunityRail() {
         </li>
         )}
         <RailEndDrop highlighted={drop?.overKey === RAIL_END_KEY} />
-        <li aria-hidden className="h-px w-full shrink-0 bg-divider" />
+      </ul>
+      <DragOverlay dropAnimation={null} className="pointer-events-none flex justify-center">
+        {draggedCommunity && (
+          <div
+            aria-hidden
+            className={`${itemClass(draggedCommunity.id === activeId)} cursor-grabbing ring-2 ring-accent ring-offset-2 ring-offset-rail`}
+          >
+            <Atom.CommunityIcon
+              name={draggedCommunity.name}
+              src={draggedCommunity.iconUrl}
+            />
+          </div>
+        )}
+      </DragOverlay>
+      </DndContext>
+      <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
+      <ul className="flex w-full shrink-0 flex-col items-center gap-4">
         <RailSlot label="Create a community">
           <button
             type="button"
@@ -833,27 +745,6 @@ export function CommunityRail() {
           </Link>
         </RailSlot>
       </ul>
-      <DragOverlay dropAnimation={null} className="pointer-events-none flex justify-center">
-        {draggedCommunity && (
-          <div
-            aria-hidden
-            className={`${itemClass(draggedCommunity.id === activeId)} cursor-grabbing ring-2 ring-accent ring-offset-2 ring-offset-rail`}
-          >
-            <Atom.CommunityIcon
-              name={draggedCommunity.name}
-              src={draggedCommunity.iconUrl}
-            />
-          </div>
-        )}
-      </DragOverlay>
-      </DndContext>
-      <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
-      <div className="shrink-0">
-        <NotificationBell className={itemClass} />
-      </div>
-      <div className="shrink-0">
-        <UserButton />
-      </div>
       <CreateCommunityModal open={creating} onClose={() => setCreating(false)} />
       <FolderSettingsModal
         folder={editing}
