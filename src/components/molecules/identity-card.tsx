@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { ReactNode } from "react";
 
 export function IdentityCard({
@@ -8,6 +9,8 @@ export function IdentityCard({
   subtitle,
   badge,
   action,
+  href,
+  linkLabel,
   children,
 }: {
   coverUrl: string | null;
@@ -16,10 +19,19 @@ export function IdentityCard({
   subtitle: ReactNode;
   badge?: ReactNode;
   action?: ReactNode;
+  href?: string;
+  linkLabel?: string;
   children?: ReactNode;
 }) {
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-lg border border-divider bg-surface transition-colors hover:border-muted">
+    <div className="relative flex h-full flex-col overflow-hidden rounded-lg border border-divider bg-surface transition-colors hover:border-muted">
+      {href && (
+        <Link
+          href={href}
+          aria-label={linkLabel}
+          className="absolute inset-0 z-10 rounded-lg focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-accent"
+        />
+      )}
       <div className="relative h-14 shrink-0 bg-gradient-to-br from-accent-soft to-rail-item">
         {coverUrl && (
           <Image src={coverUrl} alt="" fill unoptimized className="object-cover" />
@@ -36,7 +48,7 @@ export function IdentityCard({
           </span>
           <span className="truncate text-xs text-muted">{subtitle}</span>
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="relative z-20 shrink-0">{action}</div>}
       </div>
       {children && <div className="px-3 pb-3">{children}</div>}
     </div>

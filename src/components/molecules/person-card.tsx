@@ -1,8 +1,6 @@
-import Link from "next/link";
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
 import { IdentityCard } from "./identity-card";
-import { UserLink } from "./user-link";
 
 export function PersonCard({
   userId,
@@ -26,23 +24,13 @@ export function PersonCard({
   return (
     <IdentityCard
       coverUrl={coverUrl}
-      avatar={
-        <Link
-          href={`/users/${username}`}
-          aria-label={`View ${label}’s profile`}
-          className="focus-ring block rounded-full"
-        >
-          <Atom.Avatar label={label} src={avatarUrl} seed={userId} presence={presence} />
-        </Link>
-      }
-      title={
-        <UserLink username={username} className="truncate text-[13px] font-semibold">
-          {label}
-        </UserLink>
-      }
+      avatar={<Atom.Avatar label={label} src={avatarUrl} seed={userId} presence={presence} />}
+      title={<span className="truncate text-[13px] font-semibold">{label}</span>}
       subtitle={`@${username}`}
       badge={badge}
       action={action}
+      href={`/users/${username}`}
+      linkLabel={`View ${label}’s profile`}
     />
   );
 }

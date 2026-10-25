@@ -16,7 +16,6 @@ import {
   Users,
   WifiOff,
 } from "lucide-react";
-import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -79,19 +78,15 @@ export function LandingCommunities() {
           {communities.map((community) => (
             <li key={community.id}>
               <LandingReveal>
-                <Link
+                <Molecule.CommunityCard
+                  {...community}
                   href={`/communities/${community.id}`}
-                  className="focus-ring block h-full rounded-lg"
-                >
-                  <Molecule.CommunityCard
-                    {...community}
-                    action={
-                      <span className="flex items-center gap-1 text-xs font-semibold text-accent">
-                        View community <ArrowRight size={14} aria-hidden />
-                      </span>
-                    }
-                  />
-                </Link>
+                  action={
+                    <span className="flex items-center gap-1 text-xs font-semibold text-accent">
+                      View community <ArrowRight size={14} aria-hidden />
+                    </span>
+                  }
+                />
               </LandingReveal>
             </li>
           ))}

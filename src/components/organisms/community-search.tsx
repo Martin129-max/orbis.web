@@ -259,6 +259,7 @@ export function CommunitySearch() {
                   iconUrl={community.iconUrl}
                   coverUrl={community.coverUrl}
                   memberCount={community.memberCount}
+                  href={`/communities/${community.id}`}
                   action={<JoinAction community={community} joining={joining} onJoin={join} />}
                 />
                 <div className="invisible absolute inset-x-0 top-0 z-20 rounded-lg opacity-0 shadow-[0_16px_32px_-16px_rgb(0_0_0/0.45)] transition-[opacity,visibility] delay-0 duration-150 group-focus-within:visible group-focus-within:opacity-100 group-hover:visible group-hover:opacity-100 group-hover:delay-300 motion-reduce:transition-none">
@@ -267,6 +268,7 @@ export function CommunitySearch() {
                     iconUrl={community.iconUrl}
                     coverUrl={community.coverUrl}
                     memberCount={community.memberCount}
+                    href={`/communities/${community.id}`}
                     action={<JoinAction community={community} joining={joining} onJoin={join} />}
                   >
                     <CommunityDetails community={community} />

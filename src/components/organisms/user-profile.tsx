@@ -267,6 +267,7 @@ function Wall({
     { live: true, guest: true },
   );
   const name = displayName(profile);
+  const signedIn = useAuthStore((state) => Boolean(state.token));
 
   async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
@@ -276,6 +277,22 @@ function Wall({
 
   return (
     <div className="flex flex-col gap-3">
+      {!signedIn && (
+        <section className="flex flex-col gap-4 rounded-xl border border-divider bg-surface p-5 sm:p-6">
+          <div>
+            <h2 className="font-display text-xl font-bold">
+              Log in to connect with {name}
+            </h2>
+            <p className="mt-1 text-sm text-muted">
+              Log in to add {name} as a friend, post on their wall, and join the
+              conversation.
+            </p>
+          </div>
+          <div>
+            <Molecule.LoginLink>Log in</Molecule.LoginLink>
+          </div>
+        </section>
+      )}
       {canPost && (
         <div data-tour="profile-wall">
           <PostComposer
@@ -403,6 +420,7 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
               iconUrl={community.iconUrl}
               coverUrl={community.coverUrl}
               memberCount={community.memberCount}
+              href={`/communities/${community.id}`}
               badge={community.isOwner ? <Atom.RoleBadge role="owner" /> : undefined}
               action={
                 joined.some(({ id }) => id === community.id) ? (

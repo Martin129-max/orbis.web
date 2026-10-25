@@ -149,6 +149,7 @@ function CommunityCardItem({ community }: { community: DirectoryCommunity }) {
         iconUrl={community.iconUrl}
         coverUrl={community.coverUrl}
         memberCount={community.memberCount}
+        href={`/communities/${community.id}`}
         badge={
           <Atom.Pill
             size="xs"

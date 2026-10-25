@@ -9,6 +9,7 @@ export function CommunityCard({
   memberCount,
   badge,
   action,
+  href,
   children,
 }: {
   name: string;
@@ -17,6 +18,7 @@ export function CommunityCard({
   memberCount: number;
   badge?: ReactNode;
   action?: ReactNode;
+  href?: string;
   children?: ReactNode;
 }) {
   const icon = (
@@ -36,6 +38,8 @@ export function CommunityCard({
       subtitle={`${memberCount.toLocaleString()} ${memberCount === 1 ? "member" : "members"}`}
       badge={badge}
       action={action}
+      href={href}
+      linkLabel={`Open ${name}`}
     >
       {children}
     </IdentityCard>
