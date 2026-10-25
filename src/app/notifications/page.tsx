@@ -8,7 +8,6 @@ export default function NotificationsPage() {
       <main className="flex min-h-0 flex-1 flex-col">
         <Template.PageHeader
           center={<Organism.NotificationSearch />}
-          actions={<Organism.SidePanelToggle label="Friends" />}
         >
           <Atom.Heading>Notifications</Atom.Heading>
         </Template.PageHeader>

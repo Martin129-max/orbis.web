@@ -1,8 +1,9 @@
 "use client";
 
 import { Tooltip } from "antd";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, UserPlus } from "lucide-react";
 import Link from "next/link";
+import { useFriendsStore } from "@/stores/friends-store";
 import { useLayoutStore } from "@/stores/layout-store";
 import { useMessagesStore } from "@/stores/messages-store";
 import { NotificationBell } from "./notification-bell";
@@ -17,6 +18,27 @@ function itemClass(active: boolean) {
   }`;
 }
 
+function RequestsButton() {
+  const pending = useFriendsStore((state) => state.incoming.length);
+  const label = pending > 0 ? `Friend requests, ${pending} pending` : "Friend requests";
+
+  return (
+    <Tooltip title="Friend requests" placement="bottom">
+      <Link href="/requests" data-tour="friend-requests" aria-label={label} className={itemClass(false)}>
+        <UserPlus size={20} />
+        {pending > 0 && (
+          <span
+            aria-hidden
+            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-rail bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
+          >
+            {pending > 99 ? "99+" : pending}
+          </span>
+        )}
+      </Link>
+    </Tooltip>
+  );
+}
+
 function MessagesButton() {
   const unread = useMessagesStore(
     (state) =>
@@ -27,12 +49,12 @@ function MessagesButton() {
 
   return (
     <Tooltip title="Messages" placement="bottom">
-      <Link href="/?tab=messages" aria-label={label} className={itemClass(false)}>
+      <Link href="/?tab=messages" data-tour="messages" aria-label={label} className={itemClass(false)}>
         <MessageCircle size={20} />
         {unread > 0 && (
           <span
             aria-hidden
-            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-background bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
+            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-rail bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
           >
             {unread > 99 ? "99+" : unread}
           </span>
@@ -47,12 +69,14 @@ export function TopBar() {
   const hasPageSearch = useLayoutStore((state) => state.pageSearches > 0);
 
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-divider px-4 sm:h-16 sm:gap-6 sm:px-8">
-      <div className="w-full max-w-md min-w-0 flex-1">
+    <header className="grid h-14 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-rail px-4 sm:h-16 sm:grid-cols-[1fr_minmax(0,28rem)_1fr] sm:gap-6 sm:px-8">
+      <div aria-hidden className="hidden sm:block" />
+      <div className="min-w-0">
         <div ref={setSearchSlot} className="contents" />
         {!hasPageSearch && <PeopleSearch />}
       </div>
-      <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-2">
+      <div className="flex items-center justify-end gap-1 sm:gap-2">
+        <RequestsButton />
         <MessagesButton />
         <NotificationBell className={itemClass} />
         <UserMenu />

@@ -53,9 +53,7 @@ export default function CommunitySettingsPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <Template.PageHeader
-            actions={<Organism.SidePanelToggle label="Members" />}
-          >
+          <Template.PageHeader>
             <Link
               href={`/communities/${current.community.id}`}
               aria-label={`Back to ${current.community.name}`}

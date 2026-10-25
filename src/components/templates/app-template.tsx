@@ -7,7 +7,7 @@ export function AppTemplate({ children }: { children: ReactNode }) {
       <div className="shrink-0 authenticated:hidden">
         <Organism.SiteHeader />
       </div>
-      <div className="flex min-h-0 flex-1">
+      <div className="flex min-h-0 flex-1 authenticated:bg-rail">
         <div className="hidden authenticated:contents">
           <Organism.CommunityRail />
         </div>
@@ -15,7 +15,9 @@ export function AppTemplate({ children }: { children: ReactNode }) {
           <div className="hidden authenticated:contents">
             <Organism.TopBar />
           </div>
-          {children}
+          <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-background authenticated:rounded-tl-2xl authenticated:border-t authenticated:border-l authenticated:border-divider">
+            {children}
+          </div>
         </div>
         <Organism.ChatDock />
         <Organism.NotificationToasts />

@@ -128,17 +128,14 @@ export default function CommunityPage() {
             collapsed={collapsed}
             onImage={canManage(current.community) ? handleImage : undefined}
             actions={
-              <>
-                {canManage(current.community) && (
-                  <span data-tour="community-settings" className="flex">
-                    <Molecule.SettingsLink
-                      href={`/communities/${current.community.id}/settings`}
-                      label="Community settings"
-                    />
-                  </span>
-                )}
-                <Organism.SidePanelToggle label="Members" />
-              </>
+              canManage(current.community) && (
+                <span data-tour="community-settings" className="flex">
+                  <Molecule.SettingsLink
+                    href={`/communities/${current.community.id}/settings`}
+                    label="Community settings"
+                  />
+                </span>
+              )
             }
           />
           {!joinPrompt && <Organism.PageTour name="community" />}

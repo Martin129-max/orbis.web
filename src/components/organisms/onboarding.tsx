@@ -64,7 +64,13 @@ export const tourStops: TourStop[] = [
     description: "Switch between Card and Compact view, and show or hide posts, forum threads, and library updates. Your choices are remembered across feeds on this browser.",
   },
   {
-    target: "messages-tab",
+    target: "friend-requests",
+    placement: "bottom",
+    title: "Friend requests",
+    description: "People who want to be your friend show up here. The number shows how many are waiting.",
+  },
+  {
+    target: "messages",
     placement: "bottom",
     title: "Messages",
     description:
@@ -81,7 +87,7 @@ export const tourStops: TourStop[] = [
     placement: "left",
     title: "Friends",
     description:
-      "Accept friend requests and see who’s online. Inside a community, this panel shows who’s online there.",
+      "See which friends are online. Inside a community, this panel shows who’s online there.",
   },
   {
     target: "notifications",

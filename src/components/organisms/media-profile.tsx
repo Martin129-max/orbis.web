@@ -27,7 +27,7 @@ import {
 } from "./library-view";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
-import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
+import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
 
@@ -188,7 +188,6 @@ function MediaHeader({
       </div>
       <div className="absolute top-2.5 right-4 flex items-center gap-1.5 rounded-lg bg-surface/85 p-1 backdrop-blur sm:top-4 sm:right-8">
         <LibraryAction profile={profile} onChange={onChange} />
-        <SidePanelToggle label="People" />
       </div>
     </header>
   );

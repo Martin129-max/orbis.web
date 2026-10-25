@@ -45,7 +45,7 @@ import { ReportButton } from "./report-content";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { ProfileLibrary } from "./profile-library";
-import { PanelHeading, SidePanel, SidePanelToggle } from "./side-panel";
+import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
 
@@ -727,7 +727,6 @@ export function UserProfile({ username }: { username: string }) {
                 </>
               )
             )}
-            <SidePanelToggle label={PANEL_LABEL} />
           </>
         }
       />

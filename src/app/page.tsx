@@ -11,7 +11,6 @@ export default function Home() {
           <main className="flex min-h-0 flex-1 flex-col">
             <Template.PageHeader
               center={<Organism.PeopleSearch />}
-              actions={<Organism.SidePanelToggle label="Friends" />}
             >
               <Atom.Heading>Home</Atom.Heading>
             </Template.PageHeader>

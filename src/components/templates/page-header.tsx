@@ -13,8 +13,14 @@ export function PageHeader({
   actions?: ReactNode;
 }) {
   return (
-    <header className="flex h-14 shrink-0 items-center gap-3 border-b border-divider px-4 sm:h-[72px] sm:gap-6 sm:px-8">
-      <div className="flex min-w-0 flex-1 items-center gap-2">{children}</div>
+    <header
+      className={`flex h-14 shrink-0 items-center gap-3 border-b border-divider px-4 sm:h-[72px] sm:gap-6 sm:px-8 ${
+        tagline || actions ? "" : "authenticated:sm:hidden"
+      }`}
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2 authenticated:sm:invisible">
+        {children}
+      </div>
       {center && <Organism.PageSearch>{center}</Organism.PageSearch>}
       {tagline && (
         <p className="hidden shrink-0 text-xs text-muted uppercase md:block">

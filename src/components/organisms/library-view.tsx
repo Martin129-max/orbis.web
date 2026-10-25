@@ -40,7 +40,7 @@ import {
 import { mediaTypes } from "./activity-card";
 import { FriendsPanel } from "./friends-panel";
 import { AddToLibraryButton, EntryMenu } from "./library-controls";
-import { SidePanel, SidePanelToggle } from "./side-panel";
+import { SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 
 export function ProgressControl({
@@ -573,7 +573,6 @@ export function LibraryView() {
             onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
           />
         }
-        actions={<SidePanelToggle label="Friends" />}
       >
         <Atom.Heading>Library</Atom.Heading>
       </Template.PageHeader>

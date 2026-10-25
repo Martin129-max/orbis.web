@@ -22,7 +22,7 @@ import {
   type ReportFilter,
   type ReportView,
 } from "./report-board";
-import { SidePanel, SidePanelToggle } from "./side-panel";
+import { SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 
 const tabs = [
@@ -117,7 +117,6 @@ function AdminReports() {
                 <DiscordWebhookButton />
               </span>
             )}
-            <SidePanelToggle label="Admins" />
           </>
         }
       >

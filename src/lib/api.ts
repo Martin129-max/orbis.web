@@ -736,6 +736,19 @@ export async function createWallPost(
   return res.json();
 }
 
+export async function searchCommunity(
+  token: string | null,
+  communityId: number,
+  q: string,
+): Promise<FeedItem[]> {
+  const res = await api(withQuery(`/communities/${communityId}/posts/search`, { q }), {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("Could not search this community.");
+  return res.json();
+}
+
 export async function getUserPosts(
   token: string | null,
   username: string,
