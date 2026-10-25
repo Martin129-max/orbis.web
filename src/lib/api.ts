@@ -901,6 +901,15 @@ export async function removeFriend(token: string, userId: number): Promise<void>
 
 export type ChatPerson = FriendUser;
 
+export type ChatReply = {
+  id: number;
+  senderId: number;
+  sender: ChatPerson;
+  text: string;
+};
+
+export type ChatReaction = { emoji: string; userIds: number[] };
+
 export type ChatMessage = {
   id: number;
   senderId: number;
@@ -908,6 +917,8 @@ export type ChatMessage = {
   text: string;
   system: boolean;
   sentAt: string;
+  replyTo: ChatReply | null;
+  reactions: ChatReaction[];
 };
 
 export type Conversation = {
@@ -984,11 +995,28 @@ export async function sendMessage(
   token: string,
   id: number,
   text: string,
+  replyToId?: number,
 ): Promise<ChatMessage> {
-  const res = await messagesRequest(token, `/${id}`, "POST", { text });
+  const res = await messagesRequest(token, `/${id}`, "POST", { text, replyToId });
 
   if (!res.ok) {
     throw new Error(await errorMessage(res, "Could not send your message."));
+  }
+  return res.json();
+}
+
+export async function reactToMessage(
+  token: string,
+  id: number,
+  messageId: number,
+  emoji: string,
+): Promise<ChatMessage> {
+  const res = await messagesRequest(token, `/${id}/messages/${messageId}/reaction`, "POST", {
+    emoji,
+  });
+
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not react to this message."));
   }
   return res.json();
 }

@@ -22,7 +22,9 @@ type MessagesState = {
   refresh: () => Promise<void>;
   loadHistory: (id: number) => Promise<void>;
   loadOlder: (id: number) => Promise<void>;
-  send: (id: number, text: string) => Promise<void>;
+  send: (id: number, text: string, replyToId?: number) => Promise<void>;
+  react: (id: number, messageId: number, emoji: string) => Promise<void>;
+  updated: (event: { conversationId: number; message: ChatMessage }) => void;
   markRead: (id: number) => void;
   receive: (event: { conversation: Conversation; message: ChatMessage }) => void;
   upsert: (conversation: Conversation) => void;
@@ -140,10 +142,21 @@ export const useMessagesStore = create<MessagesState>()((set, get) => {
         patchHistory(id, (current) => ({ ...current, loadingOlder: false }));
       }
     },
-    send: async (id, text) => {
-      const message = await api.sendMessage(tokenOrThrow(), id, text);
+    send: async (id, text, replyToId) => {
+      const message = await api.sendMessage(tokenOrThrow(), id, text, replyToId);
       patchHistory(id, (history) => appendMessage(history, message));
     },
+    react: async (id, messageId, emoji) => {
+      const message = await api.reactToMessage(tokenOrThrow(), id, messageId, emoji);
+      get().updated({ conversationId: id, message });
+    },
+    updated: ({ conversationId, message }) =>
+      patchHistory(conversationId, (history) => ({
+        ...history,
+        messages: history.messages.map((current) =>
+          current.id === message.id ? message : current,
+        ),
+      })),
     markRead: (id) => {
       const { token } = useAuthStore.getState();
       if (!token) return;

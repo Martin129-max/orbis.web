@@ -1,6 +1,7 @@
 "use client";
 
-import { SendHorizontal } from "lucide-react";
+import { Popover } from "antd";
+import { CornerUpLeft, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
 import {
   useEffect,
   useLayoutEffect,
@@ -11,9 +12,17 @@ import {
   type KeyboardEvent,
 } from "react";
 import * as Atom from "@atom";
-import type { ChatMember, ChatMessage, Conversation as Chat } from "@/lib/api";
-import { chatTitle } from "@/lib/chat";
+import * as Molecule from "@molecule";
+import type {
+  ChatMember,
+  ChatMessage,
+  ChatReaction,
+  ChatReply,
+  Conversation as Chat,
+} from "@/lib/api";
+import { chatTitle, MESSAGE_REACTIONS } from "@/lib/chat";
 import { displayName } from "@/lib/display-name";
+import { TEXT_LINK, trimLink, webUrl } from "@/lib/links";
 import { useAuthStore } from "@/stores/auth-store";
 import { emitTyping } from "@/stores/friends-store";
 import { markViewing, useMessagesStore } from "@/stores/messages-store";
@@ -22,6 +31,13 @@ const TYPING_IDLE_MS = 3000;
 const TYPING_REPEAT_MS = 2000;
 const TIME_GAP_MS = 60 * 60 * 1000;
 const MESSAGE_MAX_LENGTH = 2000;
+const EMOJIS = [
+  "😀", "😂", "🥹", "😊", "😍", "🥰", "😘", "😎",
+  "🤩", "🥳", "😅", "😭", "😢", "😮", "😡", "🤔",
+  "🙄", "😴", "🤯", "🫡", "🙏", "👍", "👎", "👏",
+  "🙌", "💪", "👀", "🔥", "✨", "🎉", "❤️", "💔",
+  "💯", "🍜", "🍖", "🍙", "⚔️", "🌸", "⭐", "🌙",
+];
 
 function subscribeVisibility(onChange: () => void) {
   document.addEventListener("visibilitychange", onChange);
@@ -42,6 +58,11 @@ function formatTime(sentAt: string) {
     hour: "numeric",
     minute: "2-digit",
   });
+}
+
+function linkOf(text: string) {
+  const match = text.match(TEXT_LINK);
+  return match ? webUrl(trimLink(match[0])) : null;
 }
 
 function readersByMessage(messages: ChatMessage[], members: ChatMember[]) {
@@ -99,6 +120,8 @@ function Conversation({
   const loadHistory = useMessagesStore((state) => state.loadHistory);
   const loadOlder = useMessagesStore((state) => state.loadOlder);
   const markRead = useMessagesStore((state) => state.markRead);
+  const react = useMessagesStore((state) => state.react);
+  const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const visible = usePageVisible();
   const list = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
@@ -223,6 +246,9 @@ function Conversation({
                   new Date(next.sentAt).getTime() - sentAt > TIME_GAP_MS;
                 const seenBy = readers?.get(message.id);
                 const senderName = displayName(message.sender);
+                const link = linkOf(message.text);
+                const reactWith = (emoji: string) =>
+                  react(id, message.id, emoji).catch(() => null);
 
                 return (
                   <li key={message.id} className="flex flex-col">
@@ -231,7 +257,7 @@ function Conversation({
                       <p className="mt-1 mb-0.5 pl-9 text-[11px] text-muted">{senderName}</p>
                     )}
                     <div
-                      className={`flex items-end gap-2 ${mine ? "justify-end" : ""} ${
+                      className={`group/message flex items-end gap-2 ${mine ? "flex-row-reverse" : ""} ${
                         endsGroup && !seenBy?.length ? "mb-1.5" : ""
                       }`}
                     >
@@ -245,14 +271,41 @@ function Conversation({
                           />
                         </span>
                       )}
-                      <p
-                        title={formatTime(message.sentAt)}
-                        className={`max-w-[78%] rounded-2xl px-3 py-1.5 text-sm whitespace-pre-wrap [overflow-wrap:anywhere] ${
-                          mine ? "bg-accent text-accent-foreground" : "bg-rail-item text-foreground"
-                        }`}
+                      <div
+                        className={`flex max-w-[78%] min-w-0 flex-col ${mine ? "items-end" : "items-start"}`}
                       >
-                        {message.text}
-                      </p>
+                        {message.replyTo && (
+                          <ReplyQuote reply={message.replyTo} me={me} mine={mine} />
+                        )}
+                        <p
+                          title={formatTime(message.sentAt)}
+                          className={`relative max-w-full rounded-2xl px-3 py-1.5 text-sm whitespace-pre-wrap [overflow-wrap:anywhere] ${
+                            mine ? "bg-accent text-accent-foreground" : "bg-rail-item text-foreground"
+                          }`}
+                        >
+                          {message.text}
+                        </p>
+                        {link && (
+                          <div className="mt-1 w-64 max-w-full">
+                            <Molecule.LinkPreview url={link} />
+                          </div>
+                        )}
+                        {message.reactions.length > 0 && (
+                          <Reactions
+                            reactions={message.reactions}
+                            me={me}
+                            disabled={request}
+                            onReact={reactWith}
+                          />
+                        )}
+                      </div>
+                      {!request && (
+                        <MessageActions
+                          mine={mine}
+                          onReact={reactWith}
+                          onReply={() => setReplyTo(message)}
+                        />
+                      )}
                     </div>
                     {seenBy && seenBy.length > 0 && (
                       <div
@@ -311,7 +364,113 @@ function Conversation({
         </div>
       </div>
       {request && <RequestBanner conversation={conversation} />}
-      <Composer conversation={conversation} />
+      <Composer conversation={conversation} me={me} replyTo={replyTo} onReply={setReplyTo} />
+    </div>
+  );
+}
+
+function ReplyQuote({ reply, me, mine }: { reply: ChatReply; me: number; mine: boolean }) {
+  return (
+    <div
+      className={`-mb-2 flex max-w-full flex-col rounded-2xl bg-rail-item/60 px-3 pt-1.5 pb-3 text-xs text-muted ${
+        mine ? "items-end text-right" : ""
+      }`}
+    >
+      <span className="flex items-center gap-1 font-semibold">
+        <CornerUpLeft size={12} aria-hidden />
+        {reply.senderId === me ? "You" : displayName(reply.sender)}
+      </span>
+      <span className="line-clamp-2 [overflow-wrap:anywhere]">{reply.text}</span>
+    </div>
+  );
+}
+
+function Reactions({
+  reactions,
+  me,
+  disabled,
+  onReact,
+}: {
+  reactions: ChatReaction[];
+  me: number;
+  disabled: boolean;
+  onReact: (emoji: string) => void;
+}) {
+  return (
+    <div className="relative -mt-1.5 flex flex-wrap gap-1 px-1">
+      {reactions.map(({ emoji, userIds }) => {
+        const reacted = userIds.includes(me);
+        return (
+          <button
+            key={emoji}
+            type="button"
+            disabled={disabled}
+            aria-pressed={reacted}
+            aria-label={`${emoji} ${userIds.length}`}
+            onClick={() => onReact(emoji)}
+            className={`focus-ring flex h-5 cursor-pointer items-center gap-0.5 rounded-full border px-1.5 text-xs leading-none disabled:cursor-default ${
+              reacted ? "border-accent bg-accent-soft" : "border-divider bg-surface"
+            }`}
+          >
+            <span>{emoji}</span>
+            {userIds.length > 1 && (
+              <span className="text-[11px] text-muted tabular-nums">{userIds.length}</span>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function MessageActions({
+  mine,
+  onReact,
+  onReply,
+}: {
+  mine: boolean;
+  onReact: (emoji: string) => void;
+  onReply: () => void;
+}) {
+  const [picking, setPicking] = useState(false);
+
+  return (
+    <div
+      className={`flex shrink-0 items-center self-center transition-opacity group-hover/message:opacity-100 focus-within:opacity-100 motion-reduce:transition-none ${
+        picking ? "opacity-100" : "opacity-0"
+      } ${mine ? "flex-row-reverse" : ""}`}
+    >
+      <Popover
+        open={picking}
+        onOpenChange={setPicking}
+        trigger="click"
+        placement="top"
+        content={
+          <div className="flex gap-1">
+            {MESSAGE_REACTIONS.map((emoji) => (
+              <button
+                key={emoji}
+                type="button"
+                aria-label={`React with ${emoji}`}
+                onClick={() => {
+                  setPicking(false);
+                  onReact(emoji);
+                }}
+                className="focus-ring flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-lg transition-transform hover:scale-125 motion-reduce:transition-none"
+              >
+                {emoji}
+              </button>
+            ))}
+          </div>
+        }
+      >
+        <button type="button" aria-label="React" className="icon-button">
+          <SmilePlus size={16} />
+        </button>
+      </Popover>
+      <button type="button" aria-label="Reply" onClick={onReply} className="icon-button">
+        <CornerUpLeft size={16} />
+      </button>
     </div>
   );
 }
@@ -350,11 +509,23 @@ function RequestBanner({ conversation }: { conversation: Chat }) {
   );
 }
 
-function Composer({ conversation }: { conversation: Chat }) {
+function Composer({
+  conversation,
+  me,
+  replyTo,
+  onReply,
+}: {
+  conversation: Chat;
+  me: number;
+  replyTo: ChatMessage | null;
+  onReply: (message: ChatMessage | null) => void;
+}) {
   const { id } = conversation;
   const send = useMessagesStore((state) => state.send);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const input = useRef<HTMLTextAreaElement>(null);
+  const [picking, setPicking] = useState(false);
   const lastTyping = useRef(0);
   const idle = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -374,6 +545,10 @@ function Composer({ conversation }: { conversation: Chat }) {
     };
   }, [id]);
 
+  useEffect(() => {
+    if (replyTo) input.current?.focus();
+  }, [replyTo]);
+
   function handleChange(value: string) {
     setText(value);
     if (!value.trim()) {
@@ -388,6 +563,19 @@ function Composer({ conversation }: { conversation: Chat }) {
     idle.current = setTimeout(stopTyping, TYPING_IDLE_MS);
   }
 
+  function insertEmoji(emoji: string) {
+    const element = input.current;
+    const start = element?.selectionStart ?? text.length;
+    const end = element?.selectionEnd ?? text.length;
+    const next = (text.slice(0, start) + emoji + text.slice(end)).slice(0, MESSAGE_MAX_LENGTH);
+    setText(next);
+    requestAnimationFrame(() => {
+      const caret = Math.min(start + emoji.length, next.length);
+      element?.focus();
+      element?.setSelectionRange(caret, caret);
+    });
+  }
+
   async function submit(event?: FormEvent) {
     event?.preventDefault();
     const message = text.trim();
@@ -396,15 +584,22 @@ function Composer({ conversation }: { conversation: Chat }) {
     setText("");
     setError(null);
     stopTyping();
+    const reply = replyTo;
+    onReply(null);
     try {
-      await send(id, message);
+      await send(id, message, reply?.id);
     } catch (cause) {
       setText((current) => current || message);
+      onReply(reply);
       setError((cause as Error).message);
     }
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (event.key === "Escape" && replyTo) {
+      onReply(null);
+      return;
+    }
     if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
       event.preventDefault();
       submit();
@@ -414,8 +609,27 @@ function Composer({ conversation }: { conversation: Chat }) {
   return (
     <form onSubmit={submit} className="flex flex-col gap-2 border-t border-divider p-2">
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      {replyTo && (
+        <div className="flex items-start gap-2 rounded-lg bg-rail-item/60 px-3 py-2 text-xs">
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold">
+              Replying to {replyTo.senderId === me ? "yourself" : displayName(replyTo.sender)}
+            </p>
+            <p className="truncate text-muted">{replyTo.text}</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Cancel reply"
+            onClick={() => onReply(null)}
+            className="icon-button -m-1"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
       <div className="flex items-end gap-2">
         <textarea
+          ref={input}
           value={text}
           onChange={(event) => handleChange(event.target.value)}
           onKeyDown={handleKeyDown}
@@ -425,6 +639,35 @@ function Composer({ conversation }: { conversation: Chat }) {
           placeholder="Aa"
           className="focus-ring max-h-32 min-h-9 flex-1 resize-none rounded-2xl bg-rail-item px-3 py-2 text-sm [field-sizing:content] placeholder:text-muted"
         />
+        <Popover
+          open={picking}
+          onOpenChange={setPicking}
+          trigger="click"
+          placement="topRight"
+          content={
+            <div className="grid grid-cols-8 gap-0.5">
+              {EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  aria-label={`Insert ${emoji}`}
+                  onClick={() => insertEmoji(emoji)}
+                  className="focus-ring flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-lg hover:bg-rail-item"
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
+          }
+        >
+          <button
+            type="button"
+            aria-label="Insert emoji"
+            className="focus-ring flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-muted transition-colors hover:bg-rail-item hover:text-foreground"
+          >
+            <Smile size={18} />
+          </button>
+        </Popover>
         <button
           type="submit"
           aria-label="Send"

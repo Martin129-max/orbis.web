@@ -53,6 +53,7 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     );
     socket.on("friends:changed", () => get().fetchFriends());
     socket.on("message", (event) => useMessagesStore.getState().receive(event));
+    socket.on("message:updated", (event) => useMessagesStore.getState().updated(event));
     socket.on("conversation", ({ conversation }) =>
       useMessagesStore.getState().upsert(conversation),
     );

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef } from "react";
 import * as Atom from "@atom";
+import { SidePanelOpener } from "./side-panel";
 
 export function SiteHeader({ sticky = false }: { sticky?: boolean }) {
   const headerRef = useRef<HTMLElement>(null);
@@ -71,6 +72,7 @@ export function SiteHeader({ sticky = false }: { sticky?: boolean }) {
             Log in
           </Link>
           <Atom.ButtonLink href="/register">Sign up</Atom.ButtonLink>
+          <SidePanelOpener hiddenOffset="-ml-3 sm:-ml-6" />
         </div>
       </div>
     </header>

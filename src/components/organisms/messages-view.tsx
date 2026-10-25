@@ -54,7 +54,16 @@ export function MessagesView() {
                 { value: "chats", label: "Chats" },
                 {
                   value: "requests",
-                  label: requests.length > 0 ? `Requests (${requests.length})` : "Requests",
+                  label: (
+                    <span className="inline-flex items-center gap-1.5">
+                      Requests
+                      {requests.length > 0 && (
+                        <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1 text-[10px] leading-none font-bold text-accent-foreground tabular-nums">
+                          {requests.length > 99 ? "99+" : requests.length}
+                        </span>
+                      )}
+                    </span>
+                  ),
                 },
               ]}
             />

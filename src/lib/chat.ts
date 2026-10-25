@@ -1,6 +1,8 @@
 import type { Conversation } from "./api";
 import { displayName } from "./display-name";
 
+export const MESSAGE_REACTIONS = ["👍", "❤️", "😂", "😮", "😢", "😡"];
+
 export function chatTitle({ name, members }: Conversation) {
   if (name) return name;
   const names = members.map(displayName);

@@ -8,6 +8,7 @@ import { useLayoutStore } from "@/stores/layout-store";
 import { useMessagesStore } from "@/stores/messages-store";
 import { NotificationBell } from "./notification-bell";
 import { PeopleSearch } from "./friends-panel";
+import { SidePanelOpener } from "./side-panel";
 import { UserMenu } from "./user-menu";
 
 function itemClass(active: boolean) {
@@ -80,6 +81,7 @@ export function TopBar() {
         <MessagesButton />
         <NotificationBell className={itemClass} />
         <UserMenu />
+        <SidePanelOpener />
       </div>
     </header>
   );
