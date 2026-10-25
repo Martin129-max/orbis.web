@@ -62,7 +62,7 @@ export function ProgressControl({
     setDraft(entry.progress);
   }
 
-  if (entry.mediaType === "game") return <span className="text-xs text-muted">—</span>;
+  if (entry.mediaType === "game") return null;
 
   const unit = entry.mediaType === "manga" ? "chapters" : "episodes";
   const max = entry.total ?? undefined;
@@ -171,12 +171,12 @@ function ListView({
   return (
     <ul className="flex flex-col divide-y divide-divider">
       {entries.map((entry) => (
-        <li key={entry.id} className="flex flex-wrap items-center gap-3 py-3">
+        <li key={entry.id} className="flex flex-wrap items-center gap-3 px-5 py-3 first:pt-0 last:pb-0">
           <Link
             href={mediaPath(entry.mediaType, entry.sourceId)}
             className="focus-ring rounded-md"
           >
-            <MediaCover src={entry.coverImage} className="w-10" />
+            <MediaCover src={entry.coverImage} className="w-10" square />
           </Link>
           <div className="flex min-w-0 flex-1 basis-40 flex-col gap-1">
             <Link
@@ -198,8 +198,8 @@ function ListView({
               )}
             </span>
           </div>
+          <ProgressStepper entry={entry} onChange={onChange} className="w-32 bg-rail-item" />
           <StatusSelect entry={entry} onChange={onChange} />
-          <ProgressControl entry={entry} onChange={onChange} />
           <EntryMenu
             entry={entry}
             onChange={onChange}
@@ -294,22 +294,22 @@ function StatusPill({
   );
 }
 
-export function LibraryCard({
+function ProgressStepper({
   entry,
   onChange,
-  onRemove,
   className = "",
 }: {
   entry: LibraryEntry;
   onChange: (entry: LibraryEntry) => void;
-  onRemove: (id: number) => void;
   className?: string;
 }) {
   const { message } = App.useApp();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<number | null>(entry.progress);
   const [saving, setSaving] = useState(false);
-  const tracksProgress = entry.mediaType !== "game";
+
+  if (entry.mediaType === "game") return null;
+
   const unit = entry.mediaType === "manga" ? "chapter" : "episode";
   const max = entry.total ?? undefined;
   const finished = max !== undefined && entry.progress >= max;
@@ -328,6 +328,73 @@ export function LibraryCard({
       setSaving(false);
     }
   }
+
+  return (
+    <div
+      aria-label={`Progress in ${unit}s`}
+      className={`flex h-7 items-center justify-between rounded-full text-foreground pointer-coarse:h-9 ${className}`}
+    >
+      <button
+        type="button"
+        aria-label={`One fewer ${unit}`}
+        disabled={saving || entry.progress <= 0}
+        onClick={() => save(entry.progress - 1)}
+        className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
+      >
+        <ChevronDown size={15} />
+      </button>
+      {editing ? (
+        <InputNumber
+          size="small"
+          autoFocus
+          min={0}
+          max={max}
+          value={draft}
+          controls={false}
+          aria-label={`${unit}s done`}
+          onChange={setDraft}
+          onPressEnter={() => draft !== null && save(draft)}
+          onBlur={() => (draft !== null ? save(draft) : setEditing(false))}
+          className="w-14"
+        />
+      ) : (
+        <button
+          type="button"
+          aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}s. Type a number`}
+          onClick={() => {
+            setDraft(entry.progress);
+            setEditing(true);
+          }}
+          className="focus-ring min-w-0 cursor-text truncate rounded-sm px-1 text-[11px] font-semibold whitespace-nowrap"
+        >
+          {entry.progress} / {entry.total ?? "?"}
+        </button>
+      )}
+      <button
+        type="button"
+        aria-label={`One more ${unit}`}
+        disabled={saving || finished}
+        onClick={() => save(entry.progress + 1)}
+        className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
+      >
+        <ChevronUp size={15} />
+      </button>
+    </div>
+  );
+}
+
+export function LibraryCard({
+  entry,
+  onChange,
+  onRemove,
+  className = "",
+}: {
+  entry: LibraryEntry;
+  onChange: (entry: LibraryEntry) => void;
+  onRemove: (id: number) => void;
+  className?: string;
+}) {
+  const tracksProgress = entry.mediaType !== "game";
 
   return (
     <div className={`@container relative overflow-hidden rounded-md ${className}`}>
@@ -356,56 +423,11 @@ export function LibraryCard({
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-2 pt-8">
         {tracksProgress && (
           <div className="flex items-center gap-1">
-            <div
-              aria-label={`Progress in ${unit}s`}
-              className="pointer-events-auto flex h-7 min-w-0 flex-1 items-center justify-between rounded-full bg-surface/90 text-foreground shadow-sm pointer-coarse:h-9"
-            >
-              <button
-                type="button"
-                aria-label={`One fewer ${unit}`}
-                disabled={saving || entry.progress <= 0}
-                onClick={() => save(entry.progress - 1)}
-                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
-              >
-                <ChevronDown size={15} />
-              </button>
-              {editing ? (
-                <InputNumber
-                  size="small"
-                  autoFocus
-                  min={0}
-                  max={max}
-                  value={draft}
-                  controls={false}
-                  aria-label={`${unit}s done`}
-                  onChange={setDraft}
-                  onPressEnter={() => draft !== null && save(draft)}
-                  onBlur={() => (draft !== null ? save(draft) : setEditing(false))}
-                  className="w-14"
-                />
-              ) : (
-                <button
-                  type="button"
-                  aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}s. Type a number`}
-                  onClick={() => {
-                    setDraft(entry.progress);
-                    setEditing(true);
-                  }}
-                  className="focus-ring min-w-0 cursor-text truncate rounded-sm px-1 text-[11px] font-semibold whitespace-nowrap"
-                >
-                  {entry.progress} / {entry.total ?? "?"}
-                </button>
-              )}
-              <button
-                type="button"
-                aria-label={`One more ${unit}`}
-                disabled={saving || finished}
-                onClick={() => save(entry.progress + 1)}
-                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
-              >
-                <ChevronUp size={15} />
-              </button>
-            </div>
+            <ProgressStepper
+              entry={entry}
+              onChange={onChange}
+              className="pointer-events-auto min-w-0 flex-1 bg-surface/90 shadow-sm"
+            />
             <div className="pointer-events-auto shrink-0 pointer-coarse:@max-[11rem]:hidden">
               <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
             </div>
@@ -547,13 +569,17 @@ export function filterLibrary(
 export function MediaCover({
   src,
   className = "",
+  square = false,
 }: {
   src: string | null;
   className?: string;
+  square?: boolean;
 }) {
   return (
     <div
-      className={`relative aspect-[2/3] shrink-0 overflow-hidden rounded-md border border-divider bg-rail-item ${className}`}
+      className={`relative shrink-0 overflow-hidden rounded-md border border-divider bg-rail-item ${
+        square ? "aspect-square" : "aspect-[2/3]"
+      } ${className}`}
     >
       {src && <Image src={src} alt="" fill unoptimized className="object-cover" />}
     </div>
@@ -794,7 +820,11 @@ function LibraryShelf({
 
   return (
     <section
-      className={`flex flex-col gap-4 ${boxed ? "rounded-lg border border-divider bg-surface p-5" : ""}`}
+      className={`flex flex-col gap-4 ${
+        boxed
+          ? `rounded-lg border border-divider bg-surface ${shown.length > 0 ? "py-5" : "p-5"}`
+          : ""
+      }`}
     >
       {shown.length === 0 ? (
         <LibraryEmptyState
