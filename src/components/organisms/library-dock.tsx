@@ -65,7 +65,7 @@ function DockShelf({
       }}
     >
       {shown.map((entry) => (
-        <li key={entry.id} className="w-32 shrink-0 snap-start">
+        <li key={entry.id} className="w-44 shrink-0 snap-start">
           <LibraryCard entry={entry} onChange={onChange} onRemove={onRemove} />
         </li>
       ))}
@@ -83,6 +83,7 @@ export function LibraryDock() {
   const [drag, setDrag] = useState<number | null>(null);
   const start = useRef<number | null>(null);
   const dragged = useRef(false);
+  const dock = useRef<HTMLElement>(null);
   const shown = profile !== null && pathname !== "/library";
   const height = shown
     ? Math.min(PANEL_HEIGHT, Math.max(0, (open ? PANEL_HEIGHT : 0) - (drag ?? 0)))
@@ -111,12 +112,19 @@ export function LibraryDock() {
   }, [open, shown]);
 
   useEffect(() => {
+    const element = dock.current;
+    if (!element) return;
+
     const root = document.documentElement;
-    root.style.setProperty("--library-dock-height", `${height}px`);
+    const observer = new ResizeObserver(() =>
+      root.style.setProperty("--library-dock-height", `${element.offsetHeight}px`),
+    );
+    observer.observe(element);
     return () => {
+      observer.disconnect();
       root.style.removeProperty("--library-dock-height");
     };
-  }, [height]);
+  }, [shown]);
 
   if (!shown) return null;
 
@@ -149,6 +157,7 @@ export function LibraryDock() {
 
   return (
     <section
+      ref={dock}
       aria-label="Your library"
       data-dock={height > 0 ? "open" : undefined}
       style={{ height }}

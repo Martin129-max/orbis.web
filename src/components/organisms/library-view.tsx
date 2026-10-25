@@ -5,6 +5,7 @@ import {
   Bookmark,
   Check,
   ChevronDown,
+  ChevronUp,
   CirclePlay,
   CircleX,
   LayoutGrid,
@@ -244,6 +245,7 @@ function StatusPill({
 }) {
   const { message } = App.useApp();
   const label = statusLabel(entry.status, entry.mediaType);
+  const Icon = statusIcons[entry.status];
 
   async function change(status: LibraryStatus) {
     const { token } = useAuthStore.getState();
@@ -259,46 +261,51 @@ function StatusPill({
     <Dropdown
       trigger={["click"]}
       menu={{
-        items: libraryStatuses.map((status) => ({
-          key: status,
-          label: statusLabel(status, entry.mediaType),
-          icon: (
-            <span className="flex w-4 justify-center">
-              {status === entry.status && <Check size={14} />}
-            </span>
-          ),
-        })),
+        items: libraryStatuses.map((status) => {
+          const StatusIcon = statusIcons[status];
+          return {
+            key: status,
+            label: statusLabel(status, entry.mediaType),
+            icon: <StatusIcon size={14} />,
+            extra: status === entry.status ? <Check size={14} /> : undefined,
+          };
+        }),
         onClick: ({ key }) => change(key as LibraryStatus),
       }}
     >
       <button
         type="button"
         aria-label={`${label}. Change status of ${entry.title}`}
-        className="focus-ring w-fit max-w-full cursor-pointer rounded-full"
+        className="focus-ring w-full cursor-pointer rounded-full"
       >
-        <Atom.Pill tone={statusTones[entry.status]} className="max-w-full">
-          <span className="truncate">{label}</span>
-          <ChevronDown size={11} aria-hidden className="shrink-0" />
+        <Atom.Pill tone={statusTones[entry.status]} className="h-7 w-full! justify-between px-3">
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Icon size={13} aria-hidden className="shrink-0" />
+            <span className="truncate">{label}</span>
+          </span>
+          <ChevronDown size={13} aria-hidden className="shrink-0" />
         </Atom.Pill>
       </button>
     </Dropdown>
   );
 }
 
-function CoverProgress({
+export function LibraryCard({
   entry,
   onChange,
+  onRemove,
+  className = "",
 }: {
   entry: LibraryEntry;
   onChange: (entry: LibraryEntry) => void;
+  onRemove: (id: number) => void;
+  className?: string;
 }) {
   const { message } = App.useApp();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<number | null>(entry.progress);
   const [saving, setSaving] = useState(false);
-
-  if (entry.mediaType === "game") return null;
-
+  const tracksProgress = entry.mediaType !== "game";
   const unit = entry.mediaType === "manga" ? "chapter" : "episode";
   const max = entry.total ?? undefined;
   const finished = max !== undefined && entry.progress >= max;
@@ -319,90 +326,95 @@ function CoverProgress({
   }
 
   return (
-    <div className="absolute inset-x-2 bottom-2 flex items-center justify-between gap-1">
-      {editing ? (
-        <InputNumber
-          size="small"
-          autoFocus
-          min={0}
-          max={max}
-          value={draft}
-          controls={false}
-          aria-label={`${unit}s done`}
-          onChange={setDraft}
-          onPressEnter={() => draft !== null && save(draft)}
-          onBlur={() => (draft !== null ? save(draft) : setEditing(false))}
-          className="w-16"
-        />
-      ) : (
-        <button
-          type="button"
-          aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}s. Change`}
-          onClick={() => {
-            setDraft(entry.progress);
-            setEditing(true);
-          }}
-          className="focus-ring cursor-pointer rounded-full bg-surface/90 px-2 py-0.5 text-[11px] font-semibold text-foreground shadow-sm"
-        >
-          {entry.progress} / {entry.total ?? "?"} {entry.mediaType === "manga" ? "ch" : "ep"}
-        </button>
-      )}
-      {!finished && !editing && (
-        <Tooltip title={`+1 ${unit}`}>
-          <button
-            type="button"
-            aria-label={`One more ${unit}`}
-            disabled={saving}
-            onClick={() => save(entry.progress + 1)}
-            className="focus-ring flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm disabled:cursor-wait disabled:opacity-60"
-          >
-            <Plus size={14} />
-          </button>
-        </Tooltip>
-      )}
-    </div>
-  );
-}
-
-export function LibraryCard({
-  entry,
-  onChange,
-  onRemove,
-  className = "",
-}: {
-  entry: LibraryEntry;
-  onChange: (entry: LibraryEntry) => void;
-  onRemove: (id: number) => void;
-  className?: string;
-}) {
-  const href = mediaPath(entry.mediaType, entry.sourceId);
-
-  return (
-    <div className={`flex flex-col gap-2 ${className}`}>
-      <div className="relative">
-        <Link href={href} className="focus-ring block rounded-md">
-          <MediaCover src={entry.coverImage} className="w-full" />
-        </Link>
-        {!entry.isPublic && (
-          <span
-            title="Private"
-            className="absolute top-2 left-2 flex h-7 w-7 items-center justify-center rounded-full bg-surface/90 text-foreground shadow-sm"
-          >
-            <Lock size={13} />
-          </span>
-        )}
-        <div className="absolute top-2 right-2">
-          <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
-        </div>
-        <CoverProgress entry={entry} onChange={onChange} />
-      </div>
+    <div className={`relative overflow-hidden rounded-md ${className}`}>
       <Link
-        href={href}
-        className="focus-ring line-clamp-2 min-h-[2lh] rounded-sm text-sm leading-snug font-semibold hover:underline"
+        href={mediaPath(entry.mediaType, entry.sourceId)}
+        aria-label={entry.title}
+        className="focus-ring block rounded-md"
       >
-        {entry.title}
+        <MediaCover src={entry.coverImage} className="w-full" />
       </Link>
-      <StatusPill entry={entry} onChange={onChange} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 bg-gradient-to-b from-black/85 via-black/50 to-transparent p-2 pb-8">
+        <span className="line-clamp-2 text-sm leading-snug font-semibold text-white">
+          {!entry.isPublic && (
+            <Lock
+              size={12}
+              aria-label="Private"
+              className="pointer-events-auto mr-1 inline-block align-[-1px]"
+            />
+          )}
+          {entry.title}
+        </span>
+      </div>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-2 pt-8">
+        {tracksProgress && (
+          <div className="flex items-center gap-1">
+            <div
+              aria-label={`Progress in ${unit}s`}
+              className="pointer-events-auto flex h-7 min-w-0 flex-1 items-center justify-between rounded-full bg-surface/90 text-foreground shadow-sm"
+            >
+              <button
+                type="button"
+                aria-label={`One fewer ${unit}`}
+                disabled={saving || entry.progress <= 0}
+                onClick={() => save(entry.progress - 1)}
+                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronDown size={15} />
+              </button>
+              {editing ? (
+                <InputNumber
+                  size="small"
+                  autoFocus
+                  min={0}
+                  max={max}
+                  value={draft}
+                  controls={false}
+                  aria-label={`${unit}s done`}
+                  onChange={setDraft}
+                  onPressEnter={() => draft !== null && save(draft)}
+                  onBlur={() => (draft !== null ? save(draft) : setEditing(false))}
+                  className="w-14"
+                />
+              ) : (
+                <button
+                  type="button"
+                  aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}s. Type a number`}
+                  onClick={() => {
+                    setDraft(entry.progress);
+                    setEditing(true);
+                  }}
+                  className="focus-ring min-w-0 cursor-text truncate rounded-sm px-1 text-[11px] font-semibold whitespace-nowrap"
+                >
+                  {entry.progress} / {entry.total ?? "?"}
+                </button>
+              )}
+              <button
+                type="button"
+                aria-label={`One more ${unit}`}
+                disabled={saving || finished}
+                onClick={() => save(entry.progress + 1)}
+                className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                <ChevronUp size={15} />
+              </button>
+            </div>
+            <div className="pointer-events-auto shrink-0">
+              <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
+            </div>
+          </div>
+        )}
+        <div className="flex items-center gap-1">
+          <div className="pointer-events-auto min-w-0 flex-1">
+            <StatusPill entry={entry} onChange={onChange} />
+          </div>
+          {!tracksProgress && (
+            <div className="pointer-events-auto shrink-0">
+              <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
