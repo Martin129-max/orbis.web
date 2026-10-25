@@ -219,7 +219,7 @@ function InviteSettings({ community }: { community: Community }) {
     if (!token) return;
 
     getInvites(token, community.id)
-      .then(setInvites)
+      .then((list) => setInvites(list.filter((invite) => !invite.permanent)))
       .catch((e) => {
         setInvites([]);
         setError(e instanceof Error ? e.message : "Something went wrong.");

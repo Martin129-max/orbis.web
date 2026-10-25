@@ -757,6 +757,19 @@ export async function searchCommunity(
   return res.json();
 }
 
+export async function searchProfile(
+  token: string | null,
+  username: string,
+  q: string,
+): Promise<FeedItem[]> {
+  const res = await api(withQuery(`/users/${encodeURIComponent(username)}/posts/search`, { q }), {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("Could not search this profile.");
+  return res.json();
+}
+
 export async function getUserPosts(
   token: string | null,
   username: string,

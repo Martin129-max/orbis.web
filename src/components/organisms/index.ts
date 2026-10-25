@@ -53,5 +53,5 @@ export * from "./user-profile";
 export * from "./page-search";
 export * from "./top-bar";
 export * from "./user-menu";
-export * from "./community-content-search";
+export * from "./content-search";
 export * from "./oauth-username-form";

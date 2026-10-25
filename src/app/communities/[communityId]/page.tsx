@@ -123,6 +123,13 @@ export default function CommunityPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
+          <Organism.PageSearch>
+            <Organism.CommunityContentSearch
+              key={current.community.id}
+              communityId={current.community.id}
+              communityName={current.community.name}
+            />
+          </Organism.PageSearch>
           <Organism.CommunityHeader
             community={current.community}
             collapsed={collapsed}
