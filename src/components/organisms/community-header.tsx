@@ -14,17 +14,20 @@ function CommunityBadge({
   community,
   className,
   onImage,
+  live,
 }: {
   community: Community;
   className: string;
   onImage?: ImageChange;
+  live?: { ring: string; large?: boolean };
 }) {
-  const badgeClass = `relative flex shrink-0 items-center justify-center rounded-full bg-rail-item font-display leading-none font-bold text-foreground ${className}`;
+  const badgeClass = `relative flex shrink-0 items-center justify-center rounded-full bg-rail-item font-display leading-none font-bold text-foreground ${className} ${live?.ring ?? ""}`;
 
   if (!onImage) {
     return (
       <span aria-hidden className={badgeClass}>
         <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
+        {live && <Atom.LiveTag large={live.large} />}
       </span>
     );
   }
@@ -44,31 +47,10 @@ function CommunityBadge({
         >
           <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
           <Atom.EditOverlay busy={busy} badge={false} />
+          {live && <Atom.LiveTag large={live.large} />}
         </button>
       )}
     </Molecule.ImageMenu>
-  );
-}
-
-function LiveBadge({ login }: { login: string | null | undefined }) {
-  const badge = (
-    <span className="flex shrink-0 items-center gap-1 rounded-md bg-danger px-1.5 py-1 font-sans text-[11px] leading-none font-bold tracking-wide text-white">
-      <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-white motion-reduce:animate-none" />
-      LIVE
-    </span>
-  );
-
-  if (!login) return badge;
-  return (
-    <a
-      href={`https://www.twitch.tv/${login}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      aria-label="Watch live on Twitch"
-      className="focus-ring shrink-0 rounded-md"
-    >
-      {badge}
-    </a>
   );
 }
 
@@ -96,9 +78,10 @@ export function CommunityHeader({
             community={community}
             onImage={onImage}
             className="h-8 w-8 text-[17px] sm:h-10 sm:w-10 sm:text-[22px]"
+            live={live ? { ring: "ring-2 ring-danger ring-offset-2 ring-offset-background" } : undefined}
           />
           <Atom.Heading className="min-w-0 truncate">{community.name}</Atom.Heading>
-          {live && <LiveBadge login={community.twitchLogin} />}
+          {live && <span className="sr-only">Live on Twitch</span>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {onImage && (
@@ -145,6 +128,7 @@ export function CommunityHeader({
               ? "h-8 w-8 text-[17px] sm:h-10 sm:w-10"
               : "h-14 w-14 text-[28px] sm:h-20 sm:w-20 sm:text-[40px]"
           }`}
+          live={live ? { ring: "ring-2 ring-danger", large: !collapsed } : undefined}
         />
         <Atom.Heading
           className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
@@ -153,7 +137,7 @@ export function CommunityHeader({
         >
           {community.name}
         </Atom.Heading>
-        {live && <LiveBadge login={community.twitchLogin} />}
+        {live && <span className="sr-only">Live on Twitch</span>}
       </div>
       <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
         <ReportButton type="community" id={community.id} ownerId={community.ownerId} />

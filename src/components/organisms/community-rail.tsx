@@ -183,14 +183,7 @@ function SortableCommunity({
         }`}
       >
         <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
-        {community.live && (
-          <span
-            aria-hidden
-            className="pointer-events-none absolute -bottom-1.5 left-1/2 -translate-x-1/2 rounded-sm bg-danger px-1 py-px font-sans text-[8px] leading-none font-bold tracking-wide text-white sm:text-[9px]"
-          >
-            LIVE
-          </span>
-        )}
+        {community.live && <Atom.LiveTag />}
       </Link>
     </RailSlot>
   );
