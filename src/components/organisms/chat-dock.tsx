@@ -27,7 +27,7 @@ export function useShowChat() {
       return;
     }
     select(id);
-    if (!pageOpen) router.push("/?tab=messages");
+    if (!pageOpen) router.push("/messages");
   };
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { MessageCircle, UserPlus } from "lucide-react";
+import { usePathname } from "next/navigation";
 import { useState } from "react";
 import * as Atom from "@atom";
 import { useFriendsStore } from "@/stores/friends-store";
@@ -41,6 +42,8 @@ function RequestsButton() {
   const addFriend = useFriendsStore((state) => state.addFriend);
   const removeFriend = useFriendsStore((state) => state.removeFriend);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const active = open || pathname === "/requests";
   const pending = incoming.length;
   const label = pending > 0 ? `Friend requests, ${pending} pending` : "Friend requests";
 
@@ -92,7 +95,7 @@ function RequestsButton() {
         data-tour="friend-requests"
         aria-label={label}
         aria-expanded={open}
-        className={`cursor-pointer ${itemClass(open)}`}
+        className={`cursor-pointer ${itemClass(active)}`}
       >
         <UserPlus size={20} />
         <CountBadge count={pending} />
@@ -108,6 +111,8 @@ function MessagesButton() {
   const openChat = useMessagesStore((state) => state.openChat);
   const select = useMessagesStore((state) => state.select);
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const active = open || pathname === "/messages";
   const chats = conversations.filter(({ status }) => status === "accepted");
   const unread = chats.filter((chat) => chat.unread > 0).length;
   const label = unread > 0 ? `Messages, ${unread} unread` : "Messages";
@@ -117,7 +122,7 @@ function MessagesButton() {
       open={open}
       onOpenChange={setOpen}
       title="Messages"
-      href="/?tab=messages"
+      href="/messages"
       action="See all messages"
       content={
         !loaded ? (
@@ -149,7 +154,7 @@ function MessagesButton() {
         data-tour="messages"
         aria-label={label}
         aria-expanded={open}
-        className={`cursor-pointer ${itemClass(open)}`}
+        className={`cursor-pointer ${itemClass(active)}`}
       >
         <MessageCircle size={20} />
         <CountBadge count={unread} />

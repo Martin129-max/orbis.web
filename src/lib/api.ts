@@ -1871,3 +1871,73 @@ export async function getPublicCommunities(): Promise<PublicCommunity[]> {
   if (!res.ok) throw new Error("Could not load public communities.");
   return res.json();
 }
+
+export type OAuthProvider = "discord" | "twitch";
+
+export type OAuthConnection = {
+  provider: OAuthProvider;
+  username: string;
+  connectedAt: string;
+};
+
+export type OAuthConnections = { hasPassword: boolean; connections: OAuthConnection[] };
+
+export type OAuthResult = { access_token?: string; linked?: OAuthProvider };
+
+export async function getOAuthProviders(): Promise<OAuthProvider[]> {
+  const res = await api("/auth/oauth/providers");
+
+  if (!res.ok) return [];
+  return res.json();
+}
+
+export async function getOAuthUrl(
+  provider: OAuthProvider,
+  nonce: string,
+  token?: string,
+): Promise<string> {
+  const res = await api(
+    `/auth/oauth/${provider}/${token ? "link-url" : "url"}?nonce=${encodeURIComponent(nonce)}`,
+    token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  );
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t start logging in. Please try again."));
+  const { url } = await res.json();
+  return url;
+}
+
+export async function completeOAuth(
+  provider: OAuthProvider,
+  body: { code: string; state: string; nonce: string },
+  token: string | null,
+): Promise<OAuthResult> {
+  const res = await api(`/auth/oauth/${provider}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      ...(token && { Authorization: `Bearer ${token}` }),
+    },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t finish logging in. Please try again."));
+  return res.json();
+}
+
+export async function getOAuthConnections(token: string): Promise<OAuthConnections> {
+  const res = await api("/auth/oauth/connections", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not load your connections.");
+  return res.json();
+}
+
+export async function disconnectOAuth(token: string, provider: OAuthProvider): Promise<void> {
+  const res = await api(`/auth/oauth/connections/${provider}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect. Please try again."));
+}

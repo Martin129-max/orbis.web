@@ -8,6 +8,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { safeNext } from "@/lib/login";
 import { useAuthStore } from "@/stores/auth-store";
+import { OAuthButtons } from "./oauth-buttons";
 
 type Mode = "login" | "signup";
 
@@ -180,6 +181,7 @@ export function AuthForm({
             {submit}
           </Atom.Button>
         </form>
+        <OAuthButtons />
         <hr className="border-divider" />
         <p className="text-[13px] text-muted">
           {switchText}{" "}

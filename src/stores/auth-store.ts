@@ -9,6 +9,7 @@ type AuthState = {
   profile: Profile | null;
   login: (credentials: LoginCredentials) => Promise<void>;
   signup: (details: SignupDetails) => Promise<void>;
+  loginWithToken: (token: string) => void;
   logout: () => void;
   fetchProfile: () => Promise<Profile | null>;
 };
@@ -32,6 +33,10 @@ export const useAuthStore = create<AuthState>()(
       },
       signup: async (details) => {
         set({ token: await api.signup(details) });
+        markAuthenticated(true);
+      },
+      loginWithToken: (token) => {
+        set({ token });
         markAuthenticated(true);
       },
       logout: () => {

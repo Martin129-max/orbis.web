@@ -8,6 +8,7 @@ import * as Molecule from "@molecule";
 import type { Profile } from "@/lib/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
+import { OAuthConnections } from "./oauth-connections";
 import { PrivateProfileSwitch } from "./private-profile-switch";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -86,6 +87,12 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           <p className="truncate text-sm">{profile.email}</p>
           <p className="text-xs text-muted">Only you can see this.</p>
         </div>
+      </Molecule.SettingsSection>
+      <Molecule.SettingsSection
+        title="Connections"
+        description="Log in with Discord or Twitch. If their verified email matches your Orbis email, they connect automatically."
+      >
+        <OAuthConnections />
       </Molecule.SettingsSection>
     </div>
   );
