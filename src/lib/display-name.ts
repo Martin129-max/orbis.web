@@ -1,3 +1,7 @@
-export function displayName(user: { name: string | null; username: string }) {
-  return user.name ?? user.username;
+export function displayName(user: {
+  name: string | null;
+  username: string;
+  nickname?: string | null;
+}) {
+  return user.nickname ?? user.name ?? user.username;
 }

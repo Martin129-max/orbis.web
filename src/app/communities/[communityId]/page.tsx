@@ -5,6 +5,7 @@ import {
   Lock,
   MessagesSquare,
   Newspaper,
+  UserCog,
   Users,
 } from "lucide-react";
 import Link from "next/link";
@@ -135,13 +136,22 @@ export default function CommunityPage() {
             collapsed={collapsed}
             onImage={canManage(current.community) ? handleImage : undefined}
             actions={
-              canManage(current.community) && (
-                <span data-tour="community-settings" className="flex">
+              current.community.role && (
+                <>
                   <Molecule.SettingsLink
-                    href={`/communities/${current.community.id}/settings`}
-                    label="Community settings"
+                    href={`/communities/${current.community.id}/me`}
+                    label="Your settings"
+                    icon={<UserCog size={20} />}
                   />
-                </span>
+                  {canManage(current.community) && (
+                    <span data-tour="community-settings" className="flex">
+                      <Molecule.SettingsLink
+                        href={`/communities/${current.community.id}/settings`}
+                        label="Community settings"
+                      />
+                    </span>
+                  )}
+                </>
               )
             }
           />

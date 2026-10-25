@@ -136,6 +136,7 @@ export type Author = {
   username: string;
   name: string | null;
   avatarUrl: string | null;
+  nickname?: string | null;
 };
 
 export type CommunitySummary = Pick<Community, "id" | "name" | "iconUrl">;
@@ -850,6 +851,21 @@ export async function getMembers(
   });
 
   return res.ok ? res.json() : [];
+}
+
+export async function setNickname(
+  token: string,
+  communityId: number,
+  nickname: string | null,
+): Promise<{ nickname: string | null }> {
+  const res = await api(`/communities/${communityId}/nickname`, {
+    method: "PATCH",
+    headers: { ...authHeaders(token), "Content-Type": "application/json" },
+    body: JSON.stringify({ nickname }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t save your nickname. Please try again."));
+  return res.json();
 }
 
 export type FriendUser = {

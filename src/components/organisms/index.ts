@@ -55,3 +55,4 @@ export * from "./top-bar";
 export * from "./user-menu";
 export * from "./content-search";
 export * from "./oauth-username-form";
+export * from "./community-member-settings";
