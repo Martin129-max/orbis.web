@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import { useAuthStore } from "@/stores/auth-store";
-import { AppearOfflineSwitch } from "./appear-offline-switch";
+import { AppearOfflineSwitch, BusySwitch } from "./appear-offline-switch";
 import { ThemeToggle } from "./theme-toggle";
 
 export function UserMenu() {
@@ -39,7 +39,14 @@ export function UserMenu() {
       placement="bottomRight"
       arrow={false}
       align={{ offset: [0, 8] }}
-      styles={{ container: { padding: 20, borderRadius: 12 } }}
+      styles={{
+        container: {
+          padding: 20,
+          borderRadius: 12,
+          boxShadow: "none",
+          border: "1px solid var(--divider)",
+        },
+      }}
       content={
         <div className="flex w-[300px] flex-col gap-4">
           <div className="flex items-center gap-3">
@@ -56,8 +63,16 @@ export function UserMenu() {
                 </div>
               </>
             )}
-            <label className="ml-auto flex shrink-0 items-center gap-2">
-              <span className="text-xs text-muted">Appear offline</span>
+          </div>
+          <hr className="border-divider" />
+          <p className="text-xs text-muted uppercase">Status</p>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center justify-between gap-2 text-sm">
+              Busy
+              <BusySwitch size="small" />
+            </label>
+            <label className="flex items-center justify-between gap-2 text-sm">
+              Appear offline
               <AppearOfflineSwitch size="small" />
             </label>
           </div>
@@ -100,7 +115,7 @@ export function UserMenu() {
           label={profile?.username ?? "?"}
           src={profile?.avatarUrl}
           seed={profile?.userId ?? 0}
-          presence={profile?.appearOffline ? "offline" : "online"}
+          presence={profile?.appearOffline ? "offline" : profile?.busy ? "busy" : "online"}
         />
       </button>
     </Popover>

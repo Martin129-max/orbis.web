@@ -51,7 +51,7 @@ const filters: { value: NotificationFilter; label: string; icon: ReactNode }[] =
   { value: "reports", label: "Reports", icon: <CircleCheck size={16} /> },
 ];
 
-function NotificationRow({
+export function NotificationRow({
   notification,
   onOpen,
   compact = false,

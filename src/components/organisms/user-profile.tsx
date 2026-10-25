@@ -48,6 +48,8 @@ import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
+import type { PresenceStatus } from "@/lib/api";
+import { presenceDot, presenceLabel } from "@/lib/presence";
 
 const tabs = [
   { value: "posts", label: "Posts", icon: <Newspaper size={16} /> },
@@ -109,7 +111,7 @@ function ProfileAvatar({
 
 function ProfileHeader({
   profile,
-  online,
+  status,
   collapsed,
   actions,
   adminAction,
@@ -117,7 +119,7 @@ function ProfileHeader({
   images,
 }: {
   profile: Profile;
-  online: boolean;
+  status: PresenceStatus;
   collapsed: boolean;
   actions: React.ReactNode;
   adminAction?: React.ReactNode;
@@ -159,7 +161,7 @@ function ProfileHeader({
           <ProfileAvatar profile={profile} name={name} editor={images?.avatar} />
           <span
             className={`pointer-events-none absolute right-[14.6%] bottom-[14.6%] translate-x-1/2 translate-y-1/2 rounded-full border-2 border-white ${
-              online ? "bg-online" : "bg-offline"
+              presenceDot[status]
             } ${collapsed ? "h-2.5 w-2.5" : "h-4 w-4"}`}
           />
         </span>
@@ -174,7 +176,7 @@ function ProfileHeader({
           {!collapsed && (
             <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
               <span>@{profile.username}</span>
-              <span>· {online ? "Online" : "Offline"}</span>
+              <span>· {presenceLabel[status]}</span>
               {profile.isHeadAdmin ? (
                 <Atom.RoleBadge role="head-admin" />
               ) : (
@@ -337,6 +339,7 @@ function EmptyTab({ icon, title, description }: { icon: ReactNode; title: string
 
 function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
   const livePresence = useFriendsStore((state) => state.presence);
+  const liveStatuses = useFriendsStore((state) => state.statuses);
 
   if (profile.friends.length === 0) {
     return (
@@ -360,7 +363,11 @@ function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
               label={displayName(friend)}
               avatarUrl={friend.avatarUrl}
               coverUrl={friend.coverUrl}
-              presence={(livePresence[friend.userId] ?? friend.online) ? "online" : "offline"}
+              presence={
+                (livePresence[friend.userId] ?? friend.online)
+                  ? (liveStatuses[friend.userId] ?? friend.status)
+                  : "offline"
+              }
               action={
                 myId !== undefined && (
                   <FriendAction userId={friend.userId} self={friend.userId === myId} />
@@ -467,8 +474,13 @@ function SeeAll({ href, children }: { href: string; children: ReactNode }) {
 
 function ProfileSidePanel({ profile }: { profile: Profile }) {
   const livePresence = useFriendsStore((state) => state.presence);
+  const liveStatuses = useFriendsStore((state) => state.statuses);
   const friends = profile.friends
-    .map((friend) => ({ ...friend, online: livePresence[friend.userId] ?? friend.online }))
+    .map((friend) => ({
+      ...friend,
+      online: livePresence[friend.userId] ?? friend.online,
+      status: liveStatuses[friend.userId] ?? friend.status,
+    }))
     .sort((a, b) => Number(b.online) - Number(a.online));
   const base = `/users/${profile.username}`;
 
@@ -484,7 +496,7 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
               <PersonRow
                 key={friend.userId}
                 person={friend}
-                presence={friend.online ? "online" : "offline"}
+                presence={friend.online ? friend.status : "offline"}
               />
             ))}
           </ul>
@@ -566,6 +578,7 @@ function AdminToggle({
 export function UserProfile({ username }: { username: string }) {
   const me = useAuthStore((state) => state.profile);
   const livePresence = useFriendsStore((state) => state.presence);
+  const liveStatuses = useFriendsStore((state) => state.statuses);
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [collapsed, setCollapsed] = useState(false);
   const isSelf = me?.username === username.toLowerCase();
@@ -651,6 +664,13 @@ export function UserProfile({ username }: { username: string }) {
   const online = isSelf
     ? !me?.appearOffline
     : (livePresence[profile.userId] ?? profile.online);
+  const status: PresenceStatus = !online
+    ? "offline"
+    : isSelf
+      ? me?.busy
+        ? "busy"
+        : "online"
+      : (liveStatuses[profile.userId] ?? profile.status);
   const social = !isSelf && me && (
     <>
       <MessageButton person={profile} />
@@ -667,7 +687,7 @@ export function UserProfile({ username }: { username: string }) {
       <main className="flex min-h-0 flex-1 flex-col">
         <ProfileHeader
           profile={profile}
-          online={false}
+          status="offline"
           collapsed={false}
           social={social}
           actions={null}
@@ -698,7 +718,7 @@ export function UserProfile({ username }: { username: string }) {
       <PageTour name="profile" />
       <ProfileHeader
         profile={profile}
-        online={online}
+        status={status}
         collapsed={collapsed}
         images={images}
         social={social}

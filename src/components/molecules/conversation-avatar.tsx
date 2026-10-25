@@ -2,6 +2,7 @@ import * as Atom from "@atom";
 import type { Conversation } from "@/lib/api";
 import { chatTitle } from "@/lib/chat";
 import { displayName } from "@/lib/display-name";
+import type { PresenceStatus } from "@/lib/api";
 
 const boxes = { sm: "h-8 w-8", md: "h-9 w-9" };
 
@@ -12,7 +13,7 @@ export function ConversationAvatar({
 }: {
   conversation: Conversation;
   size?: keyof typeof boxes;
-  presence?: "online" | "offline";
+  presence?: PresenceStatus;
 }) {
   const [first, second] = conversation.members;
 

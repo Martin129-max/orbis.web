@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
 import { IdentityCard } from "./identity-card";
+import type { PresenceStatus } from "@/lib/api";
 
 export function PersonCard({
   userId,
@@ -18,7 +19,7 @@ export function PersonCard({
   avatarUrl: string | null;
   coverUrl: string | null;
   badge?: ReactNode;
-  presence?: "online" | "offline";
+  presence?: PresenceStatus;
   action?: ReactNode;
 }) {
   return (

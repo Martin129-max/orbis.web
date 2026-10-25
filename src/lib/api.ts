@@ -8,6 +8,8 @@ export type SignupDetails = { email: string; username: string; password: string 
 
 export type Credentials = LoginCredentials | SignupDetails;
 
+export type PresenceStatus = "online" | "idle" | "busy" | "offline";
+
 export type Profile = {
   userId: number;
   email: string;
@@ -17,6 +19,7 @@ export type Profile = {
   backgroundUrl: string | null;
   theme: ThemeMode;
   appearOffline: boolean;
+  busy: boolean;
   isPublic: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
@@ -293,6 +296,7 @@ export type Member = {
   avatarUrl: string | null;
   coverUrl: string | null;
   online: boolean;
+  status: PresenceStatus;
   nickname: string | null;
   joinedAt: string;
   isOwner: boolean;
@@ -301,7 +305,7 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "isPublic">>,
+  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "busy" | "isPublic">>,
 ): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",
@@ -838,7 +842,7 @@ export type FriendUser = {
   avatarUrl: string | null;
 };
 
-export type Friend = FriendUser & { online: boolean };
+export type Friend = FriendUser & { online: boolean; status: PresenceStatus };
 
 export type FriendList = {
   friends: Friend[];
@@ -1583,6 +1587,7 @@ export type PublicProfile = {
   restricted: boolean;
   createdAt: string;
   online: boolean;
+  status: PresenceStatus;
   friendCount: number;
   postCount: number;
   communityCount: number;
@@ -1601,6 +1606,7 @@ export type PublicProfile = {
     avatarUrl: string | null;
     coverUrl: string | null;
     online: boolean;
+    status: PresenceStatus;
   }[];
   library: {
     id: number;

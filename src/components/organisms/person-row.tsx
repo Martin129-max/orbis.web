@@ -8,6 +8,7 @@ import type { ChatPerson } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { MessageButton } from "./chat-dock";
+import type { PresenceStatus } from "@/lib/api";
 
 export function PersonRow({
   person,
@@ -20,7 +21,7 @@ export function PersonRow({
 }: {
   person: ChatPerson;
   label?: string;
-  presence?: "online" | "offline";
+  presence?: PresenceStatus;
   badge?: ReactNode;
   subtitle?: ReactNode;
   trailing?: ReactNode;

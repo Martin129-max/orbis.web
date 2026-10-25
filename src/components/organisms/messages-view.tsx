@@ -143,7 +143,7 @@ export function MessagesView() {
   );
 }
 
-function ConversationRow({
+export function ConversationRow({
   conversation,
   active,
   onSelect,
@@ -154,8 +154,8 @@ function ConversationRow({
 }) {
   const me = useAuthStore((state) => state.profile?.userId);
   const direct = conversation.isGroup ? undefined : conversation.members[0];
-  const online = useFriendsStore(
-    (state) => state.friends.find(({ userId }) => userId === direct?.userId)?.online,
+  const status = useFriendsStore(
+    (state) => state.friends.find(({ userId }) => userId === direct?.userId)?.status,
   );
   const unread = conversation.unread > 0;
 
@@ -171,7 +171,7 @@ function ConversationRow({
       >
         <Molecule.ConversationAvatar
           conversation={conversation}
-          presence={online === undefined ? undefined : online ? "online" : "offline"}
+          presence={status}
         />
         <span className="flex min-w-0 flex-1 flex-col">
           <span className={`truncate text-sm ${unread ? "font-bold" : "font-semibold"}`}>

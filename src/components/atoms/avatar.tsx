@@ -1,4 +1,6 @@
 import Image from "next/image";
+import type { PresenceStatus } from "@/lib/api";
+import { presenceDot } from "@/lib/presence";
 
 const tones = ["bg-accent-soft", "bg-rail-item"];
 
@@ -30,7 +32,7 @@ export function Avatar({
   src?: string | null;
   seed?: string | number;
   size?: keyof typeof sizes;
-  presence?: "online" | "offline";
+  presence?: PresenceStatus;
 }) {
   return (
     <span
@@ -51,7 +53,7 @@ export function Avatar({
       {presence && (
         <span
           className={`absolute -right-px -bottom-px h-3 w-3 rounded-full border-2 border-surface ${
-            presence === "online" ? "bg-online" : "bg-offline"
+            presenceDot[presence]
           }`}
         />
       )}

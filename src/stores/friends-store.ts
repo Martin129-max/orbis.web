@@ -1,7 +1,7 @@
 import { io, type Socket } from "socket.io-client";
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import type { Friend, FriendTarget, FriendUser, Notification } from "@/lib/api";
+import type { Friend, FriendTarget, FriendUser, Notification, PresenceStatus } from "@/lib/api";
 import { useAuthStore } from "./auth-store";
 import { useMessagesStore } from "./messages-store";
 import { useNotificationsStore } from "./notifications-store";
@@ -11,6 +11,7 @@ type FriendsState = {
   incoming: FriendUser[];
   outgoing: FriendUser[];
   presence: Record<number, boolean>;
+  statuses: Record<number, PresenceStatus>;
   loaded: boolean;
   connect: () => void;
   fetchFriends: () => Promise<void>;
@@ -23,10 +24,54 @@ const empty = {
   incoming: [],
   outgoing: [],
   presence: {},
+  statuses: {},
   loaded: false,
 };
 
 let socket: Socket | null = null;
+let stopIdleTracking: (() => void) | null = null;
+
+const IDLE_AFTER_MS = 5 * 60 * 1000;
+const ACTIVITY_THROTTLE_MS = 15_000;
+const ACTIVITY_EVENTS = ["pointerdown", "pointermove", "keydown", "wheel", "touchstart"];
+
+function trackIdle(client: Socket) {
+  let idle = false;
+  let lastActive = 0;
+  let timer: ReturnType<typeof setTimeout> | undefined;
+
+  function setIdle(next: boolean) {
+    if (idle === next) return;
+    idle = next;
+    client.emit("idle", next);
+  }
+
+  function active() {
+    const now = Date.now();
+    if (!idle && now - lastActive < ACTIVITY_THROTTLE_MS) return;
+    lastActive = now;
+    setIdle(false);
+    clearTimeout(timer);
+    timer = setTimeout(() => setIdle(true), IDLE_AFTER_MS);
+  }
+
+  function visibility() {
+    if (document.visibilityState === "visible") active();
+  }
+
+  ACTIVITY_EVENTS.forEach((event) => window.addEventListener(event, active, { passive: true }));
+  document.addEventListener("visibilitychange", visibility);
+  client.on("connect", () => {
+    if (idle) client.emit("idle", true);
+  });
+  active();
+
+  return () => {
+    clearTimeout(timer);
+    ACTIVITY_EVENTS.forEach((event) => window.removeEventListener(event, active));
+    document.removeEventListener("visibilitychange", visibility);
+  };
+}
 
 export function emitTyping(conversationId: number, typing: boolean) {
   socket?.emit("typing", { conversationId, typing });
@@ -39,6 +84,7 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     if (!token || socket) return;
 
     socket = io(api.API_URL, { auth: { token } });
+    stopIdleTracking = trackIdle(socket);
     socket.on("connect", () => {
       get().fetchFriends();
       useNotificationsStore.getState().refresh();
@@ -64,12 +110,13 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     socket.on("typing", (event) => useMessagesStore.getState().setTyping(event));
     socket.on(
       "presence",
-      ({ userId, online }: { userId: number; online: boolean }) =>
+      ({ userId, online, status }: { userId: number; online: boolean; status: PresenceStatus }) =>
         set((state) => ({
           friends: state.friends.map((friend) =>
-            friend.userId === userId ? { ...friend, online } : friend,
+            friend.userId === userId ? { ...friend, online, status } : friend,
           ),
           presence: { ...state.presence, [userId]: online },
+          statuses: { ...state.statuses, [userId]: status },
         })),
     );
     get().fetchFriends();
@@ -107,6 +154,8 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
 useAuthStore.subscribe(({ token }) => {
   if (token || !socket) return;
 
+  stopIdleTracking?.();
+  stopIdleTracking = null;
   socket.disconnect();
   socket = null;
   useFriendsStore.setState(empty);

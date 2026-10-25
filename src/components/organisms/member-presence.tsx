@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
-import { getMembers, type Member } from "@/lib/api";
+import { getMembers, type Member, type PresenceStatus } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
@@ -34,7 +34,7 @@ function PresenceGroup({
               key={member.userId}
               person={member}
               label={member.nickname ?? displayName(member)}
-              presence={online ? "online" : "offline"}
+              presence={online ? member.status : "offline"}
               badge={
                 (member.isOwner || member.isAdmin) && (
                   <Atom.RoleBadge role={member.isOwner ? "owner" : "admin"} />
@@ -52,6 +52,7 @@ export function MemberPresence({ communityId }: { communityId: number }) {
   const [members, setMembers] = useState<Member[]>([]);
   const profile = useAuthStore((state) => state.profile);
   const presence = useFriendsStore((state) => state.presence);
+  const statuses = useFriendsStore((state) => state.statuses);
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
@@ -64,7 +65,11 @@ export function MemberPresence({ communityId }: { communityId: number }) {
     member.userId === profile?.userId
       ? !profile.appearOffline
       : (presence[member.userId] ?? member.online);
-  const online = members.filter(isOnline);
+  const statusOf = (member: Member): PresenceStatus => {
+    if (member.userId !== profile?.userId) return statuses[member.userId] ?? member.status;
+    return profile.appearOffline ? "offline" : profile.busy ? "busy" : "online";
+  };
+  const online = members.filter(isOnline).map((member) => ({ ...member, status: statusOf(member) }));
   const offline = members.filter((member) => !isOnline(member));
 
   return (

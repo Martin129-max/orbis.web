@@ -103,7 +103,7 @@ export function FriendsPanel() {
           <PersonRow
             key={friend.userId}
             person={friend}
-            presence="online"
+            presence={friend.status}
           />
         ))}
       </Section>

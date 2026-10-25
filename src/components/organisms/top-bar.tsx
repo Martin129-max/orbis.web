@@ -1,13 +1,16 @@
 "use client";
 
-import { Tooltip } from "antd";
 import { MessageCircle, UserPlus } from "lucide-react";
-import Link from "next/link";
+import { useState } from "react";
+import * as Atom from "@atom";
 import { useFriendsStore } from "@/stores/friends-store";
 import { useLayoutStore } from "@/stores/layout-store";
 import { useMessagesStore } from "@/stores/messages-store";
+import { HEADER_POPOVER_LIMIT, HeaderPopover, HeaderPopoverNote } from "./header-popover";
+import { ConversationRow } from "./messages-view";
 import { NotificationBell } from "./notification-bell";
 import { PeopleSearch } from "./friends-panel";
+import { PersonRow } from "./person-row";
 import { SidePanelOpener } from "./side-panel";
 import { UserMenu } from "./user-menu";
 
@@ -19,49 +22,139 @@ function itemClass(active: boolean) {
   }`;
 }
 
+function CountBadge({ count }: { count: number }) {
+  if (count === 0) return null;
+
+  return (
+    <span
+      aria-hidden
+      className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-rail bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
+    >
+      {count > 99 ? "99+" : count}
+    </span>
+  );
+}
+
 function RequestsButton() {
-  const pending = useFriendsStore((state) => state.incoming.length);
+  const incoming = useFriendsStore((state) => state.incoming);
+  const loaded = useFriendsStore((state) => state.loaded);
+  const addFriend = useFriendsStore((state) => state.addFriend);
+  const removeFriend = useFriendsStore((state) => state.removeFriend);
+  const [open, setOpen] = useState(false);
+  const pending = incoming.length;
   const label = pending > 0 ? `Friend requests, ${pending} pending` : "Friend requests";
 
   return (
-    <Tooltip title="Friend requests" placement="bottom">
-      <Link href="/requests" data-tour="friend-requests" aria-label={label} className={itemClass(false)}>
+    <HeaderPopover
+      open={open}
+      onOpenChange={setOpen}
+      title="Friend requests"
+      href="/requests"
+      action="See all requests"
+      content={
+        !loaded ? (
+          <div className="flex py-6">
+            <Atom.Loader />
+          </div>
+        ) : pending === 0 ? (
+          <HeaderPopoverNote>No friend requests.</HeaderPopoverNote>
+        ) : (
+          <ul className="flex flex-col">
+            {incoming.slice(0, HEADER_POPOVER_LIMIT).map((user) => (
+              <PersonRow
+                key={user.userId}
+                person={user}
+                actions={
+                  <>
+                    <Atom.Button
+                      size="small"
+                      onClick={() => addFriend({ userId: user.userId }).catch(() => null)}
+                    >
+                      Accept
+                    </Atom.Button>
+                    <Atom.Button
+                      size="small"
+                      variant="secondary"
+                      onClick={() => removeFriend(user.userId).catch(() => null)}
+                    >
+                      Decline
+                    </Atom.Button>
+                  </>
+                }
+              />
+            ))}
+          </ul>
+        )
+      }
+    >
+      <button
+        type="button"
+        data-tour="friend-requests"
+        aria-label={label}
+        aria-expanded={open}
+        className={`cursor-pointer ${itemClass(open)}`}
+      >
         <UserPlus size={20} />
-        {pending > 0 && (
-          <span
-            aria-hidden
-            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-rail bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
-          >
-            {pending > 99 ? "99+" : pending}
-          </span>
-        )}
-      </Link>
-    </Tooltip>
+        <CountBadge count={pending} />
+      </button>
+    </HeaderPopover>
   );
 }
 
 function MessagesButton() {
-  const unread = useMessagesStore(
-    (state) =>
-      state.conversations.filter(({ status, unread }) => status === "accepted" && unread > 0)
-        .length,
-  );
+  const conversations = useMessagesStore((state) => state.conversations);
+  const loaded = useMessagesStore((state) => state.loaded);
+  const pageOpen = useMessagesStore((state) => state.pageOpen);
+  const openChat = useMessagesStore((state) => state.openChat);
+  const select = useMessagesStore((state) => state.select);
+  const [open, setOpen] = useState(false);
+  const chats = conversations.filter(({ status }) => status === "accepted");
+  const unread = chats.filter((chat) => chat.unread > 0).length;
   const label = unread > 0 ? `Messages, ${unread} unread` : "Messages";
 
   return (
-    <Tooltip title="Messages" placement="bottom">
-      <Link href="/?tab=messages" data-tour="messages" aria-label={label} className={itemClass(false)}>
+    <HeaderPopover
+      open={open}
+      onOpenChange={setOpen}
+      title="Messages"
+      href="/?tab=messages"
+      action="See all messages"
+      content={
+        !loaded ? (
+          <div className="flex py-6">
+            <Atom.Loader />
+          </div>
+        ) : chats.length === 0 ? (
+          <HeaderPopoverNote>No chats yet.</HeaderPopoverNote>
+        ) : (
+          <ul className="flex flex-col gap-0.5">
+            {chats.slice(0, HEADER_POPOVER_LIMIT).map((conversation) => (
+              <ConversationRow
+                key={conversation.id}
+                conversation={conversation}
+                active={false}
+                onSelect={() => {
+                  setOpen(false);
+                  if (pageOpen) select(conversation.id);
+                  else openChat(conversation.id);
+                }}
+              />
+            ))}
+          </ul>
+        )
+      }
+    >
+      <button
+        type="button"
+        data-tour="messages"
+        aria-label={label}
+        aria-expanded={open}
+        className={`cursor-pointer ${itemClass(open)}`}
+      >
         <MessageCircle size={20} />
-        {unread > 0 && (
-          <span
-            aria-hidden
-            className="absolute -top-1 -right-1 flex h-5 min-w-5 items-center justify-center rounded-full border-2 border-rail bg-accent px-1 font-sans text-[10px] leading-none font-bold text-accent-foreground"
-          >
-            {unread > 99 ? "99+" : unread}
-          </span>
-        )}
-      </Link>
-    </Tooltip>
+        <CountBadge count={unread} />
+      </button>
+    </HeaderPopover>
   );
 }
 
