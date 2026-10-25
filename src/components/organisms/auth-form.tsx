@@ -12,6 +12,22 @@ import { OAuthButtons } from "./oauth-buttons";
 
 type Mode = "login" | "signup";
 
+export function SignupTerms() {
+  return (
+    <p className="text-[11px] text-muted">
+      By signing up, you agree to our{" "}
+      <Link href="/terms" className="underline hover:text-foreground">
+        Terms
+      </Link>{" "}
+      and{" "}
+      <Link href="/guidelines" className="underline hover:text-foreground">
+        Community guidelines
+      </Link>
+      .
+    </p>
+  );
+}
+
 const content = {
   login: {
     title: "Welcome home.",
@@ -19,7 +35,7 @@ const content = {
     switchText: "New to Orbis?",
     switchLabel: "Create an account",
     switchHref: "/register",
-    footnote: null,
+    footnote: false,
   },
   signup: {
     title: "Find your people.",
@@ -27,19 +43,7 @@ const content = {
     switchText: "Already have a home here?",
     switchLabel: "Log in",
     switchHref: "/login",
-    footnote: (
-      <>
-        By signing up, you agree to our{" "}
-        <Link href="/terms" className="underline hover:text-foreground">
-          Terms
-        </Link>{" "}
-        and{" "}
-        <Link href="/guidelines" className="underline hover:text-foreground">
-          Community guidelines
-        </Link>
-        .
-      </>
-    ),
+    footnote: true,
   },
 };
 
@@ -202,7 +206,7 @@ export function AuthForm({
             </Link>
           )}
         </p>
-        {footnote && <p className="text-[11px] text-muted">{footnote}</p>}
+        {footnote && <SignupTerms />}
       </div>
     </div>
   );

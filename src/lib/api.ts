@@ -1904,6 +1904,7 @@ export type OAuthResult = {
   access_token?: string;
   linked?: OAuthProvider;
   communityId?: number;
+  signup?: { token: string; username: string };
 };
 
 export async function getOAuthProviders(): Promise<OAuthProvider[]> {
@@ -1947,6 +1948,20 @@ export async function completeOAuth(
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t finish logging in. Please try again."));
+  return res.json();
+}
+
+export async function finishOAuthSignup(
+  token: string,
+  username: string,
+): Promise<{ access_token: string }> {
+  const res = await api("/auth/oauth/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, username }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t create your account. Please try again."));
   return res.json();
 }
 

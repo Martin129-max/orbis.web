@@ -6,7 +6,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import * as Atom from "@atom";
 import * as Template from "@template";
 import { completeOAuth } from "@/lib/api";
-import { isOAuthProvider, oauthLabels, takeOAuthNonce } from "@/lib/oauth";
+import { isOAuthProvider, oauthLabels, savePendingSignup, takeOAuthNonce } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 
 function Callback() {
@@ -38,6 +38,9 @@ function Callback() {
       if (result.access_token) {
         loginWithToken(result.access_token);
         router.replace("/");
+      } else if (result.signup) {
+        savePendingSignup({ provider, ...result.signup });
+        router.replace("/register/username");
       } else if (result.communityId) {
         router.replace(`/communities/${result.communityId}/settings`);
       } else {
