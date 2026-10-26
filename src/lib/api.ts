@@ -759,6 +759,15 @@ export async function createWallPost(
   return res.json();
 }
 
+export async function searchPosts(token: string, q: string): Promise<FeedItem[]> {
+  const res = await api(withQuery("/feed/search", { q }), {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("Could not search posts.");
+  return res.json();
+}
+
 export async function searchCommunity(
   token: string | null,
   communityId: number,

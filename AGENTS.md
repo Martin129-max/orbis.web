@@ -48,3 +48,18 @@ Decide whether the feature is something a visitor would sign up for. If so:
 - Update or remove sections and extras when the features they show change or are removed.
 
 Keep the page visual and easy to scan: no walls of text or long lists of features, mark the mock visuals `aria-hidden` so the heading and sentence carry the meaning, and check it at desktop and phone widths.
+
+## Keep Search Up to Date
+
+Orbis has one search for the whole site: the modal in `src/components/organisms/site-search.tsx`, opened from the top bar or with Ctrl K, ⌘K, or `/`. It has two kinds of results:
+
+- **Site-wide sources**, listed in `searchSources` in `src/stores/search-store.ts`: posts and threads, titles, people, communities, and your library. Each one has a loader, a result row, and a label in `site-search.tsx`, and a server endpoint behind it (posts and threads use `GET /feed/search`).
+- **Page sections**: a page renders `<SearchScope />` to put the most relevant source first (`lead`), add its own section on top (`section`, like a community's posts and members or a profile's friends), or hear about titles added from search (`onAdded`).
+
+Whenever you add or change something people could look for by name or text, update search in the same change. That includes new kinds of content, new pages with their own items, and new names, titles, or text on existing items. Decide where it belongs:
+
+- **Findable from anywhere**: add a source to `searchSources` with its loader, row, and label, and a server search endpoint that applies the same visibility rules as wherever the content is shown (private communities, private profiles, reported or hidden content, and the NSFW setting).
+- **Only meaningful on one page**: give that page a `SearchScope` section.
+- **Changed content**: make sure existing search endpoints still match the new fields and still hide what the viewer shouldn't see.
+
+Results should open the item directly, and offer the obvious quick action where there is one (Add to library, Join, Connect). Don't add another search box to a page: filters that narrow the list you're already looking at, like the reports board filter, are fine. When what search covers changes, update the `search` stops in `onboarding.tsx` too.

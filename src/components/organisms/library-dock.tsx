@@ -1,19 +1,20 @@
 "use client";
 
 import { ChevronUp } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
 import * as Atom from "@atom";
 import { getLibrary, type LibraryEntry } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 import { useLayoutStore } from "@/stores/layout-store";
 import { useLibraryPreferencesStore } from "@/stores/library-preferences-store";
+import { useSearchStore } from "@/stores/search-store";
 import {
   filterLibrary,
   LibraryCard,
   LibraryEmptyState,
   LibraryTabs,
-  openLibrarySearch,
+  searchTitles,
 } from "./library-view";
 
 const PANEL_HEIGHT = 352;
@@ -37,7 +38,6 @@ function DockShelf({
 }) {
   const status = useLibraryPreferencesStore((state) => state.status);
   const type = useLibraryPreferencesStore((state) => state.type);
-  const router = useRouter();
 
   if (!entries) {
     return (
@@ -54,10 +54,7 @@ function DockShelf({
       <LibraryEmptyState
         compact
         entries={entries}
-        onSearch={() => {
-          openLibrarySearch();
-          router.push("/library");
-        }}
+        onSearch={() => searchTitles()}
       />
     );
   }
@@ -87,6 +84,7 @@ export function LibraryDock() {
   const setOpen = useLayoutStore((state) => state.setDockOpen);
   const restoreDock = useLayoutStore((state) => state.restoreDock);
   const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
+  const libraryChanges = useSearchStore((state) => state.libraryChanges);
   const [drag, setDrag] = useState<number | null>(null);
   const start = useRef<number | null>(null);
   const dragged = useRef(false);
@@ -119,7 +117,7 @@ export function LibraryDock() {
     return () => {
       ignore = true;
     };
-  }, [open, shown]);
+  }, [open, shown, libraryChanges]);
 
   useEffect(() => {
     const element = dock.current;

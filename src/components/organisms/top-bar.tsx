@@ -5,14 +5,13 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import * as Atom from "@atom";
 import { useFriendsStore } from "@/stores/friends-store";
-import { useLayoutStore } from "@/stores/layout-store";
 import { useMessagesStore } from "@/stores/messages-store";
 import { HEADER_POPOVER_LIMIT, HeaderPopover, HeaderPopoverNote } from "./header-popover";
 import { ConversationRow } from "./messages-view";
 import { NotificationBell } from "./notification-bell";
-import { PeopleSearch } from "./friends-panel";
 import { PersonRow } from "./person-row";
 import { SidePanelOpener } from "./side-panel";
+import { SiteSearch } from "./site-search";
 import { UserMenu } from "./user-menu";
 
 function itemClass(active: boolean) {
@@ -164,15 +163,11 @@ function MessagesButton() {
 }
 
 export function TopBar() {
-  const setSearchSlot = useLayoutStore((state) => state.setSearchSlot);
-  const hasPageSearch = useLayoutStore((state) => state.pageSearches > 0);
-
   return (
     <header className="grid h-14 shrink-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-3 bg-rail px-4 sm:h-16 sm:grid-cols-[1fr_minmax(0,28rem)_1fr] sm:gap-6 sm:px-8">
       <div aria-hidden className="hidden sm:block" />
       <div className="min-w-0">
-        <div ref={setSearchSlot} className="contents" />
-        {!hasPageSearch && <PeopleSearch />}
+        <SiteSearch />
       </div>
       <div className="flex items-center justify-end gap-1 sm:gap-2">
         <RequestsButton />

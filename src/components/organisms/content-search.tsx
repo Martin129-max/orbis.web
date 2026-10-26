@@ -4,12 +4,10 @@ import { MessagesSquare, Newspaper } from "lucide-react";
 import Link from "next/link";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
-import * as Molecule from "@molecule";
 import {
   getMembers,
   searchCommunity,
   searchProfile,
-  type FeedEntry,
   type FeedItem,
   type Member,
   type PublicProfile,
@@ -17,9 +15,9 @@ import {
 import { displayName } from "@/lib/display-name";
 import { mediaPath, statusLabel } from "@/lib/library";
 import { useAuthStore } from "@/stores/auth-store";
-import { DiscussionModal } from "./discussion-modal";
 import { MediaCover } from "./library-view";
 import { PersonRow } from "./person-row";
+import { SearchScope } from "./site-search";
 
 const LIST_LIMIT = 8;
 
@@ -169,7 +167,7 @@ function ContentResults({
   );
 }
 
-function ContentSearch({
+function ContentSearchScope({
   name,
   scope,
   search,
@@ -180,29 +178,25 @@ function ContentSearch({
   search: (query: string) => Promise<FeedItem[]>;
   sections: (query: string) => Section[];
 }) {
-  const [open, setOpen] = useState<FeedEntry | null>(null);
-
   return (
-    <>
-      <Molecule.HeaderSearch
-        label={`Search ${name}`}
-        placeholder={`Search ${name}…`}
-        renderResults={(query) => (
+    <SearchScope
+      section={{
+        label: name,
+        render: (query, { openItem }) => (
           <ContentResults
             query={query}
             search={search}
             sections={sections(query)}
             scope={scope}
-            onOpen={setOpen}
+            onOpen={openItem}
           />
-        )}
-      />
-      <DiscussionModal item={open} onClose={() => setOpen(null)} onChange={setOpen} />
-    </>
+        ),
+      }}
+    />
   );
 }
 
-export function CommunityContentSearch({
+export function CommunitySearchScope({
   communityId,
   communityName,
 }: {
@@ -223,7 +217,7 @@ export function CommunityContentSearch({
   }, [communityId]);
 
   return (
-    <ContentSearch
+    <ContentSearchScope
       name={communityName}
       scope="this community"
       search={search}
@@ -246,7 +240,7 @@ export function CommunityContentSearch({
   );
 }
 
-export function ProfileContentSearch({ profile }: { profile: PublicProfile }) {
+export function ProfileSearchScope({ profile }: { profile: PublicProfile }) {
   const { username } = profile;
   const search = useCallback(
     (query: string) => searchProfile(useAuthStore.getState().token, username, query),
@@ -254,7 +248,7 @@ export function ProfileContentSearch({ profile }: { profile: PublicProfile }) {
   );
 
   return (
-    <ContentSearch
+    <ContentSearchScope
       name={`${displayName(profile)}’s profile`}
       scope="this profile"
       search={search}

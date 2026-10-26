@@ -44,8 +44,7 @@ import { FriendAction } from "./member-list";
 import { ReportButton } from "./report-content";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
-import { ProfileContentSearch } from "./content-search";
-import { PageSearch } from "./page-search";
+import { ProfileSearchScope } from "./content-search";
 import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
@@ -719,9 +718,7 @@ export function UserProfile({ username }: { username: string }) {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
-      <PageSearch>
-        <ProfileContentSearch key={profile.username} profile={profile} />
-      </PageSearch>
+      <ProfileSearchScope key={profile.username} profile={profile} />
       <PageTour name="profile" />
       <ProfileHeader
         profile={profile}

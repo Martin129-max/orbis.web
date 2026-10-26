@@ -31,6 +31,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useNotificationsStore } from "@/stores/notifications-store";
 import { FriendsPanel } from "./friends-panel";
 import { SidePanel } from "./side-panel";
+import { SearchScope } from "./site-search";
 
 const typeIcons: Record<NotificationType, ReactNode> = {
   post_comment: <MessageSquare size={12} />,
@@ -153,12 +154,13 @@ function NotificationResults({ query }: { query: string }) {
   );
 }
 
-export function NotificationSearch() {
+export function NotificationSearchScope() {
   return (
-    <Molecule.HeaderSearch
-      label="Search notifications"
-      placeholder="Search notifications by name or message…"
-      renderResults={(search) => <NotificationResults query={search} />}
+    <SearchScope
+      section={{
+        label: "Notifications",
+        render: (query) => <NotificationResults query={query} />,
+      }}
     />
   );
 }

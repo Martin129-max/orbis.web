@@ -9,9 +9,8 @@ export default function Home() {
       home={
         <Template.AppTemplate>
           <main className="flex min-h-0 flex-1 flex-col">
-            <Template.PageHeader
-              center={<Organism.PeopleSearch />}
-            >
+            <Organism.SearchScope lead="people" />
+            <Template.PageHeader>
               <Atom.Heading>Home</Atom.Heading>
             </Template.PageHeader>
             <Suspense>

@@ -14,7 +14,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { PageTour } from "./onboarding";
 
-function useJoin() {
+export function useJoin() {
   const router = useRouter();
   const joinCommunity = useCommunityStore((state) => state.joinCommunity);
   const [joining, setJoining] = useState<number | null>(null);
@@ -36,7 +36,7 @@ function useJoin() {
   return { join, joining, error };
 }
 
-function JoinAction({
+export function JoinAction({
   community,
   joining,
   onJoin,
@@ -109,85 +109,6 @@ function CommunityDetails({ community }: { community: CommunitySearchResult }) {
           "None of your friends are here yet."
         )}
       </div>
-    </div>
-  );
-}
-
-function CommunityResults({ query }: { query: string }) {
-  const { join, joining, error } = useJoin();
-  const [results, setResults] = useState<{
-    query: string;
-    communities: CommunitySearchResult[] | null;
-  } | null>(null);
-
-  useEffect(() => {
-    const { token } = useAuthStore.getState();
-    if (!token) return;
-    let ignore = false;
-    searchCommunities(token, query)
-      .then((communities) => {
-        if (!ignore) setResults({ query, communities });
-      })
-      .catch(() => {
-        if (!ignore) setResults({ query, communities: null });
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [query]);
-
-  if (!results || results.query !== query) {
-    return (
-      <div className="flex justify-center py-4">
-        <Atom.Loader />
-      </div>
-    );
-  }
-  if (!results.communities) {
-    return <Atom.ErrorMessage>Could not search communities.</Atom.ErrorMessage>;
-  }
-  if (results.communities.length === 0) {
-    return <p className="py-4 text-center text-sm text-muted">No communities match “{query}”.</p>;
-  }
-
-  return (
-    <div className="flex flex-col gap-2">
-      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-      <ul className="flex flex-col">
-        {results.communities.map((community) => (
-          <li
-            key={community.id}
-            className="flex items-center gap-3 rounded-lg px-2 py-2 hover:bg-rail-item/50"
-          >
-            <span
-              aria-hidden
-              className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-rail-item font-display text-[17px] leading-none font-bold"
-            >
-              <Atom.CommunityIcon name={community.name} src={community.iconUrl} />
-            </span>
-            <div className="flex min-w-0 flex-1 flex-col">
-              <span className="truncate text-[13px] font-semibold">{community.name}</span>
-              <span className="text-xs text-muted">
-                {community.memberCount.toLocaleString()}{" "}
-                {community.memberCount === 1 ? "member" : "members"}
-              </span>
-            </div>
-            <JoinAction community={community} joining={joining} onJoin={join} />
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
-
-export function ExploreSearch() {
-  return (
-    <div data-tour="explore-search">
-      <Molecule.HeaderSearch
-        label="Search communities"
-        placeholder="Search communities by name…"
-        renderResults={(search) => <CommunityResults query={search} />}
-      />
     </div>
   );
 }

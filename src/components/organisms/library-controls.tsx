@@ -26,10 +26,12 @@ export function AddToLibraryButton({
   media,
   onAdded,
   size = "small",
+  label = "Add to library",
 }: {
   media: { type: MediaType; sourceId: string; title: string };
   onAdded: (entry: LibraryEntry) => void;
   size?: "small" | "middle" | "large";
+  label?: string;
 }) {
   const { message } = App.useApp();
   const [open, setOpen] = useState(false);
@@ -64,12 +66,13 @@ export function AddToLibraryButton({
       <Atom.Button
         size={size}
         icon={<Plus size={14} />}
+        aria-label={`Add ${media.title} to your library`}
         onClick={() => {
           setProgress(0);
           setOpen(true);
         }}
       >
-        Add to library
+        {label}
       </Atom.Button>
       <Modal
         open={open}

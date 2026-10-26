@@ -77,10 +77,11 @@ export const tourStops: TourStop[] = [
       "Chat one-on-one or in groups of up to 20. New messages pop up in the corner, and messages from people who aren’t your friends wait in Requests.",
   },
   {
-    target: "add-friend",
+    target: "search",
     placement: "bottom",
-    title: "Find people",
-    description: "Search by name or username, then connect to send a friend request.",
+    title: "Search everything",
+    description:
+      "Find people, communities, anime, manga, games, and posts in one place. Open it from any page, or press Ctrl K (⌘K on a Mac).",
   },
   {
     target: "side-panel",
@@ -157,7 +158,7 @@ export const checklistItems: ChecklistItem[] = [
   {
     key: "friend",
     title: "Add a friend",
-    hint: "Search for someone at the top of the home page and connect.",
+    hint: "Use the search at the top to find someone, then connect.",
   },
   {
     key: "library",
@@ -352,10 +353,10 @@ export const pageTours = {
   ],
   library: [
     {
-      target: "library-search",
+      target: "search",
       placement: "bottom",
       title: "Add anime, manga, and games",
-      description: "Search for a title and add it with a status and your episode or chapter progress.",
+      description: "Search for a title and add it to your library. On this page, titles show up first.",
     },
     {
       target: "library-tabs",
@@ -386,10 +387,10 @@ export const pageTours = {
   ],
   explore: [
     {
-      target: "explore-search",
+      target: "search",
       placement: "bottom",
       title: "Search communities",
-      description: "Find public communities by name and join them.",
+      description: "Find public communities by name and join them right from the results.",
     },
     {
       target: "explore-communities",

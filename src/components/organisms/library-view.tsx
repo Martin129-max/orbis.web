@@ -26,16 +26,15 @@ import * as Molecule from "@molecule";
 import * as Template from "@template";
 import {
   getLibrary,
-  searchLibrary,
   type LibraryEntry,
   type LibraryStatus,
-  type MediaResult,
   type MediaType,
   type SteamLink,
   updateLibraryEntry,
 } from "@/lib/api";
 import { libraryStatuses, mediaPath, statusLabel } from "@/lib/library";
 import { useAuthStore } from "@/stores/auth-store";
+import { useSearchStore } from "@/stores/search-store";
 import {
   useLibraryPreferencesStore,
   type LibraryTypeFilter as TypeFilter,
@@ -43,9 +42,10 @@ import {
 } from "@/stores/library-preferences-store";
 import { mediaTypes } from "./activity-card";
 import { FriendsPanel } from "./friends-panel";
-import { AddToLibraryButton, EntryMenu } from "./library-controls";
+import { EntryMenu } from "./library-controls";
 import { SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
+import { SearchScope } from "./site-search";
 
 export function ProgressControl({
   entry,
@@ -534,7 +534,6 @@ export function ReadOnlyLibraryCard({
   );
 }
 
-const LIBRARY_SEARCH_ID = "library-search";
 const SEARCH_SUGGESTIONS = ["Frieren", "One Piece", "Chainsaw Man", "Stardew Valley", "Berserk"];
 
 const emptyCopy = {
@@ -564,14 +563,8 @@ const emptyCopy = {
   },
 } satisfies Record<StatusFilter, { title: string; description: string }>;
 
-let focusSearchOnMount = false;
-
-export function focusLibrarySearch() {
-  document.getElementById(LIBRARY_SEARCH_ID)?.focus();
-}
-
-export function openLibrarySearch() {
-  focusSearchOnMount = true;
+export function searchTitles(query?: string) {
+  useSearchStore.getState().openSearch({ query, filter: "titles" });
 }
 
 export function LibraryEmptyState({
@@ -680,98 +673,6 @@ export function StatusBadge({
   type?: MediaType;
 }) {
   return <Atom.Pill tone={statusTones[status]}>{statusLabel(status, type)}</Atom.Pill>;
-}
-
-function SearchResults({
-  query,
-  entries,
-  onAdded,
-}: {
-  query: string;
-  entries: LibraryEntry[];
-  onAdded: (entry: LibraryEntry) => void;
-}) {
-  const [results, setResults] = useState<{
-    query: string;
-    data: Record<MediaType, MediaResult[]> | null;
-    error?: string;
-  } | null>(null);
-
-  useEffect(() => {
-    const { token } = useAuthStore.getState();
-    if (!token) return;
-    let ignore = false;
-    searchLibrary(token, query)
-      .then((data) => {
-        if (!ignore) setResults({ query, data });
-      })
-      .catch((e: Error) => {
-        if (!ignore) setResults({ query, data: null, error: e.message });
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [query]);
-
-  if (!results || results.query !== query) return <Molecule.FeedSkeleton label="Searching…" />;
-  if (!results.data) return <Atom.ErrorMessage>{results.error}</Atom.ErrorMessage>;
-
-  const saved = new Map(entries.map((entry) => [entry.mediaId, entry]));
-  const groups = (Object.keys(mediaTypes) as MediaType[]).filter(
-    (type) => results.data![type].length > 0,
-  );
-  if (groups.length === 0) {
-    return <p className="py-6 text-sm text-muted">Nothing matches “{query}”.</p>;
-  }
-
-  return (
-    <div className="flex flex-col gap-6">
-      {groups.map((type) => (
-        <section key={type} className="flex flex-col gap-2">
-          <h3 className="flex items-center gap-1.5 text-[11px] font-bold text-muted uppercase">
-            {mediaTypes[type].icon}
-            {mediaTypes[type].label}
-          </h3>
-          <ul className="flex flex-col gap-2">
-            {results.data![type].map((item) => {
-              const entry = saved.get(item.id);
-              return (
-                <li
-                  key={item.id}
-                  className="flex items-center gap-3 rounded-lg border border-divider bg-surface p-3"
-                >
-                  <Link href={mediaPath(item.type, item.sourceId)} className="focus-ring rounded-md">
-                    <MediaCover src={item.coverImage} className="w-12" />
-                  </Link>
-                  <div className="flex min-w-0 flex-1 flex-col gap-1">
-                    <Link
-                      href={mediaPath(item.type, item.sourceId)}
-                      className="focus-ring truncate rounded-sm text-sm font-semibold hover:underline"
-                    >
-                      {item.title}
-                    </Link>
-                    <span className="text-xs text-muted">
-                      {[item.year, item.score !== null && `★ ${item.score.toFixed(1)}`]
-                        .filter(Boolean)
-                        .join(" · ")}
-                    </span>
-                  </div>
-                  {entry ? (
-                    <span className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-online">
-                      <Check size={14} />
-                      {statusLabel(entry.status, entry.mediaType)}
-                    </span>
-                  ) : (
-                    <AddToLibraryButton media={item} onAdded={onAdded} />
-                  )}
-                </li>
-              );
-            })}
-          </ul>
-        </section>
-      ))}
-    </div>
-  );
 }
 
 function ViewToggle() {
@@ -915,7 +816,7 @@ function LibraryShelf({
       {shown.length === 0 ? (
         <LibraryEmptyState
           entries={entries}
-          onSearch={focusLibrarySearch}
+          onSearch={() => searchTitles()}
           onSuggest={onSuggest}
         />
       ) : view === "list" ? (
@@ -933,66 +834,9 @@ function LibraryShelf({
   );
 }
 
-function LibrarySearch({
-  entries,
-  onAdded,
-  query,
-  onQueryChange,
-}: {
-  entries: LibraryEntry[];
-  onAdded: (entry: LibraryEntry) => void;
-  query?: string;
-  onQueryChange?: (query: string) => void;
-}) {
-  useEffect(() => {
-    const input = document.getElementById(LIBRARY_SEARCH_ID);
-    if (!focusSearchOnMount || !input) return;
-    focusSearchOnMount = false;
-    input.focus();
-  }, []);
-
-  return (
-    <div data-tour="library-search">
-      <Molecule.HeaderSearch
-        id={LIBRARY_SEARCH_ID}
-        label="Search anime, manga, and games"
-        placeholder="Search anime, manga, and games…"
-        query={query}
-        onQueryChange={onQueryChange}
-        renderResults={(search) => (
-          <SearchResults query={search} entries={entries} onAdded={onAdded} />
-        )}
-      />
-    </div>
-  );
-}
-
-export function TitleSearch({ onAdded }: { onAdded: (entry: LibraryEntry) => void }) {
-  const [entries, setEntries] = useState<LibraryEntry[]>([]);
-
-  useEffect(() => {
-    const { token } = useAuthStore.getState();
-    if (!token) return;
-    getLibrary(token)
-      .then(setEntries)
-      .catch(() => null);
-  }, []);
-
-  return (
-    <LibrarySearch
-      entries={entries}
-      onAdded={(entry) => {
-        setEntries((current) => [entry, ...current]);
-        onAdded(entry);
-      }}
-    />
-  );
-}
-
 export function LibraryView() {
   const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
   const [failed, setFailed] = useState(false);
-  const [query, setQuery] = useState("");
 
   useEffect(() => {
     useLibraryPreferencesStore.persist.rehydrate();
@@ -1012,16 +856,11 @@ export function LibraryView() {
   return (
     <>
       <PageTour name="library" />
-      <Template.PageHeader
-        center={
-          <LibrarySearch
-            entries={entries ?? []}
-            onAdded={(entry) => setEntries((current) => [entry, ...(current ?? [])])}
-            query={query}
-            onQueryChange={setQuery}
-          />
-        }
-      >
+      <SearchScope
+        lead="titles"
+        onAdded={(entry) => setEntries((current) => current && [entry, ...current])}
+      />
+      <Template.PageHeader>
         <Atom.Heading>Library</Atom.Heading>
       </Template.PageHeader>
       <LibraryTabs entries={entries} actions={<ViewToggle />} />
@@ -1035,10 +874,7 @@ export function LibraryView() {
             ) : (
               <LibraryShelf
                 entries={entries}
-                onSuggest={(suggestion) => {
-                  setQuery(suggestion);
-                  focusLibrarySearch();
-                }}
+                onSuggest={searchTitles}
                 onChange={replace}
                 onRemove={(id) =>
                   setEntries((current) => current?.filter((item) => item.id !== id) ?? null)
