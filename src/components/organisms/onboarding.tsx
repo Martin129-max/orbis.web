@@ -401,6 +401,13 @@ export const pageTours = {
   ],
   reports: [
     {
+      target: "search",
+      placement: "bottom",
+      title: "Search tickets",
+      description:
+        "Find a ticket by its number, message, or who sent it. On this page, tickets show up first, and on the Reported tab you can search reported content too.",
+    },
+    {
       target: "reports-tabs",
       placement: "bottom",
       title: "Board, hidden, reported",

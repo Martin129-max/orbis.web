@@ -2,6 +2,8 @@ import type { ThemeMode } from "@/stores/theme-store";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+export const wakeServerScript = `fetch(${JSON.stringify(`${API_URL}/health`)}).catch(function(){});`;
+
 export type LoginCredentials = { identifier: string; password: string };
 
 export type SignupDetails = { email: string; username: string; password: string };
@@ -639,6 +641,18 @@ export async function createPermanentInvite(
 
   if (!res.ok) throw new Error("Couldn’t create the permanent QR. Please try again.");
   return res.json();
+}
+
+export async function downloadInviteCard(
+  token: string,
+  communityId: number,
+): Promise<Blob> {
+  const res = await api(`/communities/${communityId}/invites/permanent/card`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t create the card. Please try again."));
+  return res.blob();
 }
 
 export async function setInviteEnabled(
@@ -1467,6 +1481,15 @@ export async function getReports(token: string, hidden = false): Promise<Report[
 
   if (res.status === 403) throw new Error("Only site admins can see reports.");
   if (!res.ok) throw new Error("Could not load reports.");
+  return res.json();
+}
+
+export async function searchReports(token: string, query: string): Promise<Report[]> {
+  const res = await api(`/reports/search?${new URLSearchParams({ q: query })}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not search tickets.");
   return res.json();
 }
 

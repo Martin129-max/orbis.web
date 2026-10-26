@@ -15,6 +15,7 @@ Orbis has one search for the whole site: the modal in `src/components/organisms/
   - People: `GET /friends/search` (`searchPeople`).
   - Communities: `GET /communities/search` (`searchCommunities`).
   - Your library: filtered in the browser from `getLibrary`.
+  - Tickets, for site admins only: `GET /reports/search` (`searchReports`).
 - **Page sections**: a page renders `<SearchScope />` to put the most relevant source first (`lead`), add its own section on top (`section`, like a community's posts and members, a profile's friends and posts, or notifications), or hear about titles added from search (`onAdded`).
 
 ## Workflow

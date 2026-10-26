@@ -216,7 +216,7 @@ export function CommunityHeader({
         {live && <span className="sr-only">Live on Twitch</span>}
       </div>
       {!collapsed && <StreamCorner community={community} live={live} />}
-      <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
+      <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur empty:hidden sm:top-4 sm:right-8">
         <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
         {actions}
       </div>

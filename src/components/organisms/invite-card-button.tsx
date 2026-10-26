@@ -7,11 +7,11 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
   createPermanentInvite,
+  downloadInviteCard,
   setInviteEnabled,
   type Community,
   type Invite,
 } from "@/lib/api";
-import { buildInviteCard } from "@/lib/invite-card";
 import { qrUrl } from "@/lib/invites";
 import { useAuthStore } from "@/stores/auth-store";
 
@@ -250,19 +250,13 @@ export function InviteCardButton({ community }: { community: Community }) {
   }
 
   async function download() {
-    if (!qr || qr.disabledAt) return;
+    const { token } = useAuthStore.getState();
+    if (!qr || qr.disabledAt || !token) return;
 
     setError(null);
     setBusy(true);
     try {
-      const bytes = await buildInviteCard({
-        name: community.name,
-        iconUrl: community.iconUrl,
-        coverUrl: community.coverUrl,
-        backgroundUrl: community.backgroundUrl,
-        qrUrl: qrUrl(qr.code),
-      });
-      const url = URL.createObjectURL(new Blob([bytes], { type: "application/pdf" }));
+      const url = URL.createObjectURL(await downloadInviteCard(token, community.id));
       const link = document.createElement("a");
       link.href = url;
       link.download = `${slugOf(community.name)}-invite-card.pdf`;

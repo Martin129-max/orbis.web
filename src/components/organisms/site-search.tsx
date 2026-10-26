@@ -11,6 +11,7 @@ import {
   Newspaper,
   Search,
   Settings,
+  Ticket,
 } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -30,6 +31,7 @@ import {
   searchLibrary,
   searchPeople,
   searchPosts,
+  searchReports,
   type CommunitySearchResult,
   type FeedEntry,
   type FeedItem,
@@ -37,9 +39,11 @@ import {
   type LibraryEntry,
   type MediaResult,
   type MediaType,
+  type Report,
 } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { mediaPath, statusLabel } from "@/lib/library";
+import { ticketNumber } from "@/lib/ticket";
 import { useAuthStore } from "@/stores/auth-store";
 import {
   searchSources,
@@ -54,6 +58,7 @@ import { DiscussionModal } from "./discussion-modal";
 import { AddToLibraryButton } from "./library-controls";
 import { MediaCover } from "./library-view";
 import { FriendAction } from "./member-list";
+import { categoryStyle, columns } from "./report-board";
 
 const MIN_QUERY = 2;
 const PREVIEW = 3;
@@ -67,6 +72,7 @@ const sourceLabels: Record<SearchSource, string> = {
   people: "People",
   communities: "Communities",
   library: "Your library",
+  tickets: "Tickets",
 };
 
 const shortcuts = [
@@ -150,6 +156,7 @@ const loadPosts = (token: string, query: string) => searchPosts(token, query);
 const loadTitles = (token: string, query: string) => searchLibrary(token, query).then(interleave);
 const loadPeople = (token: string, query: string) => searchPeople(token, query.replace(/^@/, ""));
 const loadCommunities = (token: string, query: string) => searchCommunities(token, query);
+const loadTickets = (token: string, query: string) => searchReports(token, query);
 
 type Loaded<T> = { query: string; data: T | null };
 type Rows = { status: "loading" | "failed" | "done"; items: ReactNode[] };
@@ -364,6 +371,7 @@ function SearchPanel({
   const closeSearch = useSearchStore((state) => state.closeSearch);
   const libraryChanged = useSearchStore((state) => state.libraryChanged);
   const me = useAuthStore((state) => state.profile?.userId);
+  const isAdmin = useAuthStore((state) => Boolean(state.profile?.isAdmin));
   const { join, joining, error: joinError } = useJoin();
   const [search, setSearch] = useState(query.trim());
   const [library, setLibrary] = useState<LibraryEntry[] | null>(null);
@@ -393,12 +401,14 @@ function SearchPanel({
   }, []);
 
   const section = scope?.section ?? null;
-  const active: SearchFilter = filter === "page" && !section ? "all" : filter;
+  const active: SearchFilter =
+    (filter === "page" && !section) || (filter === "tickets" && !isAdmin) ? "all" : filter;
   const wants = (source: SearchSource) => active === "all" || active === source;
   const posts = useResults(search, wants("posts"), loadPosts);
   const titles = useResults(search, wants("titles"), loadTitles);
   const people = useResults(search, wants("people"), loadPeople);
   const communities = useResults(search, wants("communities"), loadCommunities);
+  const tickets = useResults(search, isAdmin && wants("tickets"), loadTickets);
   const saved = new Map((library ?? []).map((entry) => [entry.mediaId, entry]));
   const needle = search.toLowerCase();
 
@@ -532,11 +542,34 @@ function SearchPanel({
         );
       },
     ),
+    tickets: rowsOf(tickets, (report: Report) => {
+      const href = `/reports?report=${report.id}`;
+      const title = report.message.split("\n")[0];
+      const status = columns.find((column) => column.status === report.status)?.title;
+      const subtitle = [
+        ticketNumber(report.id),
+        categoryStyle[report.category].label,
+        report.hiddenAt ? "Hidden" : status,
+      ].join(" · ");
+      return (
+        <ResultRow
+          key={report.id}
+          href={href}
+          onSelect={() => select({ href, title, subtitle })}
+          icon={<Ticket size={18} className="text-muted" />}
+          title={title}
+          subtitle={subtitle}
+          detail={`From ${displayName(report.author)}`}
+        />
+      );
+    }),
   };
 
-  const order: SearchSource[] = scope?.lead
-    ? [scope.lead, ...searchSources.filter((source) => source !== scope.lead)]
-    : [...searchSources];
+  const available = searchSources.filter((source) => source !== "tickets" || isAdmin);
+  const order: SearchSource[] =
+    scope?.lead && available.includes(scope.lead)
+      ? [scope.lead, ...available.filter((source) => source !== scope.lead)]
+      : available;
   const chips: { value: SearchFilter; label: string }[] = [
     { value: "all", label: "All" },
     ...(section ? [{ value: "page" as const, label: section.label }] : []),

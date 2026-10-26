@@ -75,7 +75,6 @@ export const columns: { status: ReportStatus; title: string; icon: ReactNode }[]
 export type ReportFilter = {
   assignee: "anyone" | "me" | "unassigned" | number;
   category: "all" | ReportCategory;
-  query: string;
 };
 
 export type ReportView = "board" | "list";
@@ -85,18 +84,7 @@ export function matchesFilter(report: Report, filter: ReportFilter, myId: number
   if (filter.assignee === "me" && assigneeId !== myId) return false;
   if (filter.assignee === "unassigned" && assigneeId !== null) return false;
   if (typeof filter.assignee === "number" && assigneeId !== filter.assignee) return false;
-  if (filter.category !== "all" && report.category !== filter.category) return false;
-
-  const query = filter.query.trim().toLowerCase();
-  if (!query) return true;
-  const ticket = query.replace(/^#/, "");
-  if (/^\d+$/.test(ticket) && Number(ticket) === report.id) return true;
-  return [
-    report.message,
-    report.author.username,
-    report.author.name ?? "",
-    report.resolutionNote ?? "",
-  ].some((text) => text.toLowerCase().includes(query));
+  return filter.category === "all" || report.category === filter.category;
 }
 
 function CardMeta({ report }: { report: Report }) {
@@ -331,7 +319,7 @@ function NoMatches() {
       eyebrow="No matches"
       icon={<Inbox size={24} strokeWidth={1.5} />}
       title="Nothing matches your filters."
-      description="Try a different search, assignee or type."
+      description="Try a different assignee or type."
     />
   );
 }

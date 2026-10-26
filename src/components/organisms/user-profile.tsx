@@ -8,6 +8,7 @@ import {
   Newspaper,
   ShieldCheck,
   ShieldOff,
+  UserPlus,
   Users,
   UserX,
 } from "lucide-react";
@@ -197,9 +198,11 @@ function ProfileHeader({
             {adminAction}
           </div>
         )}
-        <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
-          {actions}
-        </div>
+        {actions && (
+          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+            {actions}
+          </div>
+        )}
       </div>
       {images && !collapsed && (
         <Molecule.CoverButton
@@ -256,6 +259,68 @@ function ProfileTabs({ profile, tab }: { profile: Profile; tab: Tab }) {
   );
 }
 
+function WallInvite({ profile }: { profile: Profile }) {
+  const { message } = App.useApp();
+  const status = useFriendsStore((state) =>
+    !state.loaded
+      ? "unknown"
+      : state.friends.some((friend) => friend.userId === profile.userId)
+        ? "friend"
+        : state.outgoing.some((user) => user.userId === profile.userId)
+          ? "sent"
+          : state.incoming.some((user) => user.userId === profile.userId)
+            ? "incoming"
+            : "none",
+  );
+  const addFriend = useFriendsStore((state) => state.addFriend);
+  const [pending, setPending] = useState(false);
+  const name = displayName(profile);
+
+  if (status === "unknown" || status === "friend") return null;
+
+  async function handleAdd() {
+    setPending(true);
+    try {
+      await addFriend({ userId: profile.userId });
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const copy = {
+    none: {
+      title: `Become friends with ${name}`,
+      description: `Add ${name} as a friend to post on their wall and like and comment on their posts.`,
+    },
+    sent: {
+      title: "Friend request sent",
+      description: `Once ${name} accepts, you can post on their wall and like and comment on their posts.`,
+    },
+    incoming: {
+      title: `${name} wants to be friends`,
+      description: `Accept their request to post on their wall and like and comment on their posts.`,
+    },
+  }[status];
+
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border border-divider bg-surface p-5 sm:p-6">
+      <div>
+        <h2 className="font-display text-xl font-bold">{copy.title}</h2>
+        <p className="mt-1 text-sm text-muted">{copy.description}</p>
+      </div>
+      {status !== "sent" && (
+        <div>
+          <Atom.Button icon={<UserPlus size={16} />} loading={pending} onClick={handleAdd}>
+            {status === "incoming" ? "Accept friend request" : "Add friend"}
+          </Atom.Button>
+        </div>
+      )}
+    </section>
+  );
+}
+
 function Wall({
   profile,
   isSelf,
@@ -299,6 +364,7 @@ function Wall({
           </div>
         </section>
       )}
+      {signedIn && !canPost && <WallInvite profile={profile} />}
       {canPost && (
         <div data-tour="profile-wall">
           <PostComposer
@@ -741,17 +807,11 @@ export function UserProfile({ username }: { username: string }) {
           ) : null
         }
         actions={
-          <>
-            {isSelf ? (
-              <Molecule.SettingsLink href="/settings" label="Profile settings" />
-            ) : (
-              me && (
-                <>
-                  <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
-                </>
-              )
-            )}
-          </>
+          isSelf ? (
+            <Molecule.SettingsLink href="/settings" label="Profile settings" />
+          ) : (
+            me && <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
+          )
         }
       />
       <ProfileTabs profile={profile} tab={tab} />
