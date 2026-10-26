@@ -16,7 +16,7 @@ import { App, Tooltip } from "antd";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, type ReactNode, type UIEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Template from "@template";
@@ -71,6 +71,8 @@ type ImageEditor = {
 
 type ProfileImages = { avatar: ImageEditor; cover: ImageEditor; background: ImageEditor };
 
+const AVATAR_MAX_SIZE = 384;
+
 function ProfileAvatar({
   profile,
   name,
@@ -96,6 +98,7 @@ function ProfileAvatar({
       hasImage={Boolean(profile.avatarUrl)}
       onUpload={editor.upload}
       onRemove={editor.remove}
+      crop={{ aspect: 1, round: true, maxSize: AVATAR_MAX_SIZE }}
     >
       {(busy) => (
         <button
@@ -130,9 +133,11 @@ function ProfileHeader({
 }) {
   const name = profile.name || profile.username;
   const backdrop = profile.coverUrl ?? profile.avatarUrl;
+  const header = useRef<HTMLElement>(null);
 
   return (
     <header
+      ref={header}
       className={`relative shrink-0 overflow-hidden border-b border-divider bg-gradient-to-br from-accent-soft to-rail-item transition-[height] duration-300 ease-out motion-reduce:transition-none ${
         collapsed ? "h-14 sm:h-[72px]" : "h-52 sm:h-64"
       }`}
@@ -207,6 +212,9 @@ function ProfileHeader({
       {images && !collapsed && (
         <Molecule.CoverButton
           hasImage={Boolean(profile.coverUrl)}
+          aspect={() =>
+            Molecule.coverAspect(header.current?.offsetWidth ?? 0, header.current?.offsetHeight ?? 0)
+          }
           onUpload={images.cover.upload}
           onRemove={images.cover.remove}
           className="absolute right-4 bottom-4 sm:right-8 sm:bottom-6"

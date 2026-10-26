@@ -10,6 +10,7 @@ export * from "./feed-end";
 export * from "./feed-skeleton";
 export * from "./feed-state";
 export * from "./form-field";
+export * from "./image-crop-modal";
 export * from "./image-menu";
 export * from "./invite-summary";
 export * from "./like-button";

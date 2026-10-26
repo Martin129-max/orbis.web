@@ -2,7 +2,7 @@
 
 import { TwitchFilled } from "@ant-design/icons";
 import Image from "next/image";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { Community, CommunityImage, NextStream } from "@/lib/api";
@@ -86,6 +86,9 @@ function StreamCorner({ community, live }: { community: Community; live: boolean
   );
 }
 
+const ICON_MAX_SIZE = 512;
+const COVER_HEIGHT = { phone: 176, desktop: 256 };
+
 function CommunityBadge({
   community,
   className,
@@ -114,6 +117,7 @@ function CommunityBadge({
       hasImage={Boolean(community.iconUrl)}
       onUpload={(file) => onImage("icon", file)}
       onRemove={() => onImage("icon", null)}
+      crop={{ aspect: 1, round: true, maxSize: ICON_MAX_SIZE }}
     >
       {(busy) => (
         <button
@@ -145,10 +149,23 @@ export function CommunityHeader({
     (state) => state.communities.find((item) => item.id === community.id)?.live,
   );
   const live = storeLive ?? community.live ?? false;
+  const header = useRef<HTMLElement>(null);
+
+  function coverAspect() {
+    const desktop = window.matchMedia("(min-width: 40rem)").matches;
+    return Molecule.coverAspect(
+      header.current?.offsetWidth ?? 0,
+      community.coverUrl
+        ? (header.current?.offsetHeight ?? 0)
+        : desktop
+          ? COVER_HEIGHT.desktop
+          : COVER_HEIGHT.phone,
+    );
+  }
 
   if (!community.coverUrl) {
     return (
-      <header className="flex h-14 shrink-0 items-center gap-6 border-b border-divider px-4 sm:h-[72px] sm:px-8">
+      <header ref={header} className="flex h-14 shrink-0 items-center gap-6 border-b border-divider px-4 sm:h-[72px] sm:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <CommunityBadge
             community={community}
@@ -163,6 +180,7 @@ export function CommunityHeader({
           {onImage && (
             <Molecule.CoverButton
               hasImage={false}
+              aspect={coverAspect}
               onUpload={(file) => onImage("cover", file)}
               onRemove={() => onImage("cover", null)}
             />
@@ -178,6 +196,7 @@ export function CommunityHeader({
 
   return (
     <header
+      ref={header}
       className={`relative shrink-0 overflow-hidden border-b border-divider transition-[height] duration-300 ease-out motion-reduce:transition-none ${
         collapsed ? "h-14 sm:h-[72px]" : "h-44 sm:h-64"
       }`}
@@ -223,6 +242,7 @@ export function CommunityHeader({
       {onImage && !collapsed && (
         <Molecule.CoverButton
           hasImage
+          aspect={coverAspect}
           onUpload={(file) => onImage("cover", file)}
           onRemove={() => onImage("cover", null)}
           className="absolute right-4 bottom-4 sm:right-8 sm:bottom-6"
