@@ -1,0 +1,95 @@
+{
+  "date": "2026-10-23",
+  "versions": [
+    "v0.27.0",
+    "v0.27.1",
+    "v0.27.2",
+    "v0.28.0",
+    "v0.28.1",
+    "v0.29.0",
+    "v0.30.0",
+    "v0.31.0",
+    "v0.32.0",
+    "v0.33.0",
+    "v0.33.1",
+    "v0.33.2",
+    "v0.34.0",
+    "v0.34.1",
+    "v0.35.0",
+    "v0.36.0"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "Report content for review",
+      "description": "You can report posts, threads, comments, profiles, and communities. Notices explain when content is hidden while reports are reviewed.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Find people by name",
+      "description": "You can search for people by username or name from the home page.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Feeds check for new posts",
+      "description": "Your feeds now check for new posts while you browse, so you can keep up without refreshing the page yourself.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Search from page headers",
+      "description": "You can use search dropdowns on Home, Explore, Library, and Notifications to find people, communities, titles, and notifications.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Keep track of your invite links",
+      "description": "You can see your active community invites and revoke links you no longer want to share. Invite pages also show more of the community’s appearance.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Learn more before joining a community",
+      "description": "You can read community descriptions and hover over community cards to see member previews and mutual friends.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Clearer updates on your feedback",
+      "description": "You’ll see report statuses such as Received, Being worked on, and Fixed, plus a message from the team when one is added to your resolved report.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Mark notifications read in one place",
+      "description": "You can mark all notifications as read from the unread notifications bar.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Preview Orbis before signing up",
+      "description": "You can discover featured communities on the refreshed welcome page, with updated sign-in screens and navigation.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

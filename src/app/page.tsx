@@ -2,8 +2,11 @@ import { Suspense } from "react";
 import * as Atom from "@atom";
 import * as Organism from "@organism";
 import * as Template from "@template";
+import { getChangelog } from "@/lib/changelog-files";
 
 export default function Home() {
+  const latestChangelog = getChangelog()[0] ?? null;
+
   return (
     <Organism.GuestGate
       home={
@@ -14,7 +17,7 @@ export default function Home() {
               <Atom.Heading>Home</Atom.Heading>
             </Template.PageHeader>
             <Suspense>
-              <Organism.HomeView />
+              <Organism.HomeView latestChangelog={latestChangelog} />
             </Suspense>
           </main>
         </Template.AppTemplate>

@@ -9,14 +9,16 @@ import { createPost, createWallPost, getFeed } from "@/lib/api";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { useOnboardingStore } from "@/stores/onboarding-store";
+import type { ChangelogDay } from "@/lib/changelog";
 import { useCommunityStore } from "@/stores/community-store";
+import { ChangelogBanner } from "./changelog-banner";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { OnboardingChecklist, OnboardingTour } from "./onboarding";
 
 type Destination = "wall" | number;
 
-export function HomeFeed() {
+export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | null }) {
   const feed = usePaged(getFeed, { live: true });
   const profile = useAuthStore((state) => state.profile);
   const communities = useCommunityStore((state) => state.communities);
@@ -39,6 +41,7 @@ export function HomeFeed() {
     <div className="flex flex-col gap-3">
       <OnboardingChecklist />
       <OnboardingTour />
+      {latestChangelog && <ChangelogBanner day={latestChangelog} />}
       {profile && (
         <div data-tour="composer">
         <PostComposer

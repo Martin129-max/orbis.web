@@ -1,0 +1,109 @@
+{
+  "date": "2026-10-24",
+  "versions": [
+    "v0.37.0",
+    "v0.38.0",
+    "v0.39.0",
+    "v0.39.1",
+    "v0.39.2",
+    "v0.40.0",
+    "v0.40.1",
+    "v0.40.2",
+    "v0.41.0",
+    "v0.41.1",
+    "v0.42.0",
+    "v0.43.0",
+    "v0.44.0",
+    "v0.44.1"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "Chat with friends and groups",
+      "description": "You can send direct messages, handle message requests, and start group chats. A chat dock keeps conversations nearby, with typing indicators while someone replies.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Share links with previews",
+      "description": "You can see link previews in posts, threads, comments, and messages. GIF links display as images, and a link dialog helps you add links to posts.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Print community invite cards",
+      "description": "You can download printable invite cards with permanent QR codes and turn their invite links on or off.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "See notifications as they arrive",
+      "description": "You can see notification popups while using Orbis without opening the notifications page.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Choose what appears in your feed",
+      "description": "You can filter feeds by content type and switch to a compact view. You can also enter your current progress when adding a title to your library.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Tours for the pages you visit",
+      "description": "You can get a short tour the first time you open communities, profiles, your library, and other key pages.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Start and vote on discussions more easily",
+      "description": "You can write a new thread directly in the forum and use thumbs-up and thumbs-down voting. Your new threads start with your own upvote.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Reach profiles from chat",
+      "description": "You can open someone’s profile from their name or avatar in an expanded chat and remove a friend from their profile.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Animated loading and navigation",
+      "description": "You’ll see an animated Orbis logo while content loads and when you hover over the sidebar logo.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "fixed",
+      "title": "Move communities between folders reliably",
+      "description": "You can drag communities out of folders and drop them into the intended place, with corrected drag previews and less empty space in the sidebar.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "fixed",
+      "title": "Chat stays at the latest message",
+      "description": "Your chat stays at the bottom when its content changes size.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

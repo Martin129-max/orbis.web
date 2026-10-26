@@ -24,6 +24,7 @@ export type Profile = {
   status: UserStatus;
   isPublic: boolean;
   showNsfw: boolean;
+  showChangelog: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
   createdAt: string;
@@ -324,7 +325,9 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic" | "showNsfw">>,
+  preferences: Partial<
+    Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic" | "showNsfw" | "showChangelog">
+  >,
 ): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",

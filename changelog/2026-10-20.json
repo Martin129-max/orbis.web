@@ -1,0 +1,62 @@
+{
+  "date": "2026-10-20",
+  "versions": [
+    "v0.2.0",
+    "v0.3.0",
+    "v0.3.1",
+    "v0.3.2",
+    "v0.4.0",
+    "v0.4.1",
+    "v0.5.0"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "Create your own communities",
+      "description": "You can create a community and switch between your communities from the sidebar.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Share posts with your community",
+      "description": "You can write formatted posts, read your community feed, and see who else has joined.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Choose your theme",
+      "description": "You can choose light, dark, or your device’s theme from your account menu. Your preference is saved to your account.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Put your communities in order",
+      "description": "You can drag communities in the sidebar into the order you prefer.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "A new welcome page and simpler sign-in",
+      "description": "You can learn about Orbis on the welcome page and use refreshed forms to register or log in.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "fixed",
+      "title": "Retry when your connection drops",
+      "description": "You now see a connection message and a retry option when your feed, profile, or community details cannot load.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

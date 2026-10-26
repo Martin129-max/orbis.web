@@ -4,6 +4,7 @@ const links = [
   { href: "/guidelines", label: "Community guidelines" },
   { href: "/privacy", label: "Privacy" },
   { href: "/terms", label: "Terms" },
+  { href: "/changelog", label: "Changelog" },
 ];
 
 export function SiteFooter({ bordered = true }: { bordered?: boolean }) {

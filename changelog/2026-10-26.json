@@ -1,0 +1,106 @@
+{
+  "date": "2026-10-26",
+  "versions": [
+    "v0.51.0",
+    "v0.52.0",
+    "v0.53.0",
+    "v0.53.1",
+    "v0.53.2",
+    "v0.53.3",
+    "v0.54.0",
+    "v0.54.1",
+    "v0.55.0",
+    "v0.56.0",
+    "v0.56.1"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "Connect Steam and import your games",
+      "description": "You can link your Steam account, import played games into your library, and see playtime and achievements. You can also show the game you’re currently playing.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Update your library from any page",
+      "description": "You can pull up a library dock to change a title’s status or progress without leaving the page. A slim strip keeps it within reach when closed.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Choose a nickname for each community",
+      "description": "You can set a different nickname in each community’s member settings. It appears on your posts and comments there.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Control adult titles in your library",
+      "description": "You can enable Show NSFW in settings to see adult titles, which are hidden by default. Adult title pages now display an 18+ notice.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Search posts on profiles",
+      "description": "You can search a person’s posts and threads from their profile. Community search now brings posts and threads together, too.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Choose your username when signing up with Discord or Twitch",
+      "description": "You can pick your own username before finishing registration with Discord or Twitch.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "A library that’s easier to update",
+      "description": "You can search your library by title and adjust progress directly on cards or in list view. Larger touch targets, responsive grids, and clearer empty states make it easier to use on your phone.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Recently updated titles come first",
+      "description": "Your library now puts the titles you updated most recently at the top.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "See when the next stream starts",
+      "description": "You can see countdowns to scheduled community Twitch streams, with live badges displayed on community icons.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Smoother page changes",
+      "description": "You’ll see a loading bar when moving between pages, and page wallpapers stay in place while you scroll.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "fixed",
+      "title": "Offline status hides game activity",
+      "description": "Your Steam game activity is hidden when you’re offline, including when you choose to appear offline.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-21",
+  "versions": [
+    "v0.6.0",
+    "v0.7.0",
+    "v0.8.0",
+    "v0.8.1",
+    "v0.9.0",
+    "v0.10.0",
+    "v0.11.0",
+    "v0.12.0",
+    "v0.12.1",
+    "v0.13.0",
+    "v0.13.1"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "All your communities in one feed",
+      "description": "You can read posts from every community you’ve joined on your home feed and choose a community when posting.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Start a discussion",
+      "description": "You can create forum threads in your communities, vote on them, and reply with nested comments.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Find your friends",
+      "description": "You can send and accept friend requests, see who’s online, and choose to appear offline.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Explore public communities",
+      "description": "You can search for public communities and join the ones that interest you.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Choose your username",
+      "description": "You can register with a unique username, log in with it or your email, and use usernames to add friends.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Keep reading without changing pages",
+      "description": "Your home and community feeds load more posts as you scroll.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "A refreshed look across Orbis",
+      "description": "You’ll see warmer colors, new fonts, clearer post cards, and redesigned profiles and sign-in screens. Keyboard focus is easier to see, too.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Friends and members within reach",
+      "description": "You can collapse the friends and members panel and open it as a drawer on smaller screens. Community badges on posts help you see where each update belongs.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Return home from sign-in",
+      "description": "You can head back to the welcome page directly from the login and registration forms.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "fixed",
+      "title": "Log in with your existing password",
+      "description": "You can log in with a shorter existing password without being blocked by the registration password requirement.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

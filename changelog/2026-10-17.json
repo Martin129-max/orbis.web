@@ -1,0 +1,13 @@
+{
+  "date": "2026-10-17",
+  "entries": [
+    {
+      "type": "new",
+      "title": "Welcome to Orbis",
+      "description": "You can create an account, log in, and view your profile on the web.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

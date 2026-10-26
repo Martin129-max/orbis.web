@@ -1,0 +1,98 @@
+{
+  "date": "2026-10-25",
+  "versions": [
+    "v0.44.2",
+    "v0.45.0",
+    "v0.46.0",
+    "v0.46.1",
+    "v0.46.2",
+    "v0.47.0",
+    "v0.48.0",
+    "v0.49.0",
+    "v0.49.1",
+    "v0.50.0",
+    "v0.50.1"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "Browse public pages before joining",
+      "description": "You can browse public communities and profiles as a guest, preview a community before joining, and choose whether your own profile is public.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Log in with Discord or Twitch",
+      "description": "You can register or log in with Discord or Twitch and manage linked accounts in your settings.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "React and reply in chat",
+      "description": "You can reply to individual messages, add emoji reactions, choose emoji from a picker, and edit messages you’ve sent.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Show when you’re streaming",
+      "description": "You can show your Twitch live status, and communities can display a live badge for their linked Twitch channel.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Get started on mobile",
+      "description": "You can register, log in, and view your profile in the mobile app.",
+      "platforms": [
+        "mobile"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Search within a community",
+      "description": "You can search a community’s posts and threads to find a conversation.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Messages and updates in the top bar",
+      "description": "You can reach search, messages, notifications, friend requests, and your account from the top bar. Quick popovers let you check updates, with dedicated pages for messages and friend requests.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Choose your availability",
+      "description": "You can pick Online, Idle, Busy, or Invisible from your account menu. Simple colored dots show people’s status.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Post to your wall from Home",
+      "description": "You can write a post on your own wall from the home feed or choose one of your communities as the destination.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Open people and communities with one click",
+      "description": "You can click anywhere on a person or community card to open its page.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}
