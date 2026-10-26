@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useLayoutStore } from "@/stores/layout-store";
 import { useLibraryPreferencesStore } from "@/stores/library-preferences-store";
 import { useSearchStore } from "@/stores/search-store";
+import { SiteFooter } from "./site-footer";
 import {
   filterLibrary,
   LibraryCard,
@@ -89,13 +90,24 @@ export function LibraryDock() {
   const start = useRef<number | null>(null);
   const dragged = useRef(false);
   const dock = useRef<HTMLElement>(null);
+  const footer = useRef<HTMLDivElement>(null);
+  const [footerHeight, setFooterHeight] = useState(0);
   const shown = profile !== null && pathname !== "/library";
+  const panelHeight = PANEL_HEIGHT + footerHeight;
   const height = shown
     ? Math.min(
-        PANEL_HEIGHT,
-        Math.max(CLOSED_HEIGHT, (open ? PANEL_HEIGHT : CLOSED_HEIGHT) - (drag ?? 0)),
+        panelHeight,
+        Math.max(CLOSED_HEIGHT, (open ? panelHeight : CLOSED_HEIGHT) - (drag ?? 0)),
       )
     : 0;
+
+  useEffect(() => {
+    const element = footer.current;
+    if (!element) return;
+    const observer = new ResizeObserver(() => setFooterHeight(element.offsetHeight));
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [shown]);
 
   useLayoutEffect(() => {
     restoreDock();
@@ -212,10 +224,13 @@ export function LibraryDock() {
           open || drag !== null ? "visible" : "invisible delay-300"
         }`}
       >
-        <div style={{ height: PANEL_HEIGHT }} className="flex flex-col">
+        <div style={{ height: panelHeight }} className="flex flex-col">
           <LibraryTabs entries={entries} bordered={false} />
-          <div className="flex min-h-0 flex-1 flex-col rounded-tl-2xl border-t border-l border-divider bg-background">
+          <div className="flex min-h-0 flex-1 flex-col rounded-l-2xl border-y border-l border-divider bg-background">
             <DockShelf entries={entries} onChange={replace} onRemove={remove} />
+          </div>
+          <div ref={footer} className="shrink-0">
+            <SiteFooter bordered={false} compact />
           </div>
         </div>
       </div>

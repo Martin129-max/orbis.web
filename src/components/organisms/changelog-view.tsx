@@ -4,7 +4,6 @@ import { Bug, ChevronLeft, ChevronRight, Sparkles, TrendingUp } from "lucide-rea
 import Link from "next/link";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import * as Template from "@template";
 import {
   changeCount,
   changelogPath,
@@ -168,59 +167,47 @@ export function ChangelogView({ days, date }: { days: ChangelogDay[]; date?: str
   const older = index >= 0 && index < days.length - 1 ? days[index + 1] : null;
 
   return (
-    <main className="flex min-h-0 flex-1 flex-col">
+    <div className="flex flex-col gap-8">
       <ChangelogSearchScope days={days} />
-      <Template.PageHeader>
-        <Atom.Heading>Changelog</Atom.Heading>
-      </Template.PageHeader>
-      <Template.PageColumn>
-        <div className="flex flex-col gap-8">
-          <Molecule.PageIntro
-            eyebrow="Changelog"
-            title="What’s new in Orbis"
-            description="New features, improvements, and fixes, day by day."
-          />
-          {current ? (
-            <>
-              <DayArticle day={current} latest={index === 0} />
-              {(newer || older) && (
-                <nav aria-label="Other updates" className="flex items-center justify-between gap-3">
-                  {newer ? (
-                    <Atom.ButtonLink
-                      href={changelogPath(newer.date, index - 1 === 0)}
-                      variant="secondary"
-                      size="small"
-                      icon={<ChevronLeft size={14} />}
-                    >
-                      Newer
-                    </Atom.ButtonLink>
-                  ) : (
-                    <span />
-                  )}
-                  {older && (
-                    <Atom.ButtonLink
-                      href={changelogPath(older.date, false)}
-                      variant="secondary"
-                      size="small"
-                      icon={<ChevronRight size={14} />}
-                      iconPlacement="end"
-                    >
-                      Older
-                    </Atom.ButtonLink>
-                  )}
-                </nav>
+      {current ? (
+        <>
+          <DayArticle day={current} latest={index === 0} />
+          {(newer || older) && (
+            <nav aria-label="Other updates" className="flex items-center justify-between gap-3">
+              {newer ? (
+                <Atom.ButtonLink
+                  href={changelogPath(newer.date, index - 1 === 0)}
+                  variant="secondary"
+                  size="small"
+                  icon={<ChevronLeft size={14} />}
+                >
+                  Newer
+                </Atom.ButtonLink>
+              ) : (
+                <span />
               )}
-              <AllUpdates days={days} current={current.date} />
-            </>
-          ) : (
-            <Molecule.FeedState
-              icon={<Sparkles size={32} strokeWidth={1.5} />}
-              title="No updates yet."
-              description="New features, improvements, and fixes will show up here."
-            />
+              {older && (
+                <Atom.ButtonLink
+                  href={changelogPath(older.date, false)}
+                  variant="secondary"
+                  size="small"
+                  icon={<ChevronRight size={14} />}
+                  iconPlacement="end"
+                >
+                  Older
+                </Atom.ButtonLink>
+              )}
+            </nav>
           )}
-        </div>
-      </Template.PageColumn>
-    </main>
+          <AllUpdates days={days} current={current.date} />
+        </>
+      ) : (
+        <Molecule.FeedState
+          icon={<Sparkles size={32} strokeWidth={1.5} />}
+          title="No updates yet."
+          description="New features, improvements, and fixes will show up here."
+        />
+      )}
+    </div>
   );
 }

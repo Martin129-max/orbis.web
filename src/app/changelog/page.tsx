@@ -10,8 +10,11 @@ export const metadata: Metadata = {
 
 export default function ChangelogPage() {
   return (
-    <Template.AppTemplate>
+    <Template.DocumentTemplate
+      title="What’s new in Orbis"
+      description="New features, improvements, and fixes, day by day."
+    >
       <Organism.ChangelogView days={getChangelog()} />
-    </Template.AppTemplate>
+    </Template.DocumentTemplate>
   );
 }

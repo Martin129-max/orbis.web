@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import * as Organism from "@organism";
+import { DocumentTemplate } from "./document-template";
 
 export function LegalTemplate({
   title,
@@ -11,20 +11,8 @@ export function LegalTemplate({
   children: ReactNode;
 }) {
   return (
-    <div className="flex flex-1 flex-col">
-      <Organism.SiteHeader />
-      <main className="mx-auto w-full max-w-[720px] flex-1 px-4 py-12 sm:px-8 sm:py-16">
-        <article className="legal flex flex-col gap-4">
-          <header className="flex flex-col gap-2 pb-4">
-            <h1 className="font-display text-5xl leading-[1.04] font-bold">
-              {title}
-            </h1>
-            <p className="text-xs text-muted">Last updated {updated}</p>
-          </header>
-          {children}
-        </article>
-      </main>
-      <Organism.SiteFooter />
-    </div>
+    <DocumentTemplate title={title} description={`Last updated ${updated}`}>
+      <article className="legal flex flex-col gap-4">{children}</article>
+    </DocumentTemplate>
   );
 }

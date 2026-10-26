@@ -27,8 +27,11 @@ export default async function ChangelogDayPage({ params }: Props) {
   if (!days.some((day) => day.date === date)) notFound();
 
   return (
-    <Template.AppTemplate>
+    <Template.DocumentTemplate
+      title="What’s new in Orbis"
+      description="New features, improvements, and fixes, day by day."
+    >
       <Organism.ChangelogView days={days} date={date} />
-    </Template.AppTemplate>
+    </Template.DocumentTemplate>
   );
 }
