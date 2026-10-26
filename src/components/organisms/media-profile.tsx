@@ -1,12 +1,13 @@
 "use client";
 
-import { ChevronDown, Globe, Lock, MoreHorizontal, SearchX, Star } from "lucide-react";
+import { ChevronDown, EyeOff, Globe, Lock, MoreHorizontal, SearchX, Star } from "lucide-react";
 import Image from "next/image";
 import { useCallback, useEffect, useState, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Template from "@template";
 import {
+  AdultTitleError,
   createMediaPost,
   getMediaPosts,
   getMediaProfile,
@@ -99,7 +100,7 @@ function Synopsis({ text }: { text: string }) {
   );
 }
 
-type Loaded = { key: string; profile: Profile | null; error?: string };
+type Loaded = { key: string; profile: Profile | null; error?: string; adult?: boolean };
 
 function LibraryAction({
   profile,
@@ -375,7 +376,13 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
     if (!token) return;
     getMediaProfile(token, type, sourceId)
       .then((profile) => setLoaded({ key, profile }))
-      .catch((e: Error) => setLoaded({ key, profile: null, error: e.message }));
+      .catch((e: Error) =>
+        setLoaded(
+          e instanceof AdultTitleError
+            ? { key, profile: null, adult: true }
+            : { key, profile: null, error: e.message },
+        ),
+      );
   }, [key, type, sourceId]);
 
   function handleScroll(event: UIEvent<HTMLDivElement>) {
@@ -393,6 +400,14 @@ export function MediaProfile({ type, sourceId }: { type: string; sourceId: strin
       <Template.CenteredTemplate>
         {!current ? (
           <Atom.Loader />
+        ) : current.adult ? (
+          <Molecule.FeedState
+            eyebrow="18+"
+            icon={<EyeOff size={24} strokeWidth={1.5} />}
+            title="This title is 18+."
+            description="Turn on Show NSFW content in Settings to see 18+ anime, manga, and games."
+            action={<Atom.ButtonLink href="/settings">Open settings</Atom.ButtonLink>}
+          />
         ) : (
           <Molecule.FeedState
             role={current.error ? "alert" : undefined}

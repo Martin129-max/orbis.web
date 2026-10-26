@@ -23,6 +23,7 @@ export type Profile = {
   appearOffline: boolean;
   status: UserStatus;
   isPublic: boolean;
+  showNsfw: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
   createdAt: string;
@@ -310,7 +311,7 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic">>,
+  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic" | "showNsfw">>,
 ): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",
@@ -1853,6 +1854,8 @@ export type MediaProfile = Omit<MediaResult, "inLibrary"> & {
   members: { status: LibraryStatus; user: Author }[];
 };
 
+export class AdultTitleError extends Error {}
+
 export async function getMediaProfile(
   token: string,
   type: string,
@@ -1863,6 +1866,7 @@ export async function getMediaProfile(
   });
 
   if (res.status === 404 || res.status === 400) return null;
+  if (res.status === 403) throw new AdultTitleError("This title is 18+.");
   if (!res.ok) throw new Error(await errorMessage(res, "Could not load this title."));
   return res.json();
 }

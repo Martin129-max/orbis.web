@@ -9,6 +9,7 @@ import type { Profile } from "@/lib/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { OAuthConnections } from "./oauth-connections";
+import { NsfwSwitch } from "./nsfw-switch";
 import { PrivateProfileSwitch } from "./private-profile-switch";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -77,6 +78,15 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           </label>
           <p className="text-xs text-muted">
             Only your friends can see your posts, friends, communities, and library. Everyone else sees just your name and picture.
+          </p>
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="flex items-center justify-between gap-4">
+            <span className="text-sm font-semibold">Show NSFW content</span>
+            <NsfwSwitch />
+          </label>
+          <p className="text-xs text-muted">
+            Show 18+ anime, manga, and games in search, title pages, feeds, and libraries.
           </p>
         </div>
         <RestartTours />
