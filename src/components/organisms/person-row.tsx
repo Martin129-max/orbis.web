@@ -34,7 +34,12 @@ export function PersonRow({
   const me = useAuthStore((state) => state.profile?.userId);
   const liveGame = useFriendsStore((state) => state.games[person.userId]);
   const self = person.userId === me;
-  const game = presence === undefined ? null : liveGame !== undefined ? liveGame : playing;
+  const game =
+    presence === undefined || presence === "offline"
+      ? null
+      : liveGame !== undefined
+        ? liveGame
+        : playing;
 
   return (
     <li className="group flex flex-col gap-2 py-2">
