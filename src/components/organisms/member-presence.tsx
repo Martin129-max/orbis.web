@@ -35,6 +35,7 @@ function PresenceGroup({
               person={member}
               label={member.nickname ?? displayName(member)}
               presence={online ? member.status : "offline"}
+              playing={member.playing}
               badge={
                 (member.isOwner || member.isAdmin) && (
                   <Atom.RoleBadge role={member.isOwner ? "owner" : "admin"} />

@@ -1,3 +1,4 @@
+import { Trophy } from "lucide-react";
 import type { SteamLink } from "@/lib/api";
 
 const STEAM_PATH =
@@ -17,6 +18,74 @@ export function steamPlaytime(minutes: number) {
   return `${hours < 10 ? hours.toFixed(1).replace(/\.0$/, "") : Math.round(hours)} h`;
 }
 
+export function steamStoreUrl(appId: string) {
+  return `https://store.steampowered.com/app/${appId}`;
+}
+
+export function steamAchievementsUrl({ steamId, appId }: SteamLink) {
+  return `https://steamcommunity.com/profiles/${steamId}/stats/${appId}/achievements`;
+}
+
+const pillClass =
+  "focus-ring flex h-7 items-center justify-center gap-1.5 rounded-full bg-[#171a21] px-2.5 text-[11px] font-semibold whitespace-nowrap text-white shadow-sm transition-colors hover:bg-[#2a475e] pointer-coarse:h-9";
+
+export function SteamHours({
+  steam,
+  title,
+  className = "",
+}: {
+  steam: SteamLink;
+  title: string;
+  className?: string;
+}) {
+  const played = steam.minutes > 0 ? steamPlaytime(steam.minutes) : "Not played";
+
+  return (
+    <a
+      href={steamStoreUrl(steam.appId)}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="View on Steam"
+      aria-label={`${title}: ${played} on Steam. View on Steam`}
+      className={`${pillClass} ${className}`}
+    >
+      <span className="flex shrink-0 @max-[9rem]:hidden">
+        <SteamIcon size={13} />
+      </span>
+      <span className="min-w-0 truncate">{played}</span>
+    </a>
+  );
+}
+
+export function SteamAchievements({
+  steam,
+  title,
+  className = "",
+}: {
+  steam: SteamLink;
+  title: string;
+  className?: string;
+}) {
+  if (!steam.achievements) return null;
+  const { achieved, total } = steam.achievements;
+
+  return (
+    <a
+      href={steamAchievementsUrl(steam)}
+      target="_blank"
+      rel="noopener noreferrer"
+      title="View achievements on Steam"
+      aria-label={`${title}: ${achieved} of ${total} achievements. View achievements on Steam`}
+      className={`${pillClass} ${className}`}
+    >
+      <Trophy size={12} aria-hidden className="shrink-0" />
+      <span className="@max-[9rem]:hidden">
+        {achieved}/{total}
+      </span>
+    </a>
+  );
+}
+
 export function SteamBadge({
   steam,
   title,
@@ -30,7 +99,7 @@ export function SteamBadge({
 
   return (
     <a
-      href={`https://store.steampowered.com/app/${steam.appId}`}
+      href={steamStoreUrl(steam.appId)}
       target="_blank"
       rel="noopener noreferrer"
       title="View on Steam"

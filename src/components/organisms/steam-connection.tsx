@@ -1,23 +1,139 @@
 "use client";
 
-import { Switch } from "antd";
-import { useEffect, useState } from "react";
+import { App, Modal, Switch } from "antd";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
   disconnectSteam,
   getSteamStatus,
-  setSteamTrackGames,
+  importSteamGames,
+  updateSteamSettings,
   type SteamStatus,
 } from "@/lib/api";
 import { startSteamConnect } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
+
+function gamesLabel(count: number) {
+  return `${count} ${count === 1 ? "game" : "games"}`;
+}
+
+function SteamImportModal({
+  open,
+  count,
+  remindOnDecline = false,
+  onClose,
+  onImported,
+}: {
+  open: boolean;
+  count: number;
+  remindOnDecline?: boolean;
+  onClose: () => void;
+  onImported: (status: SteamStatus) => void;
+}) {
+  const { message } = App.useApp();
+  const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  function decline() {
+    onClose();
+    if (remindOnDecline) {
+      message.info(
+        "No problem. You can import your Steam games anytime from Settings → Connections → Steam.",
+      );
+    }
+  }
+
+  async function confirm() {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    setPending(true);
+    setError(null);
+    try {
+      const { imported, status } = await importSteamGames(token);
+      onImported(status);
+      onClose();
+      message.success(
+        imported === 0
+          ? "Everything you’ve played is already in your library."
+          : `Added ${gamesLabel(imported)} from Steam to your library.`,
+      );
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Modal
+      open={open}
+      title={null}
+      footer={null}
+      width={460}
+      destroyOnHidden
+      onCancel={pending ? undefined : decline}
+      styles={{ container: { padding: 24 } }}
+    >
+      <div className="flex flex-col gap-6">
+        <Molecule.ModalHeader
+          eyebrow="Steam"
+          title="Import your Steam games?"
+          description={`You’ve played ${gamesLabel(count)} on Steam that aren’t in your library yet. Add them with your hours?`}
+        />
+        <ul className="flex list-disc flex-col gap-2 pl-5 text-[13px] text-muted">
+          <li>
+            Games you played in the last two weeks are added as Playing, the rest as On hold. You
+            can change any of them later.
+          </li>
+          <li>Nothing is posted to your communities’ feeds.</li>
+        </ul>
+        {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        <div className="flex justify-end gap-2 border-t border-divider pt-6">
+          <Atom.Button variant="secondary" disabled={pending} onClick={decline}>
+            Not now
+          </Atom.Button>
+          <Atom.Button loading={pending} onClick={confirm}>
+            Import {gamesLabel(count)}
+          </Atom.Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function ConnectedPrompt({
+  importable,
+  onImported,
+}: {
+  importable: number;
+  onImported: (status: SteamStatus) => void;
+}) {
+  const params = useSearchParams();
+  const router = useRouter();
+  const [dismissed, setDismissed] = useState(false);
+
+  return (
+    <SteamImportModal
+      open={!dismissed && params.get("steam") === "connected" && importable > 0}
+      count={importable}
+      remindOnDecline
+      onClose={() => {
+        setDismissed(true);
+        router.replace("/settings", { scroll: false });
+      }}
+      onImported={onImported}
+    />
+  );
+}
 
 export function SteamConnection() {
   const [status, setStatus] = useState<SteamStatus | null>(null);
   const [failed, setFailed] = useState(false);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [importOpen, setImportOpen] = useState(false);
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
@@ -94,9 +210,33 @@ export function SteamConnection() {
             aria-label="Add games to my library the first time I play them"
             checked={account.trackGames}
             disabled={pending}
-            onChange={(trackGames) => run((token) => setSteamTrackGames(token, trackGames))}
+            onChange={(trackGames) => run((token) => updateSteamSettings(token, { trackGames }))}
           />
         </label>
+      )}
+      {account && (
+        <label className="flex items-center justify-between gap-3 pl-11 text-xs">
+          <span className="text-muted">
+            Show friends and community members what I’m playing
+          </span>
+          <Switch
+            size="small"
+            aria-label="Show friends and community members what I’m playing"
+            checked={account.showPlaying}
+            disabled={pending}
+            onChange={(showPlaying) => run((token) => updateSteamSettings(token, { showPlaying }))}
+          />
+        </label>
+      )}
+      {account && account.importable > 0 && (
+        <div className="flex items-center justify-between gap-3 pl-11 text-xs">
+          <span className="text-muted">
+            {gamesLabel(account.importable)} you’ve played aren’t in your library yet
+          </span>
+          <Atom.Button size="small" variant="secondary" onClick={() => setImportOpen(true)}>
+            Import games
+          </Atom.Button>
+        </div>
       )}
       {account?.gamesPrivate && (
         <p className="pl-11 text-xs text-warning">
@@ -105,6 +245,19 @@ export function SteamConnection() {
         </p>
       )}
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      {account && (
+        <>
+          <SteamImportModal
+            open={importOpen}
+            count={account.importable}
+            onClose={() => setImportOpen(false)}
+            onImported={setStatus}
+          />
+          <Suspense fallback={null}>
+            <ConnectedPrompt importable={account.importable} onImported={setStatus} />
+          </Suspense>
+        </>
+      )}
     </div>
   );
 }

@@ -104,6 +104,7 @@ export function FriendsPanel() {
             key={friend.userId}
             person={friend}
             presence={friend.status}
+            playing={friend.playing}
           />
         ))}
       </Section>
@@ -115,6 +116,7 @@ export function FriendsPanel() {
             key={friend.userId}
             person={friend}
             presence="offline"
+            playing={friend.playing}
           />
         ))}
       </Section>

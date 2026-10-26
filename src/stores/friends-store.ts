@@ -13,6 +13,7 @@ type FriendsState = {
   outgoing: FriendUser[];
   presence: Record<number, boolean>;
   statuses: Record<number, PresenceStatus>;
+  games: Record<number, string | null>;
   loaded: boolean;
   connect: () => void;
   fetchFriends: () => Promise<void>;
@@ -26,6 +27,7 @@ const empty = {
   outgoing: [],
   presence: {},
   statuses: {},
+  games: {},
   loaded: false,
 };
 
@@ -114,13 +116,24 @@ export const useFriendsStore = create<FriendsState>()((set, get) => ({
     socket.on("typing", (event) => useMessagesStore.getState().setTyping(event));
     socket.on(
       "presence",
-      ({ userId, online, status }: { userId: number; online: boolean; status: PresenceStatus }) =>
+      ({
+        userId,
+        online,
+        status,
+        playing = null,
+      }: {
+        userId: number;
+        online: boolean;
+        status: PresenceStatus;
+        playing?: string | null;
+      }) =>
         set((state) => ({
           friends: state.friends.map((friend) =>
-            friend.userId === userId ? { ...friend, online, status } : friend,
+            friend.userId === userId ? { ...friend, online, status, playing } : friend,
           ),
           presence: { ...state.presence, [userId]: online },
           statuses: { ...state.statuses, [userId]: status },
+          games: { ...state.games, [userId]: playing },
         })),
     );
     get().fetchFriends();

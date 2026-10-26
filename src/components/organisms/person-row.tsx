@@ -1,5 +1,6 @@
 "use client";
 
+import { Gamepad2 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 import * as Atom from "@atom";
@@ -7,6 +8,7 @@ import * as Molecule from "@molecule";
 import type { ChatPerson } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
+import { useFriendsStore } from "@/stores/friends-store";
 import { MessageButton } from "./chat-dock";
 import type { PresenceStatus } from "@/lib/api";
 
@@ -18,6 +20,7 @@ export function PersonRow({
   subtitle = `@${person.username}`,
   trailing,
   actions,
+  playing,
 }: {
   person: ChatPerson;
   label?: string;
@@ -26,9 +29,12 @@ export function PersonRow({
   subtitle?: ReactNode;
   trailing?: ReactNode;
   actions?: ReactNode;
+  playing?: string | null;
 }) {
   const me = useAuthStore((state) => state.profile?.userId);
+  const liveGame = useFriendsStore((state) => state.games[person.userId]);
   const self = person.userId === me;
+  const game = presence === undefined ? null : liveGame !== undefined ? liveGame : playing;
 
   return (
     <li className="group flex flex-col gap-2 py-2">
@@ -63,6 +69,12 @@ export function PersonRow({
               {badge}
             </span>
             <span className="truncate text-xs text-muted">{subtitle}</span>
+            {game && (
+              <span className="flex min-w-0 items-center gap-1 text-xs font-semibold text-online">
+                <Gamepad2 size={13} aria-hidden className="shrink-0" />
+                <span className="truncate">Playing {game}</span>
+              </span>
+            )}
           </div>
         </div>
         {!self && <MessageButton person={person} compact />}

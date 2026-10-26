@@ -502,6 +502,7 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
                 key={friend.userId}
                 person={friend}
                 presence={friend.online ? friend.status : "offline"}
+                playing={friend.playing}
               />
             ))}
           </ul>

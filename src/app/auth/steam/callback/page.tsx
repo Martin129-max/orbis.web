@@ -31,7 +31,7 @@ function Callback() {
         [...params.entries()].filter(([key]) => key.startsWith("openid.")),
       );
       await connectSteam(token, { state, nonce, params: openId });
-      router.replace("/settings");
+      router.replace("/settings?steam=connected");
     }
 
     finish().catch((cause: Error) => setError(cause.message));

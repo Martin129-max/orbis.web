@@ -1,14 +1,90 @@
 "use client";
 
+import { TwitchFilled } from "@ant-design/icons";
 import Image from "next/image";
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import type { Community, CommunityImage } from "@/lib/api";
+import type { Community, CommunityImage, NextStream } from "@/lib/api";
 import { useCommunityStore } from "@/stores/community-store";
 import { ReportButton } from "./report-content";
 
 type ImageChange = (image: CommunityImage, file: File | null) => Promise<unknown>;
+
+const STARTING_SOON_MS = 60 * 60 * 1000;
+
+function useNow() {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+  return now;
+}
+
+function countdown(ms: number) {
+  const seconds = Math.floor(ms / 1000);
+  const days = Math.floor(seconds / 86400);
+  const hours = Math.floor((seconds % 86400) / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+  if (hours > 0) return `${hours}h ${minutes}m ${seconds % 60}s`;
+  return `${minutes}m ${seconds % 60}s`;
+}
+
+const scheduleTime = new Intl.DateTimeFormat(undefined, {
+  weekday: "long",
+  month: "short",
+  day: "numeric",
+  hour: "numeric",
+  minute: "2-digit",
+});
+
+function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
+  const now = useNow();
+  const startsAt = Date.parse(next.startsAt);
+  const endsAt = next.endsAt ? Date.parse(next.endsAt) : startsAt + STARTING_SOON_MS;
+  if (now >= endsAt) return null;
+
+  const when = scheduleTime.format(startsAt);
+  const label = now < startsAt ? `Next stream in ${countdown(startsAt - now)}` : "Starting soon";
+
+  return (
+    <a
+      href={`https://www.twitch.tv/${login}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      title={next.title ? `${next.title} · ${when}` : when}
+      className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
+    >
+      <TwitchFilled aria-hidden className="text-[#9146FF]" />
+      {label}
+    </a>
+  );
+}
+
+function StreamCorner({ community, live }: { community: Community; live: boolean }) {
+  const login = community.twitchLogin;
+  if (!login || (!live && !community.nextStream)) return null;
+
+  return (
+    <div className="absolute top-2.5 left-4 sm:top-4 sm:left-8">
+      {live ? (
+        <a
+          href={`https://www.twitch.tv/${login}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-[#9146FF] px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#772ce8]"
+        >
+          <TwitchFilled aria-hidden />
+          Watch on Twitch
+        </a>
+      ) : (
+        community.nextStream && <StreamCountdown login={login} next={community.nextStream} />
+      )}
+    </div>
+  );
+}
 
 function CommunityBadge({
   community,
@@ -139,6 +215,7 @@ export function CommunityHeader({
         </Atom.Heading>
         {live && <span className="sr-only">Live on Twitch</span>}
       </div>
+      {!collapsed && <StreamCorner community={community} live={live} />}
       <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
         <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
         {actions}

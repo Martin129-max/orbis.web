@@ -31,6 +31,7 @@ import {
   type LibraryStatus,
   type MediaResult,
   type MediaType,
+  type SteamLink,
   updateLibraryEntry,
 } from "@/lib/api";
 import { libraryStatuses, mediaPath, statusLabel } from "@/lib/library";
@@ -384,18 +385,28 @@ function ProgressStepper({
   );
 }
 
-export function LibraryCard({
+type CardEntry = Pick<
+  LibraryEntry,
+  "mediaType" | "sourceId" | "title" | "coverImage" | "status" | "progress" | "total"
+> & {
+  isPublic?: boolean;
+  steam?: SteamLink | null;
+};
+
+function CardLayout({
   entry,
-  onChange,
-  onRemove,
+  progress,
+  status,
+  menu,
   className = "",
 }: {
-  entry: LibraryEntry;
-  onChange: (entry: LibraryEntry) => void;
-  onRemove: (id: number) => void;
+  entry: CardEntry;
+  progress: ReactNode;
+  status: ReactNode;
+  menu?: ReactNode;
   className?: string;
 }) {
-  const tracksProgress = entry.mediaType !== "game";
+  const menuWithProgress = Boolean(progress) && entry.mediaType !== "game";
 
   return (
     <div className={`@container relative overflow-hidden rounded-md ${className}`}>
@@ -408,7 +419,7 @@ export function LibraryCard({
       </Link>
       <div className="pointer-events-none absolute inset-x-0 top-0 flex items-start gap-2 bg-gradient-to-b from-black/85 via-black/50 to-transparent p-2 pb-8">
         <span className="line-clamp-2 min-w-0 flex-1 text-sm leading-snug font-semibold text-white">
-          {!entry.isPublic && (
+          {entry.isPublic === false && (
             <Lock
               size={12}
               aria-label="Private"
@@ -417,40 +428,109 @@ export function LibraryCard({
           )}
           {entry.title}
         </span>
-        {entry.steam && (
-          <span className="pointer-events-auto shrink-0">
-            <Molecule.SteamBadge steam={entry.steam} title={entry.title} />
-          </span>
+        {menu && (
+          <div className="pointer-events-auto hidden shrink-0 pointer-coarse:@max-[11rem]:block">
+            {menu}
+          </div>
         )}
-        <div className="pointer-events-auto hidden shrink-0 pointer-coarse:@max-[11rem]:block">
-          <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
-        </div>
       </div>
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1.5 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-2 pt-8">
-        {tracksProgress && (
+        {progress && (
           <div className="flex items-center gap-1">
-            <ProgressStepper
-              entry={entry}
-              onChange={onChange}
-              className="pointer-events-auto min-w-0 flex-1 bg-surface/90 shadow-sm"
-            />
-            <div className="pointer-events-auto shrink-0 pointer-coarse:@max-[11rem]:hidden">
-              <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
-            </div>
+            <div className="pointer-events-auto min-w-0 flex-1">{progress}</div>
+            {menu && menuWithProgress && (
+              <div className="pointer-events-auto shrink-0 pointer-coarse:@max-[11rem]:hidden">
+                {menu}
+              </div>
+            )}
           </div>
         )}
         <div className="flex items-center gap-1">
-          <div className="pointer-events-auto min-w-0 flex-1">
-            <StatusPill entry={entry} onChange={onChange} />
-          </div>
-          {!tracksProgress && (
+          <div className="pointer-events-auto min-w-0 flex-1">{status}</div>
+          {!menuWithProgress && menu && (
             <div className="pointer-events-auto shrink-0 pointer-coarse:@max-[11rem]:hidden">
-              <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
+              {menu}
             </div>
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+function steamHours(entry: CardEntry) {
+  if (!entry.steam) return null;
+  return (
+    <div className="flex items-center gap-1">
+      <Molecule.SteamHours steam={entry.steam} title={entry.title} className="min-w-0 flex-1" />
+      <Molecule.SteamAchievements steam={entry.steam} title={entry.title} className="shrink-0" />
+    </div>
+  );
+}
+
+export function LibraryCard({
+  entry,
+  onChange,
+  onRemove,
+  className = "",
+}: {
+  entry: LibraryEntry;
+  onChange: (entry: LibraryEntry) => void;
+  onRemove: (id: number) => void;
+  className?: string;
+}) {
+  return (
+    <CardLayout
+      entry={entry}
+      className={className}
+      progress={
+        entry.mediaType === "game" ? (
+          steamHours(entry)
+        ) : (
+          <ProgressStepper entry={entry} onChange={onChange} className="bg-surface/90 shadow-sm" />
+        )
+      }
+      status={<StatusPill entry={entry} onChange={onChange} />}
+      menu={<EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />}
+    />
+  );
+}
+
+export function ReadOnlyLibraryCard({
+  entry,
+  className = "",
+}: {
+  entry: CardEntry;
+  className?: string;
+}) {
+  const Icon = statusIcons[entry.status];
+  const unit = entry.mediaType === "manga" ? "chapters" : "episodes";
+
+  return (
+    <CardLayout
+      entry={entry}
+      className={className}
+      progress={
+        entry.mediaType === "game" ? (
+          steamHours(entry)
+        ) : (
+          <span
+            aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}`}
+            className="flex h-7 items-center justify-center rounded-full bg-surface/90 px-2 text-[11px] font-semibold whitespace-nowrap text-foreground shadow-sm pointer-coarse:h-9"
+          >
+            {entry.progress} / {entry.total ?? "?"}
+          </span>
+        )
+      }
+      status={
+        <Atom.Pill tone={statusTones[entry.status]} className="h-7 w-full! px-3 pointer-coarse:h-9">
+          <span className="flex min-w-0 items-center gap-1.5">
+            <Icon size={13} aria-hidden className="shrink-0" />
+            <span className="truncate">{statusLabel(entry.status, entry.mediaType)}</span>
+          </span>
+        </Atom.Pill>
+      }
+    />
   );
 }
 

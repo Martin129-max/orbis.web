@@ -45,6 +45,7 @@ export type Community = {
   memberCount?: number;
   twitchLogin?: string | null;
   live?: boolean;
+  nextStream?: NextStream | null;
 };
 
 export type CommunityPerson = {
@@ -195,7 +196,14 @@ export type LibraryStatus =
   | "dropped"
   | "planned";
 
-export type SteamLink = { appId: string; minutes: number };
+export type SteamLink = {
+  appId: string;
+  minutes: number;
+  steamId: string;
+  achievements: { achieved: number; total: number } | null;
+};
+
+export type NextStream = { startsAt: string; endsAt: string | null; title: string | null };
 
 export type Activity = {
   type: "activity";
@@ -306,6 +314,7 @@ export type Member = {
   coverUrl: string | null;
   online: boolean;
   status: PresenceStatus;
+  playing?: string | null;
   nickname: string | null;
   joinedAt: string;
   isOwner: boolean;
@@ -879,7 +888,11 @@ export type FriendUser = {
   avatarUrl: string | null;
 };
 
-export type Friend = FriendUser & { online: boolean; status: PresenceStatus };
+export type Friend = FriendUser & {
+  online: boolean;
+  status: PresenceStatus;
+  playing?: string | null;
+};
 
 export type FriendList = {
   friends: Friend[];
@@ -1659,6 +1672,7 @@ export type PublicProfile = {
     coverUrl: string | null;
     online: boolean;
     status: PresenceStatus;
+    playing?: string | null;
   }[];
   library: {
     id: number;
@@ -2053,10 +2067,12 @@ export type SteamStatus = {
     steamId: string;
     personaName: string;
     trackGames: boolean;
+    showPlaying: boolean;
     gamesPrivate: boolean;
     connectedAt: string;
     games: number;
     matched: number;
+    importable: number;
   } | null;
 };
 
@@ -2091,14 +2107,29 @@ export async function connectSteam(
   return res.json();
 }
 
-export async function setSteamTrackGames(token: string, trackGames: boolean): Promise<SteamStatus> {
+export async function updateSteamSettings(
+  token: string,
+  changes: { trackGames?: boolean; showPlaying?: boolean },
+): Promise<SteamStatus> {
   const res = await api("/steam", {
     method: "PATCH",
     headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ trackGames }),
+    body: JSON.stringify(changes),
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t save that. Please try again."));
+  return res.json();
+}
+
+export async function importSteamGames(
+  token: string,
+): Promise<{ imported: number; status: SteamStatus }> {
+  const res = await api("/steam/import", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t import your Steam games. Please try again."));
   return res.json();
 }
 
