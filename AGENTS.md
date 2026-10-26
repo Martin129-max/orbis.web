@@ -10,56 +10,11 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # Agent Instructions
 
-## When You Add a Feature
+## Skills
 
-Whenever you add a user-facing feature, check the three places that introduce Orbis to people and update them in the same change. Skip all three for small tweaks and admin-only tools.
+Step-by-step instructions live in skills in `.agents/skills/`, linked as `.claude/skills/` for Claude Code. Any agent can also read them as plain files. Whenever one of these situations applies, follow its skill in the same change:
 
-### Onboarding Tour and Checklist
-
-New users get a guided tour and a "Get started" checklist on the homepage. Both are defined in `src/components/organisms/onboarding.tsx`:
-
-- `tourStops`: each stop points at an element marked with a `data-tour="<name>"` attribute. Stops whose element isn't on screen (for example, the side panel on mobile) are skipped automatically.
-- `checklistItems`: each item is checked off from real data returned by `GET /users/me/onboarding` (see `server/src/users/users.service.ts`).
-
-The homepage tour introduces the app as a whole: the rail, the composer, notifications, the account menu, and the feedback buttons. Features that live on a specific page (a community, a profile, the library, a title page, Explore, the reports board for admins) belong in that page's own tour instead, shown the first time someone opens the page. Keep each page tour short, two to five stops, and only include what isn't obvious from the page itself.
-
-Page tours are defined in `pageTours` in the same file and shown with `<PageTour name="…" />` on each page. Each one appears once per account, after the homepage tour, and its completion is saved in `completedTours` on the user (returned by `GET /users/me/onboarding`, updated with `PATCH`). To give a new page a tour, add an entry to `pageTours`, render `PageTour` on the page, and add the name to `PAGE_TOURS` in `server/prisma/seed.ts` so seeded accounts start with it completed.
-
-Decide whether a new user needs to know about the feature. If so:
-
-- Add a tour stop for anything with a visible entry point (a button, link, or panel), in the tour for the page where it appears. Add `data-tour` to that element, and keep the description to one or two plain sentences about what it does.
-- Add a checklist item for a first action worth nudging (for example, "Send feedback"). Add a matching boolean to the onboarding response on the server, computed from existing data, and to the `OnboardingStep` type in `src/lib/api.ts`.
-- Update a stop's description when a feature it describes changes, and remove stops or items for features that are removed.
-
-### Landing Page
-
-Logged-out visitors see the landing page, which should make them want to sign up at a glance. It's built in `src/components/organisms/landing-hero.tsx` (the hero) and `src/components/organisms/landing-showcase.tsx` (everything below it), and shown by `src/app/page.tsx`. Below the hero, in order:
-
-- `LandingCommunities`: a scrolling strip of example communities.
-- `LandingShowcase`: one `Showcase` section per major feature. Each has a short eyebrow, a punchy heading (for example "Track what you love."), one sentence, and a visual: a small mock of the real UI built from the app's own look and assets (the pixel avatars, community icons and covers in `public/images/`, and real media covers). Sections alternate sides with `flip`.
-- `LandingExtras`: one compact row of smaller extras, each an icon and a few words.
-- `SiteStats` and `LandingCallToAction`.
-
-Decide whether the feature is something a visitor would sign up for. If so:
-
-- **A major feature** gets its own `Showcase` section with a visual that shows the feature in use, not an icon and a paragraph. Keep the copy to a heading and one sentence, let the visual do the explaining, and keep sections alternating sides.
-- **A smaller feature** gets an entry in `extras` instead.
-- Update the hero's intro paragraph only if the feature changes what Orbis is, not just what it can do.
-- Update or remove sections and extras when the features they show change or are removed.
-
-Keep the page visual and easy to scan: no walls of text or long lists of features, mark the mock visuals `aria-hidden` so the heading and sentence carry the meaning, and check it at desktop and phone widths.
-
-## Keep Search Up to Date
-
-Orbis has one search for the whole site: the modal in `src/components/organisms/site-search.tsx`, opened from the top bar or with Ctrl K, ⌘K, or `/`. It has two kinds of results:
-
-- **Site-wide sources**, listed in `searchSources` in `src/stores/search-store.ts`: posts and threads, titles, people, communities, and your library. Each one has a loader, a result row, and a label in `site-search.tsx`, and a server endpoint behind it (posts and threads use `GET /feed/search`).
-- **Page sections**: a page renders `<SearchScope />` to put the most relevant source first (`lead`), add its own section on top (`section`, like a community's posts and members or a profile's friends), or hear about titles added from search (`onAdded`).
-
-Whenever you add or change something people could look for by name or text, update search in the same change. That includes new kinds of content, new pages with their own items, and new names, titles, or text on existing items. Decide where it belongs:
-
-- **Findable from anywhere**: add a source to `searchSources` with its loader, row, and label, and a server search endpoint that applies the same visibility rules as wherever the content is shown (private communities, private profiles, reported or hidden content, and the NSFW setting).
-- **Only meaningful on one page**: give that page a `SearchScope` section.
-- **Changed content**: make sure existing search endpoints still match the new fields and still hide what the viewer shouldn't see.
-
-Results should open the item directly, and offer the obvious quick action where there is one (Add to library, Join, Connect). Don't add another search box to a page: filters that narrow the list you're already looking at, like the reports board filter, are fine. When what search covers changes, update the `search` stops in `onboarding.tsx` too.
+- **Adding, changing, or removing a user-facing feature** (skip small tweaks and admin-only tools):
+  - `onboarding-updates` (`.agents/skills/onboarding-updates/SKILL.md`): add or update tour stops and checklist items for anything a new user needs to know about.
+  - `landing-page-updates` (`.agents/skills/landing-page-updates/SKILL.md`): show it on the landing page if it's something a visitor would sign up for.
+- **Adding or changing anything people could look for by name or text** (new content, a page with its own items, or new names or text on existing items) → `search-updates` (`.agents/skills/search-updates/SKILL.md`): keep the site search covering it, with the same privacy rules as where it's shown.
