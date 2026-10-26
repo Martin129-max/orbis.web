@@ -1,9 +1,16 @@
 "use client";
 
+import { App, Switch } from "antd";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import { getMembers, setNickname, type Community, type Member } from "@/lib/api";
+import {
+  getMembers,
+  setNickname,
+  setShowLibraryUpdates,
+  type Community,
+  type Member,
+} from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
 const NICKNAME_MAX = 32;
@@ -108,6 +115,52 @@ function NicknameSettings({
   );
 }
 
+function LibraryUpdatesSettings({ community }: { community: Community }) {
+  const { message } = App.useApp();
+  const [show, setShow] = useState(community.showLibraryUpdates ?? true);
+  const [pending, setPending] = useState(false);
+
+  async function handleChange(next: boolean) {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+
+    setShow(next);
+    setPending(true);
+    try {
+      const saved = await setShowLibraryUpdates(token, community.id, next);
+      setShow(saved.showLibraryUpdates);
+    } catch (e) {
+      setShow(!next);
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Molecule.SettingsSection
+      title="Library updates"
+      description={`Choose whether ${community.name} sees what you watch, read, and play.`}
+    >
+      <div className="flex flex-col gap-1">
+        <label className="flex items-center justify-between gap-4">
+          <span className="text-sm font-semibold">Show my library updates here</span>
+          <Switch
+            aria-label={`Show my library updates in ${community.name}`}
+            checked={show}
+            loading={pending}
+            onChange={handleChange}
+          />
+        </label>
+        <p className="text-xs text-muted">
+          When this is off, this community won’t show your updates in its feed or bring them
+          into its members’ home feeds. Your profile still shows them.
+        </p>
+      </div>
+    </Molecule.SettingsSection>
+  );
+}
+
 export function CommunityMemberSettings({
   community,
   onSaved,
@@ -123,6 +176,7 @@ export function CommunityMemberSettings({
         description="Settings that only apply to you, in this community."
       />
       <NicknameSettings community={community} onSaved={onSaved} />
+      <LibraryUpdatesSettings community={community} />
     </div>
   );
 }

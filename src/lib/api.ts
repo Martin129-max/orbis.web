@@ -46,6 +46,7 @@ export type Community = {
   twitchLogin?: string | null;
   live?: boolean;
   nextStream?: NextStream | null;
+  showLibraryUpdates?: boolean;
 };
 
 export type CommunityPerson = {
@@ -864,6 +865,21 @@ export async function getMembers(
   });
 
   return res.ok ? res.json() : [];
+}
+
+export async function setShowLibraryUpdates(
+  token: string,
+  communityId: number,
+  show: boolean,
+): Promise<{ showLibraryUpdates: boolean }> {
+  const res = await api(`/communities/${communityId}/library-updates`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ show }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t save that. Please try again."));
+  return res.json();
 }
 
 export async function setNickname(
