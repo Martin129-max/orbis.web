@@ -1,8 +1,9 @@
 "use client";
 
 import { Input, Switch } from "antd";
+import { ShieldCheck, SlidersHorizontal, Ticket, Tv } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
@@ -22,6 +23,7 @@ import { oauthColors, startOAuth } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { OAuthIcon } from "./oauth-buttons";
+import { SettingsTabs } from "./settings-tabs";
 
 function GeneralSettings({ community }: { community: Community }) {
   const updateCommunity = useCommunityStore((state) => state.updateCommunity);
@@ -320,6 +322,7 @@ function DangerZone({ community }: { community: Community }) {
 
   return (
     <Molecule.SettingsSection
+      danger
       title="Delete community"
       description="This permanently removes all posts, threads, and memberships. This action can’t be undone."
     >
@@ -440,19 +443,48 @@ function TwitchSettings({ community }: { community: Community }) {
   );
 }
 
-export function CommunitySettings({ community }: { community: Community }) {
+export function CommunitySettings({
+  community,
+  aside,
+}: {
+  community: Community;
+  aside?: ReactNode;
+}) {
   return (
-    <div className="flex flex-col gap-8">
-      <Molecule.PageIntro
-        eyebrow={`${community.name} / ${community.role === "owner" ? "Owner" : "Admin"}`}
-        title="Community settings"
-        description="Manage this community’s details, admins, invites, and visibility."
-      />
-      <GeneralSettings community={community} />
-      <AdminSettings community={community} />
-      <InviteSettings community={community} />
-      <TwitchSettings community={community} />
-      {community.role === "owner" && <DangerZone community={community} />}
-    </div>
+    <SettingsTabs
+      label="Community settings sections"
+      aside={aside}
+      tabs={[
+        {
+          key: "general",
+          label: "General",
+          icon: <SlidersHorizontal size={16} aria-hidden />,
+          content: (
+            <>
+              <GeneralSettings community={community} />
+              {community.role === "owner" && <DangerZone community={community} />}
+            </>
+          ),
+        },
+        {
+          key: "admins",
+          label: "Admins",
+          icon: <ShieldCheck size={16} aria-hidden />,
+          content: <AdminSettings community={community} />,
+        },
+        {
+          key: "invites",
+          label: "Invites",
+          icon: <Ticket size={16} aria-hidden />,
+          content: <InviteSettings community={community} />,
+        },
+        {
+          key: "twitch",
+          label: "Twitch",
+          icon: <Tv size={16} aria-hidden />,
+          content: <TwitchSettings community={community} />,
+        },
+      ]}
+    />
   );
 }

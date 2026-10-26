@@ -42,9 +42,9 @@ function Callback() {
         savePendingSignup({ provider, ...result.signup });
         router.replace("/register/username");
       } else if (result.communityId) {
-        router.replace(`/communities/${result.communityId}/settings`);
+        router.replace(`/communities/${result.communityId}/settings?tab=twitch`);
       } else {
-        router.replace("/settings");
+        router.replace("/settings?tab=connections");
       }
     }
 
@@ -59,7 +59,7 @@ function Callback() {
         <Atom.Heading>Couldn’t continue with {label}</Atom.Heading>
         <Atom.ErrorMessage>{error}</Atom.ErrorMessage>
         <Link
-          href={signedIn ? "/settings" : "/login"}
+          href={signedIn ? "/settings?tab=connections" : "/login"}
           className="focus-ring rounded-sm text-sm text-accent hover:underline"
         >
           {signedIn ? "Back to settings" : "Back to log in"}

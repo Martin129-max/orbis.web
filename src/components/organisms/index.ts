@@ -23,6 +23,7 @@ export * from "./join-community-prompt";
 export * from "./home-feed";
 export * from "./home-view";
 export * from "./changelog-view";
+export * from "./settings-tabs";
 export * from "./landing-hero";
 export * from "./library-controls";
 export * from "./library-view";

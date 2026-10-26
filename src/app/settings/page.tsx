@@ -38,11 +38,7 @@ export default function SettingsPage() {
             </Link>
             <Atom.Heading className="min-w-0 truncate">Settings</Atom.Heading>
           </Template.PageHeader>
-          <div className="flex min-h-0 flex-1">
-            <Template.PageColumn>
-              <Organism.ProfileSettings profile={profile} />
-            </Template.PageColumn>
-          </div>
+          <Organism.ProfileSettings profile={profile} />
         </main>
       ) : (
         <Template.CenteredTemplate>

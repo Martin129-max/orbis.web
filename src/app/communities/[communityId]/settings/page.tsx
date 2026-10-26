@@ -63,14 +63,22 @@ export default function CommunitySettingsPage() {
             </Link>
             <Atom.Heading className="min-w-0 truncate">Settings</Atom.Heading>
           </Template.PageHeader>
+          {canManage(current.community) ? (
+            <Organism.CommunitySettings
+              key={current.community.id}
+              community={current.community}
+              aside={
+                <Organism.SidePanel label="Members">
+                  <Organism.MemberPresence
+                    key={current.community.id}
+                    communityId={current.community.id}
+                  />
+                </Organism.SidePanel>
+              }
+            />
+          ) : (
           <div className="flex min-h-0 flex-1">
             <Template.PageColumn>
-              {canManage(current.community) ? (
-                <Organism.CommunitySettings
-                  key={current.community.id}
-                  community={current.community}
-                />
-              ) : (
                 <div className="flex flex-col gap-4 sm:pt-12">
                   <Molecule.FeedState
                     icon={<Lock size={32} strokeWidth={1.5} />}
@@ -88,7 +96,6 @@ export default function CommunitySettingsPage() {
                     To request changes, contact the community owner.
                   </p>
                 </div>
-              )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
               <Organism.MemberPresence
@@ -97,6 +104,7 @@ export default function CommunitySettingsPage() {
               />
             </Organism.SidePanel>
           </div>
+          )}
         </main>
       )}
     </Template.AppTemplate>

@@ -64,15 +64,23 @@ export default function CommunityMemberSettingsPage() {
             </Link>
             <Atom.Heading className="min-w-0 truncate">Your settings</Atom.Heading>
           </Template.PageHeader>
+          {current.community.role ? (
+            <Organism.CommunityMemberSettings
+              key={current.community.id}
+              community={current.community}
+              onSaved={() => setSaves((count) => count + 1)}
+              aside={
+                <Organism.SidePanel label="Members">
+                  <Organism.MemberPresence
+                    key={`${current.community.id}-${saves}`}
+                    communityId={current.community.id}
+                  />
+                </Organism.SidePanel>
+              }
+            />
+          ) : (
           <div className="flex min-h-0 flex-1">
             <Template.PageColumn>
-              {current.community.role ? (
-                <Organism.CommunityMemberSettings
-                  key={current.community.id}
-                  community={current.community}
-                  onSaved={() => setSaves((count) => count + 1)}
-                />
-              ) : (
                 <div className="flex flex-col gap-4 sm:pt-12">
                   <Molecule.FeedState
                     icon={<UserRound size={32} strokeWidth={1.5} />}
@@ -87,7 +95,6 @@ export default function CommunityMemberSettingsPage() {
                     }
                   />
                 </div>
-              )}
             </Template.PageColumn>
             <Organism.SidePanel label="Members">
               <Organism.MemberPresence
@@ -96,6 +103,7 @@ export default function CommunityMemberSettingsPage() {
               />
             </Organism.SidePanel>
           </div>
+          )}
         </main>
       )}
     </Template.AppTemplate>

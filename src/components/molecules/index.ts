@@ -22,6 +22,7 @@ export * from "./page-wallpaper";
 export * from "./person-card";
 export * from "./settings-link";
 export * from "./settings-section";
+export * from "./settings-row";
 export * from "./user-link";
 export * from "./vote-control";
 export * from "./steam-badge";

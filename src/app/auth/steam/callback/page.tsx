@@ -31,7 +31,7 @@ function Callback() {
         [...params.entries()].filter(([key]) => key.startsWith("openid.")),
       );
       await connectSteam(token, { state, nonce, params: openId });
-      router.replace("/settings?steam=connected");
+      router.replace("/settings?tab=connections&steam=connected");
     }
 
     finish().catch((cause: Error) => setError(cause.message));
@@ -42,7 +42,7 @@ function Callback() {
       <div className="flex max-w-sm flex-col items-center gap-4 text-center">
         <Atom.Heading>Couldn’t connect Steam</Atom.Heading>
         <Atom.ErrorMessage>{error}</Atom.ErrorMessage>
-        <Link href="/settings" className="focus-ring rounded-sm text-sm text-accent hover:underline">
+        <Link href="/settings?tab=connections" className="focus-ring rounded-sm text-sm text-accent hover:underline">
           Back to settings
         </Link>
       </div>
