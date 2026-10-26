@@ -110,15 +110,6 @@ function AdminReports() {
             onChange={(event) => setFilter({ ...filter, query: event.target.value })}
           />
         }
-        actions={
-          <>
-            {profile?.isHeadAdmin && (
-              <span data-tour="reports-discord" className="flex">
-                <DiscordWebhookButton />
-              </span>
-            )}
-          </>
-        }
       >
         <Atom.Heading>Reports</Atom.Heading>
       </Template.PageHeader>
@@ -196,6 +187,11 @@ function AdminReports() {
           />
           <ViewToggle view={views[tab]} onChange={(view) => setViews({ ...views, [tab]: view })} />
         </div>
+        {profile?.isHeadAdmin && (
+          <span data-tour="reports-discord" className="flex shrink-0 self-center">
+            <DiscordWebhookButton />
+          </span>
+        )}
       </nav>
       <div className="flex min-h-0 flex-1">
         <div className={content}>
