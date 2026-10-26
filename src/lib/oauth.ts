@@ -1,4 +1,4 @@
-import { getOAuthUrl, type OAuthProvider } from "./api";
+import { getOAuthUrl, getSteamConnectUrl, type OAuthProvider } from "./api";
 
 const NONCE_KEY = "oauth-nonce";
 const SIGNUP_KEY = "oauth-signup";
@@ -55,6 +55,12 @@ export function parsePendingSignup(raw: string | null | undefined): PendingSignu
   } catch {
     return null;
   }
+}
+
+export async function startSteamConnect(token: string) {
+  const nonce = crypto.randomUUID().replaceAll("-", "");
+  sessionStorage.setItem(NONCE_KEY, nonce);
+  window.location.assign(await getSteamConnectUrl(token, nonce));
 }
 
 export function takeOAuthNonce() {

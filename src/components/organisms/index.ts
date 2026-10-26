@@ -57,3 +57,4 @@ export * from "./content-search";
 export * from "./oauth-username-form";
 export * from "./community-member-settings";
 export * from "./library-dock";
+export * from "./steam-connection";

@@ -144,6 +144,9 @@ export function CompactFeedItem({
             />
           )}
           <Molecule.CommentsButton count={item.commentCount} onClick={onOpen} />
+          {item.type === "activity" && item.steam && (
+            <Molecule.SteamBadge steam={item.steam} title={item.media.title} />
+          )}
           {item.type === "post" && (
             <button
               type="button"

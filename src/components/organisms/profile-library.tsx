@@ -4,7 +4,8 @@ import { Segmented } from "antd";
 import { Library, Lock } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
-import type { LibraryStatus, MediaType } from "@/lib/api";
+import * as Molecule from "@molecule";
+import type { LibraryStatus, MediaType, SteamLink } from "@/lib/api";
 import { libraryStatuses, mediaPath, statusLabel } from "@/lib/library";
 import { MediaCover, StatusBadge } from "./library-view";
 
@@ -18,6 +19,7 @@ type ShelfEntry = {
   progress: number;
   total: number | null;
   isPublic?: boolean;
+  steam?: SteamLink | null;
 };
 
 export function ProfileLibrary({
@@ -64,7 +66,7 @@ export function ProfileLibrary({
       ) : (
         <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-5">
           {shown.map((entry) => (
-            <li key={entry.id}>
+            <li key={entry.id} className="relative">
               <Link
                 href={mediaPath(entry.mediaType, entry.sourceId)}
                 className="focus-ring group flex flex-col gap-2 rounded-md"
@@ -95,6 +97,13 @@ export function ProfileLibrary({
                   )}
                 </span>
               </Link>
+              {entry.steam && (
+                <Molecule.SteamBadge
+                  steam={entry.steam}
+                  title={entry.title}
+                  className="absolute top-2 right-2"
+                />
+              )}
             </li>
           ))}
         </ul>

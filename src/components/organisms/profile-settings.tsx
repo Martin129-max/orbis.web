@@ -11,6 +11,7 @@ import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { OAuthConnections } from "./oauth-connections";
 import { NsfwSwitch } from "./nsfw-switch";
 import { PrivateProfileSwitch } from "./private-profile-switch";
+import { SteamConnection } from "./steam-connection";
 import { ThemeToggle } from "./theme-toggle";
 
 function RestartTours() {
@@ -100,9 +101,10 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
       </Molecule.SettingsSection>
       <Molecule.SettingsSection
         title="Connections"
-        description="Log in with Discord or Twitch. If their verified email matches your Orbis email, they connect automatically."
+        description="Log in with Discord or Twitch. If their verified email matches your Orbis email, they connect automatically. Connect Steam to bring your games into your library."
       >
         <OAuthConnections />
+        <SteamConnection />
       </Molecule.SettingsSection>
     </div>
   );

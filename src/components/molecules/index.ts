@@ -25,3 +25,4 @@ export * from "./settings-link";
 export * from "./settings-section";
 export * from "./user-link";
 export * from "./vote-control";
+export * from "./steam-badge";

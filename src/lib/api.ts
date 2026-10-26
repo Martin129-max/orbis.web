@@ -195,6 +195,8 @@ export type LibraryStatus =
   | "dropped"
   | "planned";
 
+export type SteamLink = { appId: string; minutes: number };
+
 export type Activity = {
   type: "activity";
   id: number;
@@ -206,6 +208,7 @@ export type Activity = {
   author: Author;
   status: LibraryStatus;
   progress: { from: number; to: number } | null;
+  steam?: SteamLink | null;
   media: {
     type: MediaType;
     sourceId: string;
@@ -1666,6 +1669,7 @@ export type PublicProfile = {
     status: LibraryStatus;
     progress: number;
     total: number | null;
+    steam?: SteamLink | null;
   }[];
 };
 
@@ -1778,6 +1782,7 @@ export type LibraryEntry = {
   isPublic: boolean;
   createdAt: string;
   updatedAt: string;
+  steam?: SteamLink | null;
 };
 
 export async function searchLibrary(
@@ -2040,4 +2045,68 @@ export async function disconnectOAuth(token: string, provider: OAuthProvider): P
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect. Please try again."));
+}
+
+export type SteamStatus = {
+  enabled: boolean;
+  account: {
+    steamId: string;
+    personaName: string;
+    trackGames: boolean;
+    gamesPrivate: boolean;
+    connectedAt: string;
+    games: number;
+    matched: number;
+  } | null;
+};
+
+export async function getSteamStatus(token: string): Promise<SteamStatus> {
+  const res = await api("/steam", { headers: { Authorization: `Bearer ${token}` } });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t load your Steam connection."));
+  return res.json();
+}
+
+export async function getSteamConnectUrl(token: string, nonce: string): Promise<string> {
+  const res = await api(withQuery("/steam/connect-url", { nonce }), {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t start connecting Steam. Please try again."));
+  const { url } = (await res.json()) as { url: string };
+  return url;
+}
+
+export async function connectSteam(
+  token: string,
+  body: { state: string; nonce: string; params: Record<string, string> },
+): Promise<SteamStatus> {
+  const res = await api("/steam/connect", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t connect Steam. Please try again."));
+  return res.json();
+}
+
+export async function setSteamTrackGames(token: string, trackGames: boolean): Promise<SteamStatus> {
+  const res = await api("/steam", {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ trackGames }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t save that. Please try again."));
+  return res.json();
+}
+
+export async function disconnectSteam(token: string): Promise<void> {
+  const res = await api("/steam", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t disconnect Steam. Please try again."));
 }

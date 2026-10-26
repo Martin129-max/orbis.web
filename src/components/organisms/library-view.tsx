@@ -196,6 +196,7 @@ function ListView({
                   Private
                 </span>
               )}
+              {entry.steam && <Molecule.SteamBadge steam={entry.steam} title={entry.title} />}
             </span>
           </div>
           <ProgressStepper entry={entry} onChange={onChange} className="w-32 bg-rail-item" />
@@ -416,6 +417,11 @@ export function LibraryCard({
           )}
           {entry.title}
         </span>
+        {entry.steam && (
+          <span className="pointer-events-auto shrink-0">
+            <Molecule.SteamBadge steam={entry.steam} title={entry.title} />
+          </span>
+        )}
         <div className="pointer-events-auto hidden shrink-0 pointer-coarse:@max-[11rem]:block">
           <EntryMenu entry={entry} onChange={onChange} onRemove={onRemove} />
         </div>

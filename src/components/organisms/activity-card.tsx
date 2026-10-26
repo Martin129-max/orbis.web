@@ -58,6 +58,7 @@ export function ActivityCard({
             {kind.icon}
             {kind.label}
           </span>
+          {activity.steam && <Molecule.SteamBadge steam={activity.steam} title={media.title} />}
           {media.year && <span>{media.year}</span>}
           <span>·</span>
           <time
