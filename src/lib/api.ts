@@ -1663,6 +1663,7 @@ export type Onboarding = {
   checklistDismissed: boolean;
   completedTours: string[];
   steps: Record<OnboardingStep, boolean>;
+  used: { steam: boolean; connections: boolean; folders: boolean };
 };
 
 export async function getOnboarding(token: string): Promise<Onboarding> {

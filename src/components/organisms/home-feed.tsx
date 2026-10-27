@@ -11,10 +11,11 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import type { ChangelogDay } from "@/lib/changelog";
 import { useCommunityStore } from "@/stores/community-store";
-import { ChangelogBanner } from "./changelog-banner";
+import { ChangelogBanner, useChangelogShown } from "./changelog-banner";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { OnboardingChecklist, OnboardingTour } from "./onboarding";
+import { TipOfTheWeek } from "./tip-of-the-week";
 
 type Destination = "wall" | number;
 
@@ -25,6 +26,10 @@ export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | 
   const [selected, setSelected] = useState<Destination>("wall");
   const community =
     selected === "wall" ? undefined : communities.find((item) => item.id === selected);
+  const changelogShown = useChangelogShown(latestChangelog);
+  const checklistHidden = useOnboardingStore(
+    (state) => state.onboarding?.checklistDismissed === true,
+  );
 
   async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
@@ -41,7 +46,12 @@ export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | 
     <div className="flex flex-col gap-3">
       <OnboardingChecklist />
       <OnboardingTour />
-      {latestChangelog && <ChangelogBanner day={latestChangelog} />}
+      {checklistHidden &&
+        (latestChangelog && changelogShown ? (
+          <ChangelogBanner day={latestChangelog} />
+        ) : (
+          <TipOfTheWeek />
+        ))}
       {profile && (
         <div data-tour="composer">
         <PostComposer

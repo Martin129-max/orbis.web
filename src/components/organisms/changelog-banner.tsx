@@ -38,14 +38,24 @@ function subscribe(onChange: () => void) {
   };
 }
 
-export function ChangelogBanner({ day }: { day: ChangelogDay }) {
-  const { message } = App.useApp();
+export function useChangelogShown(day: ChangelogDay | null) {
   const profile = useAuthStore((state) => state.profile);
   const hidden = useSyncExternalStore(subscribe, readHidden, () => UNKNOWN);
 
-  if (!profile || profile.showChangelog === false || hidden === UNKNOWN || hidden === day.date) {
-    return null;
-  }
+  return Boolean(
+    day &&
+      profile &&
+      profile.showChangelog !== false &&
+      hidden !== UNKNOWN &&
+      hidden !== day.date,
+  );
+}
+
+export function ChangelogBanner({ day }: { day: ChangelogDay }) {
+  const { message } = App.useApp();
+  const shown = useChangelogShown(day);
+
+  if (!shown) return null;
 
   const version = day.versions?.[day.versions.length - 1];
   const [first, ...rest] = day.entries;
