@@ -180,6 +180,7 @@ export function CommunitySearch() {
                   iconUrl={community.iconUrl}
                   coverUrl={community.coverUrl}
                   memberCount={community.memberCount}
+                  isVerified={community.isVerified}
                   href={`/communities/${community.id}`}
                   action={<JoinAction community={community} joining={joining} onJoin={join} />}
                 />
@@ -189,6 +190,7 @@ export function CommunitySearch() {
                     iconUrl={community.iconUrl}
                     coverUrl={community.coverUrl}
                     memberCount={community.memberCount}
+                    isVerified={community.isVerified}
                     href={`/communities/${community.id}`}
                     action={<JoinAction community={community} joining={joining} onJoin={join} />}
                   >

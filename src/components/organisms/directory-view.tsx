@@ -128,6 +128,7 @@ function UserCard({ user }: { user: DirectoryUser }) {
         label={displayName(user)}
         avatarUrl={user.avatarUrl}
         coverUrl={user.coverUrl}
+        isVerified={user.isVerified}
         badge={
           user.isHeadAdmin ? (
             <Atom.RoleBadge role="head-admin" />
@@ -149,6 +150,7 @@ function CommunityCardItem({ community }: { community: DirectoryCommunity }) {
         iconUrl={community.iconUrl}
         coverUrl={community.coverUrl}
         memberCount={community.memberCount}
+        isVerified={community.isVerified}
         href={`/communities/${community.id}`}
         badge={
           <Atom.Pill
@@ -215,7 +217,10 @@ function CommunityRow({ community }: { community: DirectoryCommunity }) {
       </span>
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex min-w-0 items-center gap-1.5">
-          <span className="truncate text-[13px] font-semibold">{community.name}</span>
+          <span className="flex min-w-0 items-center gap-1 text-[13px] font-semibold">
+            <span className="truncate">{community.name}</span>
+            {community.isVerified && <Atom.VerifiedBadge />}
+          </span>
           <Atom.Pill
             size="xs"
             tone={community.isPublic ? "success" : "neutral"}

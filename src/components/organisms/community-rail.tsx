@@ -297,6 +297,7 @@ function RailEndDrop({ highlighted }: { highlighted: boolean }) {
 export function CommunityRail() {
   const { communityId } = useParams<{ communityId?: string }>();
   const pathname = usePathname();
+  const inLibrary = pathname === "/library" || pathname.startsWith("/library/");
   const communities = useCommunityStore((state) => state.communities);
   const layout = useCommunityStore((state) => state.layout);
   const fetchCommunities = useCommunityStore((state) => state.fetchCommunities);
@@ -596,9 +597,9 @@ export function CommunityRail() {
           <Link
             href="/library"
             aria-label="Library"
-            aria-current={pathname === "/library" ? "page" : undefined}
+            aria-current={inLibrary ? "page" : undefined}
             data-tour="library"
-            className={itemClass(pathname === "/library")}
+            className={itemClass(inLibrary)}
           >
             <LibraryBig size={20} />
           </Link>

@@ -201,6 +201,7 @@ function ResultRow({
   onSelect,
   icon,
   title,
+  verified = false,
   subtitle,
   detail,
   action,
@@ -209,6 +210,7 @@ function ResultRow({
   onSelect: () => void;
   icon: ReactNode;
   title: string;
+  verified?: boolean;
   subtitle?: string;
   detail?: string;
   action?: ReactNode;
@@ -219,7 +221,10 @@ function ResultRow({
         {icon}
       </span>
       <span className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-semibold">{title}</span>
+        <span className="flex min-w-0 items-center gap-1 text-sm font-semibold">
+          <span className="truncate">{title}</span>
+          {verified && <Atom.VerifiedBadge />}
+        </span>
         {subtitle && <span className="truncate text-xs text-muted">{subtitle}</span>}
         {detail && <span className="truncate text-[11px] text-muted">{detail}</span>}
       </span>
@@ -490,6 +495,7 @@ function SearchPanel({
           onSelect={() => select({ href, title: name, subtitle: `@${user.username}` })}
           icon={<Atom.Avatar size="sm" label={name} src={user.avatarUrl} seed={user.userId} />}
           title={name}
+          verified={user.isVerified}
           subtitle={`@${user.username}`}
           action={<FriendAction userId={user.userId} self={user.userId === me} addLabel="Connect" />}
         />
@@ -511,6 +517,7 @@ function SearchPanel({
             </span>
           }
           title={community.name}
+          verified={community.isVerified}
           subtitle={subtitle}
           action={
             <JoinAction

@@ -13,3 +13,4 @@ export * from "./pill";
 export * from "./role-badge";
 export * from "./text-link";
 export * from "./live-tag";
+export * from "./verified-badge";

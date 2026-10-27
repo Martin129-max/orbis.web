@@ -68,11 +68,13 @@ function LinkRow({
   href,
   icon,
   title,
+  verified = false,
   subtitle,
 }: {
   href: string;
   icon: ReactNode;
   title: string;
+  verified?: boolean;
   subtitle: string;
 }) {
   return (
@@ -80,7 +82,10 @@ function LinkRow({
       <Link href={href} className={rowClass}>
         {icon}
         <span className="flex min-w-0 flex-col">
-          <span className="truncate text-sm font-semibold">{title}</span>
+          <span className="flex min-w-0 items-center gap-1 text-sm font-semibold">
+            <span className="truncate">{title}</span>
+            {verified && <Atom.VerifiedBadge />}
+          </span>
           <span className="truncate text-xs text-muted">{subtitle}</span>
         </span>
       </Link>
@@ -275,6 +280,7 @@ export function ProfileSearchScope({ profile }: { profile: PublicProfile }) {
                   </span>
                 }
                 title={community.name}
+                verified={community.isVerified}
                 subtitle={`${community.memberCount.toLocaleString()} ${
                   community.memberCount === 1 ? "member" : "members"
                 }`}

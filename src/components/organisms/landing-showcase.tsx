@@ -143,6 +143,7 @@ export function LandingPeople() {
               label={displayName(person)}
               avatarUrl={person.avatarUrl}
               coverUrl={person.coverUrl}
+              isVerified={person.isVerified}
               presence={person.online ? "online" : "offline"}
             />
           </li>

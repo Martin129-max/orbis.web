@@ -18,6 +18,7 @@ import * as Template from "@template";
 import {
   canManage,
   getCommunity,
+  setCommunityVerified,
   type Community,
   type CommunityImage,
 } from "@/lib/api";
@@ -74,6 +75,18 @@ export default function CommunityPage() {
     }
   }
 
+  async function handleVerified(isVerified: boolean) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const verified = await setCommunityVerified(token, Number(communityId), isVerified);
+    setLoaded((current) =>
+      current?.id === communityId && current.community
+        ? { ...current, community: { ...current.community, isVerified: verified } }
+        : current,
+    );
+  }
+
   function handleScroll(event: UIEvent<HTMLDivElement>) {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
     const room = scrollHeight - clientHeight;
@@ -94,6 +107,7 @@ export default function CommunityPage() {
 
   const current = loaded?.id === communityId ? loaded : null;
   const signedIn = useAuthStore((state) => Boolean(state.token));
+  const headAdmin = useAuthStore((state) => Boolean(state.profile?.isHeadAdmin));
   const joinPrompt =
     current?.community && !current.community.role ? (
       <Organism.JoinCommunityPrompt
@@ -133,6 +147,14 @@ export default function CommunityPage() {
             community={current.community}
             collapsed={collapsed}
             onImage={canManage(current.community) ? handleImage : undefined}
+            adminAction={
+              headAdmin && (
+                <Organism.VerifyToggle
+                  verified={current.community.isVerified}
+                  onToggle={handleVerified}
+                />
+              )
+            }
             actions={
               current.community.role && (
                 <>

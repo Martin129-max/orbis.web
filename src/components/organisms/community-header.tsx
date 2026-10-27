@@ -138,11 +138,13 @@ export function CommunityHeader({
   community,
   collapsed,
   actions,
+  adminAction,
   onImage,
 }: {
   community: Community;
   collapsed: boolean;
   actions: ReactNode;
+  adminAction?: ReactNode;
   onImage?: ImageChange;
 }) {
   const storeLive = useCommunityStore(
@@ -173,10 +175,14 @@ export function CommunityHeader({
             className="h-8 w-8 text-[17px] sm:h-10 sm:w-10 sm:text-[22px]"
             live={live ? { ring: "ring-2 ring-danger ring-offset-2 ring-offset-background" } : undefined}
           />
-          <Atom.Heading className="min-w-0 truncate">{community.name}</Atom.Heading>
+          <Atom.Heading className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate">{community.name}</span>
+            {community.isVerified && <Atom.VerifiedBadge size="heading" />}
+          </Atom.Heading>
           {live && <span className="sr-only">Live on Twitch</span>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {adminAction}
           {onImage && (
             <Molecule.CoverButton
               hasImage={false}
@@ -226,18 +232,26 @@ export function CommunityHeader({
           live={live ? { ring: "ring-2 ring-danger", large: !collapsed } : undefined}
         />
         <Atom.Heading
-          className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+          className={`flex min-w-0 items-center gap-1.5 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
             collapsed ? "" : "sm:text-4xl"
           }`}
         >
-          {community.name}
+          <span className="truncate">{community.name}</span>
+          {community.isVerified && <Atom.VerifiedBadge size="heading" />}
         </Atom.Heading>
         {live && <span className="sr-only">Live on Twitch</span>}
       </div>
       {!collapsed && <StreamCorner community={community} live={live} />}
-      <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur empty:hidden sm:top-4 sm:right-8">
-        <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
-        {actions}
+      <div className="absolute top-2.5 right-4 flex items-center gap-2 sm:top-4 sm:right-8">
+        {adminAction && !collapsed && (
+          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+            {adminAction}
+          </div>
+        )}
+        <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur empty:hidden">
+          <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
+          {actions}
+        </div>
       </div>
       {onImage && !collapsed && (
         <Molecule.CoverButton

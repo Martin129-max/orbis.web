@@ -96,7 +96,11 @@ function RequestCard({ person, actions }: { person: FriendUser; actions: ReactNo
           <Atom.Avatar label={label} src={person.avatarUrl} seed={person.userId} />
         </Link>
         <div className="flex min-w-0 flex-col">
-          <Molecule.UserLink username={person.username} className="truncate text-[15px] font-semibold">
+          <Molecule.UserLink
+            username={person.username}
+            verified={person.isVerified}
+            className="truncate text-[15px] font-semibold"
+          >
             {label}
           </Molecule.UserLink>
           <span className="truncate text-xs text-muted">@{person.username}</span>

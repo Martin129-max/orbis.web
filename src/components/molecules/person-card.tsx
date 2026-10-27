@@ -9,6 +9,7 @@ export function PersonCard({
   label,
   avatarUrl,
   coverUrl,
+  isVerified = false,
   badge,
   presence,
   action,
@@ -18,6 +19,7 @@ export function PersonCard({
   label: string;
   avatarUrl: string | null;
   coverUrl: string | null;
+  isVerified?: boolean;
   badge?: ReactNode;
   presence?: PresenceStatus;
   action?: ReactNode;
@@ -26,7 +28,12 @@ export function PersonCard({
     <IdentityCard
       coverUrl={coverUrl}
       avatar={<Atom.Avatar label={label} src={avatarUrl} seed={userId} presence={presence} />}
-      title={<span className="truncate text-[13px] font-semibold">{label}</span>}
+      title={
+        <span className="flex min-w-0 items-center gap-1 text-[13px] font-semibold">
+          <span className="truncate">{label}</span>
+          {isVerified && <Atom.VerifiedBadge />}
+        </span>
+      }
       subtitle={`@${username}`}
       badge={badge}
       action={action}

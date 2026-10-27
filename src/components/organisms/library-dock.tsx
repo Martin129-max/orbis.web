@@ -1,5 +1,6 @@
 "use client";
 
+import { Tooltip } from "antd";
 import { ChevronUp } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect, useLayoutEffect, useRef, useState, type PointerEvent } from "react";
@@ -81,7 +82,11 @@ function DockShelf({
 export function LibraryDock() {
   const profile = useAuthStore((state) => state.profile);
   const pathname = usePathname();
-  const open = useLayoutStore((state) => state.dockOpen);
+  const locked = pathname === "/library";
+  const storedOpen = useLayoutStore((state) => state.dockOpen);
+  const open = storedOpen && !locked;
+  const [settled, setSettled] = useState(false);
+  const expanded = open || (storedOpen && !settled);
   const setOpen = useLayoutStore((state) => state.setDockOpen);
   const restoreDock = useLayoutStore((state) => state.restoreDock);
   const [entries, setEntries] = useState<LibraryEntry[] | null>(null);
@@ -92,12 +97,12 @@ export function LibraryDock() {
   const dock = useRef<HTMLElement>(null);
   const footer = useRef<HTMLDivElement>(null);
   const [footerHeight, setFooterHeight] = useState(0);
-  const shown = profile !== null && pathname !== "/library";
+  const shown = profile !== null;
   const panelHeight = PANEL_HEIGHT + footerHeight;
   const height = shown
     ? Math.min(
         panelHeight,
-        Math.max(CLOSED_HEIGHT, (open ? panelHeight : CLOSED_HEIGHT) - (drag ?? 0)),
+        Math.max(CLOSED_HEIGHT, (expanded ? panelHeight : CLOSED_HEIGHT) - (drag ?? 0)),
       )
     : 0;
 
@@ -113,6 +118,11 @@ export function LibraryDock() {
     restoreDock();
     useLibraryPreferencesStore.persist.rehydrate();
   }, [restoreDock]);
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => setSettled(true));
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     const { token } = useAuthStore.getState();
@@ -146,13 +156,10 @@ export function LibraryDock() {
     };
   }, [shown]);
 
-  if (!shown) {
-    return profile ? (
-      <div aria-hidden data-dock="" style={{ height: CLOSED_HEIGHT }} className="shrink-0" />
-    ) : null;
-  }
+  if (!shown) return null;
 
   function handlePointerDown(event: PointerEvent<HTMLButtonElement>) {
+    if (locked) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     start.current = event.clientY;
     dragged.current = false;
@@ -191,37 +198,46 @@ export function LibraryDock() {
           : ""
       }`}
     >
-      <button
-        type="button"
-        data-tour="library-dock"
-        aria-label={open ? "Hide your library" : "Show your library"}
-        aria-expanded={open}
-        aria-controls="library-dock-panel"
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        onClick={() => {
-          if (dragged.current) {
-            dragged.current = false;
-            return;
-          }
-          setOpen(!open);
-        }}
-        className={`focus-ring absolute bottom-full left-1/2 flex h-7 -translate-x-1/2 cursor-grab touch-none items-center rounded-t-lg border border-b-0 border-divider bg-rail px-5 select-none active:cursor-grabbing ${notchCorners}`}
+      <Tooltip
+        title={locked ? "Your library is already open on this page." : undefined}
+        styles={{ root: { maxWidth: "none" } }}
       >
-        <span aria-hidden className="absolute -inset-x-3 -inset-y-2" />
-        <ChevronUp
-          size={16}
-          aria-hidden
-          className={`transition-transform duration-300 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
-        />
-      </button>
+        <button
+          type="button"
+          data-tour="library-dock"
+          aria-label={open ? "Hide your library" : "Show your library"}
+          aria-expanded={open}
+          aria-controls="library-dock-panel"
+          aria-disabled={locked || undefined}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          onClick={() => {
+            if (locked) return;
+            if (dragged.current) {
+              dragged.current = false;
+              return;
+            }
+            setOpen(!open);
+          }}
+          className={`focus-ring absolute bottom-full left-1/2 flex h-7 -translate-x-1/2 touch-none items-center rounded-t-lg border border-b-0 border-divider bg-rail px-5 select-none ${
+            locked ? "cursor-not-allowed text-muted" : "cursor-grab active:cursor-grabbing"
+          } ${notchCorners}`}
+        >
+          <span aria-hidden className="absolute -inset-x-3 -inset-y-2" />
+          <ChevronUp
+            size={16}
+            aria-hidden
+            className={`transition-transform duration-300 motion-reduce:transition-none ${open ? "rotate-180" : ""}`}
+          />
+        </button>
+      </Tooltip>
       <div
         id="library-dock-panel"
         inert={!open}
         className={`h-full overflow-hidden transition-[visibility] ${
-          open || drag !== null ? "visible" : "invisible delay-300"
+          expanded || drag !== null ? "visible" : "invisible delay-300"
         }`}
       >
         <div style={{ height: panelHeight }} className="flex flex-col">

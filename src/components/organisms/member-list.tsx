@@ -140,6 +140,7 @@ function MemberGroup({
                 label={label}
                 avatarUrl={member.avatarUrl}
                 coverUrl={member.coverUrl}
+                isVerified={member.isVerified}
                 badge={
                   member.isOwner ? (
                     <Atom.RoleBadge role="owner" />

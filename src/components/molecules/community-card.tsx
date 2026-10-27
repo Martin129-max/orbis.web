@@ -7,6 +7,7 @@ export function CommunityCard({
   iconUrl,
   coverUrl,
   memberCount,
+  isVerified = false,
   badge,
   action,
   href,
@@ -16,6 +17,7 @@ export function CommunityCard({
   iconUrl: string | null;
   coverUrl: string | null;
   memberCount: number;
+  isVerified?: boolean;
   badge?: ReactNode;
   action?: ReactNode;
   href?: string;
@@ -34,7 +36,12 @@ export function CommunityCard({
     <IdentityCard
       coverUrl={coverUrl}
       avatar={icon}
-      title={<span className="truncate text-[13px] font-semibold">{name}</span>}
+      title={
+        <span className="flex min-w-0 items-center gap-1 text-[13px] font-semibold">
+          <span className="truncate">{name}</span>
+          {isVerified && <Atom.VerifiedBadge />}
+        </span>
+      }
       subtitle={`${memberCount.toLocaleString()} ${memberCount === 1 ? "member" : "members"}`}
       badge={badge}
       action={action}

@@ -43,6 +43,7 @@ export type Community = {
   backgroundUrl: string | null;
   ownerId: number;
   isPublic: boolean;
+  isVerified: boolean;
   createdAt: string;
   role?: CommunityRole | null;
   memberCount?: number;
@@ -65,6 +66,7 @@ export type CommunitySearchResult = {
   description: string | null;
   iconUrl: string | null;
   coverUrl: string | null;
+  isVerified: boolean;
   memberCount: number;
   joined: boolean;
   members: CommunityPerson[];
@@ -247,6 +249,7 @@ export type DirectoryUser = {
   coverUrl: string | null;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  isVerified: boolean;
   communityCount: number;
   createdAt: string;
 };
@@ -257,6 +260,7 @@ export type DirectoryCommunity = {
   iconUrl: string | null;
   coverUrl: string | null;
   isPublic: boolean;
+  isVerified: boolean;
   memberCount: number;
   owner: { id: number; username: string; name: string | null; avatarUrl: string | null };
   createdAt: string;
@@ -316,6 +320,7 @@ export type Member = {
   name: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
+  isVerified: boolean;
   online: boolean;
   status: PresenceStatus;
   playing?: string | null;
@@ -606,7 +611,7 @@ export type InvitePreview = {
   creator: InviteCreator;
   community: Pick<
     Community,
-    "id" | "name" | "iconUrl" | "coverUrl" | "backgroundUrl" | "isPublic"
+    "id" | "name" | "iconUrl" | "coverUrl" | "backgroundUrl" | "isPublic" | "isVerified"
   > & {
     memberCount: number;
   };
@@ -928,6 +933,7 @@ export type FriendUser = {
   username: string;
   name: string | null;
   avatarUrl: string | null;
+  isVerified?: boolean;
 };
 
 export type Friend = FriendUser & {
@@ -1699,6 +1705,7 @@ export type PublicProfile = {
   backgroundUrl: string | null;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  isVerified: boolean;
   isPublic: boolean;
   restricted: boolean;
   createdAt: string;
@@ -1712,6 +1719,7 @@ export type PublicProfile = {
     name: string;
     iconUrl: string | null;
     coverUrl: string | null;
+    isVerified: boolean;
     memberCount: number;
     isOwner: boolean;
   }[];
@@ -1721,6 +1729,7 @@ export type PublicProfile = {
     name: string | null;
     avatarUrl: string | null;
     coverUrl: string | null;
+    isVerified: boolean;
     online: boolean;
     status: PresenceStatus;
     playing?: string | null;
@@ -1766,6 +1775,40 @@ export async function setSiteAdmin(
     throw new Error(await errorMessage(res, "Could not update admin access. Please try again."));
   }
   return (await res.json()).isAdmin;
+}
+
+export async function setProfileVerified(
+  token: string,
+  username: string,
+  isVerified: boolean,
+): Promise<boolean> {
+  const res = await api(`/users/${encodeURIComponent(username)}/verified`, {
+    method: isVerified ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the head admin can verify profiles.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not update verification. Please try again."));
+  }
+  return (await res.json()).isVerified;
+}
+
+export async function setCommunityVerified(
+  token: string,
+  communityId: number,
+  isVerified: boolean,
+): Promise<boolean> {
+  const res = await api(`/communities/${communityId}/verified`, {
+    method: isVerified ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the head admin can verify communities.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not update verification. Please try again."));
+  }
+  return (await res.json()).isVerified;
 }
 
 export async function uploadUserCover(token: string, file: File): Promise<Profile> {
@@ -1958,6 +2001,7 @@ export type PublicUser = {
   name: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
+  isVerified: boolean;
   online: boolean;
   activity: number;
 };

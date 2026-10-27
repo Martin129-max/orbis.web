@@ -27,6 +27,7 @@ import {
   removeAvatar,
   removeUserBackground,
   removeUserCover,
+  setProfileVerified,
   setSiteAdmin,
   uploadAvatar,
   uploadUserBackground,
@@ -50,6 +51,7 @@ import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
+import { VerifyToggle } from "./verify-toggle";
 import type { PresenceStatus } from "@/lib/api";
 import { presenceDot, presenceLabel } from "@/lib/presence";
 
@@ -178,11 +180,12 @@ function ProfileHeader({
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
           <Atom.Heading
-            className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+            className={`flex min-w-0 items-center gap-1.5 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
               collapsed ? "" : "sm:text-4xl"
             }`}
           >
-            {name}
+            <span className="truncate">{name}</span>
+            {profile.isVerified && <Atom.VerifiedBadge size="heading" />}
           </Atom.Heading>
           {!collapsed && (
             <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
@@ -198,7 +201,7 @@ function ProfileHeader({
         </div>
       </div>
       <div className="absolute top-2.5 right-4 flex items-center gap-2 sm:top-4 sm:right-8">
-        {adminAction && (
+        {adminAction && !collapsed && (
           <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
             {adminAction}
           </div>
@@ -441,6 +444,7 @@ function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
               label={displayName(friend)}
               avatarUrl={friend.avatarUrl}
               coverUrl={friend.coverUrl}
+              isVerified={friend.isVerified}
               presence={
                 (livePresence[friend.userId] ?? friend.online)
                   ? (liveStatuses[friend.userId] ?? friend.status)
@@ -505,6 +509,7 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
               iconUrl={community.iconUrl}
               coverUrl={community.coverUrl}
               memberCount={community.memberCount}
+              isVerified={community.isVerified}
               href={`/communities/${community.id}`}
               badge={community.isOwner ? <Atom.RoleBadge role="owner" /> : undefined}
               action={
@@ -600,6 +605,7 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
                     name={community.name}
                     iconUrl={community.iconUrl}
                     role={community.isOwner ? "owner" : "member"}
+                    isVerified={community.isVerified}
                   />
                 </li>
               ))}
@@ -702,6 +708,18 @@ export function UserProfile({ username }: { username: string }) {
     };
   }
 
+  async function handleVerified(isVerified: boolean) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const verified = await setProfileVerified(token, username, isVerified);
+    setLoaded((current) =>
+      current?.profile
+        ? { ...current, profile: { ...current.profile, isVerified: verified } }
+        : current,
+    );
+  }
+
   function handleScroll(event: UIEvent<HTMLDivElement>) {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
     const room = scrollHeight - clientHeight;
@@ -801,17 +819,22 @@ export function UserProfile({ username }: { username: string }) {
         images={images}
         social={social}
         adminAction={
-          !isSelf && me?.isHeadAdmin ? (
-            <AdminToggle
-              profile={profile}
-              onChange={(isAdmin) =>
-                setLoaded((current) =>
-                  current?.profile
-                    ? { ...current, profile: { ...current.profile, isAdmin } }
-                    : current,
-                )
-              }
-            />
+          me?.isHeadAdmin ? (
+            <>
+              <VerifyToggle verified={profile.isVerified} onToggle={handleVerified} />
+              {!isSelf && (
+                <AdminToggle
+                  profile={profile}
+                  onChange={(isAdmin) =>
+                    setLoaded((current) =>
+                      current?.profile
+                        ? { ...current, profile: { ...current.profile, isAdmin } }
+                        : current,
+                    )
+                  }
+                />
+              )}
+            </>
           ) : null
         }
         actions={
