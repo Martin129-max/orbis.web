@@ -1,8 +1,9 @@
-import { getOAuthUrl, getSteamConnectUrl, type OAuthProvider } from "./api";
+import { getOAuthUrl, getSteamConnectUrl, type DiscordServer, type OAuthProvider } from "./api";
 
 const NONCE_KEY = "oauth-nonce";
 const SIGNUP_KEY = "oauth-signup";
 const AVATAR_KEY = "oauth-avatar";
+const SERVERS_KEY = "oauth-discord-servers";
 
 export type PendingSignup = {
   provider: OAuthProvider;
@@ -14,6 +15,12 @@ export type PendingAvatar = {
   provider: OAuthProvider;
   url: string;
   token: string;
+};
+
+export type PendingServers = {
+  communityId: number;
+  token: string;
+  options: DiscordServer[];
 };
 
 export const OAUTH_PROVIDERS: OAuthProvider[] = ["discord", "twitch"];
@@ -84,6 +91,27 @@ export function readPendingAvatar(): PendingAvatar | null {
 
 export function clearPendingAvatar() {
   sessionStorage.removeItem(AVATAR_KEY);
+}
+
+export function saveDiscordServers(servers: PendingServers) {
+  sessionStorage.setItem(SERVERS_KEY, JSON.stringify(servers));
+}
+
+export function readDiscordServers(communityId: number): PendingServers | null {
+  try {
+    const servers = JSON.parse(sessionStorage.getItem(SERVERS_KEY) ?? "null");
+    return servers?.communityId === communityId &&
+      typeof servers.token === "string" &&
+      Array.isArray(servers.options)
+      ? servers
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearDiscordServers() {
+  sessionStorage.removeItem(SERVERS_KEY);
 }
 
 export async function startSteamConnect(token: string) {

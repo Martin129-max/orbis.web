@@ -50,6 +50,8 @@ export type Community = {
   twitchLogin?: string | null;
   live?: boolean;
   nextStream?: NextStream | null;
+  discordGuildName?: string | null;
+  discord?: DiscordStatus | null;
   showLibraryUpdates?: boolean;
 };
 
@@ -2048,12 +2050,17 @@ export type OAuthConnection = {
 
 export type OAuthConnections = { hasPassword: boolean; connections: OAuthConnection[] };
 
+export type DiscordStatus = { online: number | null; inviteUrl: string | null };
+
+export type DiscordServer = { id: string; name: string; iconUrl: string | null };
+
 export type OAuthResult = {
   access_token?: string;
   linked?: OAuthProvider;
   communityId?: number;
   signup?: { token: string; username: string };
   avatar?: { url: string; token: string };
+  servers?: { token: string; options: DiscordServer[] };
 };
 
 export async function getOAuthProviders(): Promise<OAuthProvider[]> {
@@ -2152,6 +2159,33 @@ export async function setShowLive(
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Could not update this setting."));
+}
+
+export async function connectDiscordServer(
+  token: string,
+  servers: string,
+  serverId: string,
+): Promise<{ communityId: number; name: string } & DiscordStatus> {
+  const res = await api("/auth/oauth/community-server", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token: servers, serverId }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not connect that server."));
+  return res.json();
+}
+
+export async function disconnectCommunityDiscord(token: string, communityId: number): Promise<void> {
+  const res = await api(`/communities/${communityId}/discord`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect Discord."));
 }
 
 export async function disconnectCommunityTwitch(token: string, communityId: number): Promise<void> {

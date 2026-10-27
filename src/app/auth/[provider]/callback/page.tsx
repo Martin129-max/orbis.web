@@ -9,6 +9,7 @@ import { completeOAuth } from "@/lib/api";
 import {
   isOAuthProvider,
   oauthLabels,
+  saveDiscordServers,
   savePendingAvatar,
   savePendingSignup,
   takeOAuthNonce,
@@ -48,7 +49,10 @@ function Callback() {
         savePendingSignup({ provider, ...result.signup });
         router.replace("/register/username");
       } else if (result.communityId) {
-        router.replace(`/communities/${result.communityId}/settings?tab=twitch`);
+        if (result.servers) {
+          saveDiscordServers({ communityId: result.communityId, ...result.servers });
+        }
+        router.replace(`/communities/${result.communityId}/settings?tab=${provider}`);
       } else {
         if (result.avatar) savePendingAvatar({ provider, ...result.avatar });
         router.replace("/settings?tab=connections");

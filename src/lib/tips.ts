@@ -45,6 +45,11 @@ export const tips: Tip[] = [
     body: "Use Filter feed to show or hide posts, threads, and library updates, and switch to Compact view to see more at a glance.",
   },
   {
+    id: "community-discord",
+    title: "Show your community’s Discord server",
+    body: "If you run a community, connect its Discord server in the community’s settings to show how many people are online there, with a button to join.",
+  },
+  {
     id: "library-dock",
     title: "Update your library from any page",
     body: "Pull up the bar at the bottom of the screen to change what you’re watching, reading, or playing without leaving the page.",

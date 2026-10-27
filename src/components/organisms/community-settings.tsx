@@ -1,12 +1,14 @@
 "use client";
 
-import { Input, Switch } from "antd";
-import { ShieldCheck, SlidersHorizontal, Ticket, Tv } from "lucide-react";
+import { Input, Modal, Switch } from "antd";
+import { MessagesSquare, ShieldCheck, SlidersHorizontal, Ticket, Tv } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
+  connectDiscordServer,
+  disconnectCommunityDiscord,
   disconnectCommunityTwitch,
   getInvites,
   getMembers,
@@ -14,12 +16,19 @@ import {
   revokeInvite,
   setCommunityAdmin,
   type Community,
+  type DiscordStatus,
   type Invite,
   type Member,
 } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { inviteExpiry, inviteUses } from "@/lib/invites";
-import { oauthColors, startOAuth } from "@/lib/oauth";
+import {
+  clearDiscordServers,
+  oauthColors,
+  readDiscordServers,
+  startOAuth,
+  type PendingServers,
+} from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { OAuthIcon } from "./oauth-buttons";
@@ -443,6 +452,167 @@ function TwitchSettings({ community }: { community: Community }) {
   );
 }
 
+function DiscordSettings({ community }: { community: Community }) {
+  const [server, setServer] = useState<({ name: string } & DiscordStatus) | null>(
+    community.discordGuildName
+      ? {
+          name: community.discordGuildName,
+          online: community.discord?.online ?? null,
+          inviteUrl: community.discord?.inviteUrl ?? null,
+        }
+      : null,
+  );
+  const [choice, setChoice] = useState<PendingServers | null>(() =>
+    readDiscordServers(community.id),
+  );
+  const [enabled, setEnabled] = useState<boolean | null>(null);
+  const [pending, setPending] = useState(false);
+  const [picking, setPicking] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    getOAuthProviders()
+      .then((providers) => setEnabled(providers.includes("discord")))
+      .catch(() => setEnabled(false));
+  }, []);
+
+  if (!server && !choice && enabled === false) return null;
+
+  async function connect() {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    setPending(true);
+    setError(null);
+    try {
+      await startOAuth("discord", token, community.id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+      setPending(false);
+    }
+  }
+
+  function closeChoice() {
+    clearDiscordServers();
+    setChoice(null);
+  }
+
+  async function pick(serverId: string) {
+    const { token } = useAuthStore.getState();
+    if (!token || !choice) return;
+    setPicking(serverId);
+    setError(null);
+    try {
+      const { name, online, inviteUrl } = await connectDiscordServer(token, choice.token, serverId);
+      setServer({ name, online, inviteUrl });
+      closeChoice();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPicking(null);
+    }
+  }
+
+  async function disconnect() {
+    const { token } = useAuthStore.getState();
+    if (!token) return;
+    setPending(true);
+    setError(null);
+    try {
+      await disconnectCommunityDiscord(token, community.id);
+      setServer(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Molecule.SettingsSection
+      title="Discord"
+      description="Connect the community’s Discord server to show how many people are online there, with a button to join it. Only the online count and invite link are read, and nothing is added to your server."
+    >
+      <div className="flex items-center gap-3">
+        <span
+          aria-hidden
+          className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white ${oauthColors.discord}`}
+        >
+          <OAuthIcon provider="discord" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col">
+          <span className="text-sm font-semibold">Discord</span>
+          <span className="truncate text-xs text-muted">
+            {server
+              ? `Connected to ${server.name}${
+                  server.online === null ? "" : ` · ${server.online.toLocaleString()} online`
+                }`
+              : "Not connected"}
+          </span>
+        </div>
+        {server ? (
+          <Atom.Button size="small" variant="secondary" loading={pending} onClick={disconnect}>
+            Disconnect
+          </Atom.Button>
+        ) : (
+          <Atom.Button size="small" loading={pending} disabled={enabled !== true} onClick={connect}>
+            Connect
+          </Atom.Button>
+        )}
+      </div>
+      {server && server.online === null && (
+        <p className="text-xs text-muted">
+          To show the online count, open your Discord server’s settings, go to Widget, and turn on
+          Enable Server Widget. It can take a couple of minutes to show up here.
+        </p>
+      )}
+      {server && server.online !== null && !server.inviteUrl && (
+        <p className="text-xs text-muted">
+          To add a Join Discord button, pick an Invite Channel in your Discord server’s Widget
+          settings.
+        </p>
+      )}
+      {error && !choice && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      <Modal
+        open={choice !== null}
+        title={null}
+        footer={null}
+        onCancel={picking ? undefined : closeChoice}
+        mask={{ closable: !picking }}
+        closable={!picking}
+        width={440}
+        centered
+        destroyOnHidden
+        styles={{ container: { padding: 24 } }}
+      >
+        <div className="flex flex-col gap-6">
+          <Molecule.ModalHeader
+            eyebrow="Connect Discord"
+            title="Pick your server."
+            description="These are the servers you own or can manage."
+          />
+          <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+            {choice?.options.map((option) => (
+              <li key={option.id} className="flex items-center gap-3 rounded-md py-1.5">
+                <Atom.Avatar size="sm" label={option.name} src={option.iconUrl} seed={option.id} />
+                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{option.name}</span>
+                <Atom.Button
+                  size="small"
+                  loading={picking === option.id}
+                  disabled={picking !== null && picking !== option.id}
+                  onClick={() => pick(option.id)}
+                >
+                  Connect
+                </Atom.Button>
+              </li>
+            ))}
+          </ul>
+          {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        </div>
+      </Modal>
+    </Molecule.SettingsSection>
+  );
+}
+
 export function CommunitySettings({
   community,
   aside,
@@ -483,6 +653,12 @@ export function CommunitySettings({
           label: "Twitch",
           icon: <Tv size={16} aria-hidden />,
           content: <TwitchSettings community={community} />,
+        },
+        {
+          key: "discord",
+          label: "Discord",
+          icon: <MessagesSquare size={16} aria-hidden />,
+          content: <DiscordSettings community={community} />,
         },
       ]}
     />
