@@ -6,8 +6,6 @@ import {
   Library,
   Lock,
   Newspaper,
-  ShieldCheck,
-  ShieldOff,
   UserPlus,
   Users,
   UserX,
@@ -28,7 +26,6 @@ import {
   removeUserBackground,
   removeUserCover,
   setProfileVerified,
-  setSiteAdmin,
   uploadAvatar,
   uploadUserBackground,
   uploadUserCover,
@@ -52,6 +49,7 @@ import { PanelHeading, SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
 import { VerifyToggle } from "./verify-toggle";
+import { AdminToggle } from "./admin-toggle";
 import type { PresenceStatus } from "@/lib/api";
 import { presenceDot, presenceLabel } from "@/lib/presence";
 
@@ -620,46 +618,6 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
   );
 }
 
-function AdminToggle({
-  profile,
-  onChange,
-}: {
-  profile: Profile;
-  onChange: (isAdmin: boolean) => void;
-}) {
-  const { message } = App.useApp();
-  const [pending, setPending] = useState(false);
-  const label = profile.isAdmin ? "Remove admin" : "Make admin";
-
-  async function toggle() {
-    const { token } = useAuthStore.getState();
-    if (!token) return;
-
-    setPending(true);
-    try {
-      onChange(await setSiteAdmin(token, profile.username, !profile.isAdmin));
-    } catch (e) {
-      message.error(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  return (
-    <Atom.Button
-      size="small"
-      variant="secondary"
-      danger={profile.isAdmin}
-      loading={pending}
-      icon={profile.isAdmin ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
-      onClick={toggle}
-      className="shrink-0"
-    >
-      {label}
-    </Atom.Button>
-  );
-}
-
 export function UserProfile({ username }: { username: string }) {
   const me = useAuthStore((state) => state.profile);
   const livePresence = useFriendsStore((state) => state.presence);
@@ -824,7 +782,8 @@ export function UserProfile({ username }: { username: string }) {
               <VerifyToggle verified={profile.isVerified} onToggle={handleVerified} />
               {!isSelf && (
                 <AdminToggle
-                  profile={profile}
+                  username={profile.username}
+                  isAdmin={profile.isAdmin}
                   onChange={(isAdmin) =>
                     setLoaded((current) =>
                       current?.profile

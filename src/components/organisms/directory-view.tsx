@@ -10,6 +10,8 @@ import * as Molecule from "@molecule";
 import {
   getDirectoryCommunities,
   getDirectoryUsers,
+  setCommunityVerified,
+  setProfileVerified,
   type DirectoryCommunity,
   type DirectoryUser,
   type NumberedPage,
@@ -17,6 +19,8 @@ import {
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useDirectoryPreferencesStore } from "@/stores/directory-preferences-store";
+import { AdminToggle } from "./admin-toggle";
+import { VerifyToggle } from "./verify-toggle";
 
 const tabs = [
   { value: "users", label: "Users", icon: <Users size={16} /> },
@@ -56,12 +60,33 @@ function usePagedList<T>(load: (token: string, page: number) => Promise<Numbered
     };
   }, [load, page, attempt]);
 
+  function replace(previous: T, next: T) {
+    setResult((current) =>
+      current?.data
+        ? {
+            ...current,
+            data: {
+              ...current.data,
+              items: current.data.items.map((item) => (item === previous ? next : item)),
+            },
+          }
+        : current,
+    );
+  }
+
   return {
     page,
     setPage,
     current: result?.page === page ? result : null,
     retry: () => setAttempt((count) => count + 1),
+    replace,
   };
+}
+
+function signedInToken() {
+  const { token } = useAuthStore.getState();
+  if (!token) throw new Error("Please log in again.");
+  return token;
 }
 
 function DirectoryList<T>({
@@ -72,11 +97,11 @@ function DirectoryList<T>({
 }: {
   load: (token: string, page: number) => Promise<NumberedPage<T>>;
   label: string;
-  renderCard: (item: T) => ReactNode;
-  renderRow: (item: T) => ReactNode;
+  renderCard: (item: T, update: (next: T) => void) => ReactNode;
+  renderRow: (item: T, update: (next: T) => void) => ReactNode;
 }) {
   const view = useDirectoryPreferencesStore((state) => state.view);
-  const { page, setPage, current, retry } = usePagedList(load);
+  const { page, setPage, current, retry, replace } = usePagedList(load);
 
   if (!current) {
     return (
@@ -99,10 +124,12 @@ function DirectoryList<T>({
       {items.length === 0 ? (
         <p className="py-8 text-center text-sm text-muted">No {label} on this page.</p>
       ) : view === "cards" ? (
-        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">{items.map(renderCard)}</ul>
+        <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          {items.map((item) => renderCard(item, (next) => replace(item, next)))}
+        </ul>
       ) : (
         <ul className="flex flex-col divide-y divide-divider rounded-lg border border-divider bg-surface">
-          {items.map(renderRow)}
+          {items.map((item) => renderRow(item, (next) => replace(item, next)))}
         </ul>
       )}
       {total > pageSize && (
@@ -119,7 +146,64 @@ function DirectoryList<T>({
   );
 }
 
-function UserCard({ user }: { user: DirectoryUser }) {
+function UserControls({
+  user,
+  onChange,
+}: {
+  user: DirectoryUser;
+  onChange: (user: DirectoryUser) => void;
+}) {
+  return (
+    <div className="relative z-20 flex shrink-0 flex-wrap items-center gap-1.5">
+      <VerifyToggle
+        verified={user.isVerified}
+        onToggle={async (verified) =>
+          onChange({
+            ...user,
+            isVerified: await setProfileVerified(signedInToken(), user.username, verified),
+          })
+        }
+      />
+      {!user.isHeadAdmin && (
+        <AdminToggle
+          username={user.username}
+          isAdmin={user.isAdmin}
+          onChange={(isAdmin) => onChange({ ...user, isAdmin })}
+        />
+      )}
+    </div>
+  );
+}
+
+function CommunityControls({
+  community,
+  onChange,
+}: {
+  community: DirectoryCommunity;
+  onChange: (community: DirectoryCommunity) => void;
+}) {
+  return (
+    <div className="relative z-20 flex shrink-0 items-center">
+      <VerifyToggle
+        verified={community.isVerified}
+        onToggle={async (verified) =>
+          onChange({
+            ...community,
+            isVerified: await setCommunityVerified(signedInToken(), community.id, verified),
+          })
+        }
+      />
+    </div>
+  );
+}
+
+function UserCard({
+  user,
+  onChange,
+}: {
+  user: DirectoryUser;
+  onChange?: (user: DirectoryUser) => void;
+}) {
   return (
     <li title={user.email}>
       <Molecule.PersonCard
@@ -137,12 +221,20 @@ function UserCard({ user }: { user: DirectoryUser }) {
           )
         }
         action={<span className="text-xs text-muted">Joined {joined(user.createdAt)}</span>}
-      />
+      >
+        {onChange && <UserControls user={user} onChange={onChange} />}
+      </Molecule.PersonCard>
     </li>
   );
 }
 
-function CommunityCardItem({ community }: { community: DirectoryCommunity }) {
+function CommunityCardItem({
+  community,
+  onChange,
+}: {
+  community: DirectoryCommunity;
+  onChange?: (community: DirectoryCommunity) => void;
+}) {
   return (
     <li>
       <Molecule.CommunityCard
@@ -170,12 +262,20 @@ function CommunityCardItem({ community }: { community: DirectoryCommunity }) {
             @{community.owner.username}
           </Link>
         }
-      />
+      >
+        {onChange && <CommunityControls community={community} onChange={onChange} />}
+      </Molecule.CommunityCard>
     </li>
   );
 }
 
-function UserRow({ user }: { user: DirectoryUser }) {
+function UserRow({
+  user,
+  onChange,
+}: {
+  user: DirectoryUser;
+  onChange?: (user: DirectoryUser) => void;
+}) {
   const name = displayName(user);
 
   return (
@@ -183,7 +283,11 @@ function UserRow({ user }: { user: DirectoryUser }) {
       <Atom.Avatar size="sm" label={name} src={user.avatarUrl} seed={user.userId} />
       <div className="flex min-w-0 flex-1 flex-col">
         <span className="flex min-w-0 items-center gap-1.5">
-          <Molecule.UserLink username={user.username} className="truncate text-[13px] font-semibold">
+          <Molecule.UserLink
+            username={user.username}
+            verified={user.isVerified}
+            className="truncate text-[13px] font-semibold"
+          >
             {name}
           </Molecule.UserLink>
           {user.isHeadAdmin ? (
@@ -196,6 +300,7 @@ function UserRow({ user }: { user: DirectoryUser }) {
           @{user.username} · {user.email}
         </span>
       </div>
+      {onChange && <UserControls user={user} onChange={onChange} />}
       <div className="hidden shrink-0 flex-col items-end text-xs text-muted sm:flex">
         <span>Joined {joined(user.createdAt)}</span>
         <span>
@@ -206,7 +311,13 @@ function UserRow({ user }: { user: DirectoryUser }) {
   );
 }
 
-function CommunityRow({ community }: { community: DirectoryCommunity }) {
+function CommunityRow({
+  community,
+  onChange,
+}: {
+  community: DirectoryCommunity;
+  onChange?: (community: DirectoryCommunity) => void;
+}) {
   return (
     <li className="flex items-center gap-3 px-4 py-3">
       <span
@@ -241,6 +352,7 @@ function CommunityRow({ community }: { community: DirectoryCommunity }) {
           {community.memberCount === 1 ? "member" : "members"}
         </span>
       </div>
+      {onChange && <CommunityControls community={community} onChange={onChange} />}
       <span className="hidden shrink-0 text-xs text-muted sm:block">
         Created {joined(community.createdAt)}
       </span>
@@ -354,18 +466,40 @@ export function DirectoryView() {
               key={`users-${profile.userId}`}
               load={getDirectoryUsers}
               label="users"
-              renderCard={(user) => <UserCard key={user.userId} user={user} />}
-              renderRow={(user) => <UserRow key={user.userId} user={user} />}
+              renderCard={(user, update) => (
+                <UserCard
+                  key={user.userId}
+                  user={user}
+                  onChange={profile.isHeadAdmin ? update : undefined}
+                />
+              )}
+              renderRow={(user, update) => (
+                <UserRow
+                  key={user.userId}
+                  user={user}
+                  onChange={profile.isHeadAdmin ? update : undefined}
+                />
+              )}
             />
           ) : (
             <DirectoryList
               key={`communities-${profile.userId}`}
               load={getDirectoryCommunities}
               label="communities"
-              renderCard={(community) => (
-                <CommunityCardItem key={community.id} community={community} />
+              renderCard={(community, update) => (
+                <CommunityCardItem
+                  key={community.id}
+                  community={community}
+                  onChange={profile.isHeadAdmin ? update : undefined}
+                />
               )}
-              renderRow={(community) => <CommunityRow key={community.id} community={community} />}
+              renderRow={(community, update) => (
+                <CommunityRow
+                  key={community.id}
+                  community={community}
+                  onChange={profile.isHeadAdmin ? update : undefined}
+                />
+              )}
             />
           )}
         </div>

@@ -13,6 +13,7 @@ export function PersonCard({
   badge,
   presence,
   action,
+  children,
 }: {
   userId: number;
   username: string;
@@ -23,6 +24,7 @@ export function PersonCard({
   badge?: ReactNode;
   presence?: PresenceStatus;
   action?: ReactNode;
+  children?: ReactNode;
 }) {
   return (
     <IdentityCard
@@ -39,6 +41,8 @@ export function PersonCard({
       action={action}
       href={`/users/${username}`}
       linkLabel={`View ${label}’s profile`}
-    />
+    >
+      {children}
+    </IdentityCard>
   );
 }
