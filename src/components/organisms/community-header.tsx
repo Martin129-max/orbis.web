@@ -1,6 +1,7 @@
 "use client";
 
 import { TwitchFilled } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import Image from "next/image";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
@@ -47,19 +48,35 @@ function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
   if (now >= endsAt) return null;
 
   const when = scheduleTime.format(startsAt);
-  const label = now < startsAt ? `Next stream in ${countdown(startsAt - now)}` : "Starting soon";
+  const details = next.title ? `${next.title} · ${when}` : when;
+  const remaining = now < startsAt ? countdown(startsAt - now) : null;
 
   return (
-    <a
-      href={`https://www.twitch.tv/${login}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={next.title ? `${next.title} · ${when}` : when}
-      className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
+    <Tooltip
+      title={
+        <>
+          {remaining && <div>Next stream in {remaining}</div>}
+          <div>{details}</div>
+        </>
+      }
     >
-      <TwitchFilled aria-hidden className="text-[#9146FF]" />
-      {label}
-    </a>
+      <a
+        href={`https://www.twitch.tv/${login}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
+      >
+        <TwitchFilled aria-hidden className="text-[#9146FF]" />
+        {remaining ? (
+          <>
+            <span className="sr-only">Next stream in </span>
+            {remaining}
+          </>
+        ) : (
+          "Starting soon"
+        )}
+      </a>
+    </Tooltip>
   );
 }
 
