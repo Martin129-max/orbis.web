@@ -2,11 +2,18 @@ import { getOAuthUrl, getSteamConnectUrl, type OAuthProvider } from "./api";
 
 const NONCE_KEY = "oauth-nonce";
 const SIGNUP_KEY = "oauth-signup";
+const AVATAR_KEY = "oauth-avatar";
 
 export type PendingSignup = {
   provider: OAuthProvider;
   token: string;
   username: string;
+};
+
+export type PendingAvatar = {
+  provider: OAuthProvider;
+  url: string;
+  token: string;
 };
 
 export const OAUTH_PROVIDERS: OAuthProvider[] = ["discord", "twitch"];
@@ -55,6 +62,28 @@ export function parsePendingSignup(raw: string | null | undefined): PendingSignu
   } catch {
     return null;
   }
+}
+
+export function savePendingAvatar(avatar: PendingAvatar) {
+  sessionStorage.setItem(AVATAR_KEY, JSON.stringify(avatar));
+}
+
+export function readPendingAvatar(): PendingAvatar | null {
+  try {
+    const avatar = JSON.parse(sessionStorage.getItem(AVATAR_KEY) ?? "null");
+    return avatar &&
+      isOAuthProvider(avatar.provider) &&
+      typeof avatar.url === "string" &&
+      typeof avatar.token === "string"
+      ? avatar
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPendingAvatar() {
+  sessionStorage.removeItem(AVATAR_KEY);
 }
 
 export async function startSteamConnect(token: string) {

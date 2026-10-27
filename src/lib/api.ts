@@ -2052,6 +2052,7 @@ export type OAuthResult = {
   linked?: OAuthProvider;
   communityId?: number;
   signup?: { token: string; username: string };
+  avatar?: { url: string; token: string };
 };
 
 export async function getOAuthProviders(): Promise<OAuthProvider[]> {
@@ -2110,6 +2111,20 @@ export async function finishOAuthSignup(
 
   if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t create your account. Please try again."));
   return res.json();
+}
+
+export async function acceptLinkedAvatar(token: string, offer: string): Promise<string> {
+  const res = await api("/auth/oauth/avatar", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token: offer }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t use that picture. Please try again."));
+  return (await res.json()).avatarUrl;
 }
 
 export async function getOAuthConnections(token: string): Promise<OAuthConnections> {

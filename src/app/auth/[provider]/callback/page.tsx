@@ -6,7 +6,13 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import * as Atom from "@atom";
 import * as Template from "@template";
 import { completeOAuth } from "@/lib/api";
-import { isOAuthProvider, oauthLabels, savePendingSignup, takeOAuthNonce } from "@/lib/oauth";
+import {
+  isOAuthProvider,
+  oauthLabels,
+  savePendingAvatar,
+  savePendingSignup,
+  takeOAuthNonce,
+} from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 
 function Callback() {
@@ -44,6 +50,7 @@ function Callback() {
       } else if (result.communityId) {
         router.replace(`/communities/${result.communityId}/settings?tab=twitch`);
       } else {
+        if (result.avatar) savePendingAvatar({ provider, ...result.avatar });
         router.replace("/settings?tab=connections");
       }
     }
