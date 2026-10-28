@@ -9,6 +9,7 @@ import {
   disconnectOAuth,
   getOAuthConnections,
   getOAuthProviders,
+  setShowClips,
   setShowLive,
   type OAuthConnections as Connections,
   type OAuthProvider,
@@ -123,7 +124,7 @@ export function OAuthConnections() {
     }
   }
 
-  async function toggleLive(showLive: boolean) {
+  async function toggleTwitch(setting: "showLive" | "showClips", value: boolean) {
     const { token } = useAuthStore.getState();
     if (!token || !data) return;
     setError(null);
@@ -133,12 +134,12 @@ export function OAuthConnections() {
       connections: {
         ...data.connections,
         connections: data.connections.connections.map((item) =>
-          item.provider === "twitch" ? { ...item, showLive } : item,
+          item.provider === "twitch" ? { ...item, [setting]: value } : item,
         ),
       },
     });
     try {
-      await setShowLive(token, "twitch", showLive);
+      await (setting === "showLive" ? setShowLive : setShowClips)(token, "twitch", value);
     } catch (e) {
       setData(before);
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -215,10 +216,24 @@ export function OAuthConnections() {
               )}
               </div>
               {provider === "twitch" && connection && (
-                <label className="flex items-center justify-between gap-3 pl-11 text-xs">
-                  <span className="text-muted">Show when I’m live on Twitch</span>
-                  <Switch size="small" checked={connection.showLive} onChange={toggleLive} />
-                </label>
+                <>
+                  <label className="flex items-center justify-between gap-3 pl-11 text-xs">
+                    <span className="text-muted">Show when I’m live on Twitch</span>
+                    <Switch
+                      size="small"
+                      checked={connection.showLive}
+                      onChange={(value) => toggleTwitch("showLive", value)}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-3 pl-11 text-xs">
+                    <span className="text-muted">Show my Twitch clips on my profile</span>
+                    <Switch
+                      size="small"
+                      checked={connection.showClips}
+                      onChange={(value) => toggleTwitch("showClips", value)}
+                    />
+                  </label>
+                </>
               )}
             </li>
           );

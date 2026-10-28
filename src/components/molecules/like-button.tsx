@@ -45,5 +45,11 @@ export function LikeButton({
     </button>
   );
 
-  return reason ? <Tooltip title={reason}>{button}</Tooltip> : button;
+  return reason ? (
+    <Tooltip title={reason} classNames={{ root: "touch-visible" }}>
+      {button}
+    </Tooltip>
+  ) : (
+    button
+  );
 }

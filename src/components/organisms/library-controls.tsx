@@ -242,7 +242,12 @@ export function EntryMenu({
   );
 
   return readOnly ? (
-    <Tooltip title="Confirm your email first to change your library.">{menu}</Tooltip>
+    <Tooltip
+      title="Confirm your email first to change your library."
+      classNames={{ root: "touch-visible" }}
+    >
+      {menu}
+    </Tooltip>
   ) : (
     menu
   );

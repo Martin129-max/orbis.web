@@ -79,7 +79,9 @@ export function VoteControl({
   );
 
   return readOnly ? (
-    <Tooltip title="Confirm your email first to vote.">{control}</Tooltip>
+    <Tooltip title="Confirm your email first to vote." classNames={{ root: "touch-visible" }}>
+      {control}
+    </Tooltip>
   ) : (
     control
   );

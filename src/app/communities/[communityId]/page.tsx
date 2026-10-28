@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  Clapperboard,
   Globe,
   Lock,
   MessagesSquare,
@@ -31,6 +32,7 @@ const tabs = [
   { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
   { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
   { value: "members", label: "Members", icon: <Users size={16} /> },
+  { value: "clips", label: "Clips", icon: <Clapperboard size={16} /> },
 ] as const;
 
 type Tab = (typeof tabs)[number]["value"];
@@ -180,26 +182,28 @@ export default function CommunityPage() {
           <nav
             aria-label="Community sections"
             data-tour="community-tabs"
-            className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+            className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
           >
-            {tabs.map(({ value, label, icon }) => (
-              <Link
-                key={value}
-                href={`/communities/${current.community!.id}${
-                  value === "feed" ? "" : `?tab=${value}`
-                }`}
-                aria-current={tab === value ? "page" : undefined}
-                className={`focus-ring -mb-px flex items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
-                  tab === value
-                    ? "border-accent text-accent"
-                    : "border-transparent font-semibold text-foreground hover:text-accent"
-                }`}
-              >
-                {icon}
-                {label}
-              </Link>
-            ))}
-            <p className="ml-auto hidden items-center gap-2 self-center text-xs text-muted sm:flex">
+            {tabs
+              .filter(({ value }) => value !== "clips" || current.community!.twitchLogin)
+              .map(({ value, label, icon }) => (
+                <Link
+                  key={value}
+                  href={`/communities/${current.community!.id}${
+                    value === "feed" ? "" : `?tab=${value}`
+                  }`}
+                  aria-current={tab === value ? "page" : undefined}
+                  className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+                    tab === value
+                      ? "border-accent text-accent"
+                      : "border-transparent font-semibold text-foreground hover:text-accent"
+                  }`}
+                >
+                  {icon}
+                  {label}
+                </Link>
+              ))}
+            <p className="ml-auto hidden shrink-0 items-center gap-2 self-center text-xs text-muted sm:flex">
               {current.community.isPublic ? (
                 <Globe size={14} aria-hidden />
               ) : (
@@ -229,7 +233,13 @@ export default function CommunityPage() {
               }
             />
             <Template.PageColumn onScroll={handleScroll}>
-              {tab === "members" ? (
+              {tab === "clips" && current.community.twitchLogin ? (
+                <Organism.TwitchClips
+                  key={current.community.id}
+                  communityId={current.community.id}
+                  name={current.community.name}
+                />
+              ) : tab === "members" ? (
                 <Organism.MemberList
                   key={current.community.id}
                   communityId={current.community.id}

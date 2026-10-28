@@ -277,8 +277,16 @@ body {
     text-decoration: none;
   }
 
-  .rich-text a.mention:hover {
-    text-decoration: underline;
+  @media (hover: hover) {
+    .rich-text a.mention:hover {
+      text-decoration: underline;
+    }
+  }
+
+  @media (hover: none) {
+    .ant-tooltip:not(.touch-visible) {
+      display: none;
+    }
   }
 }
 

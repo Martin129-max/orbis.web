@@ -15,7 +15,7 @@ export function ReadOnlyGate({
   if (!readOnly) return children;
 
   return (
-    <Tooltip title={`Confirm your email first to ${action}.`}>
+    <Tooltip title={`Confirm your email first to ${action}.`} classNames={{ root: "touch-visible" }}>
       {cloneElement(children, { disabled: true })}
     </Tooltip>
   );

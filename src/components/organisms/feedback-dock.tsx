@@ -197,6 +197,7 @@ export function FeedbackDock() {
         <Tooltip
           title={readOnly ? "Confirm your email first to send feedback." : "Send feedback"}
           placement="left"
+          classNames={readOnly ? { root: "touch-visible" } : undefined}
         >
           <button
             type="button"

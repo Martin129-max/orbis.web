@@ -1758,6 +1758,7 @@ export type PublicProfile = {
   isVerified: boolean;
   isPublic: boolean;
   restricted: boolean;
+  hasClips: boolean;
   createdAt: string;
   online: boolean;
   status: PresenceStatus;
@@ -2092,6 +2093,7 @@ export type OAuthConnection = {
   provider: OAuthProvider;
   username: string;
   showLive: boolean;
+  showClips: boolean;
   connectedAt: string;
 };
 
@@ -2208,6 +2210,52 @@ export async function setShowLive(
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Could not update this setting."));
+}
+
+export async function setShowClips(
+  token: string,
+  provider: OAuthProvider,
+  showClips: boolean,
+): Promise<void> {
+  const res = await api(`/auth/oauth/connections/${provider}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ showClips }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not update this setting."));
+}
+
+export type Clip = {
+  id: string;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
+  viewCount: number;
+  duration: number;
+  creatorName: string;
+  createdAt: string;
+};
+
+export type ClipPage = { items: Clip[]; nextCursor: string | null };
+
+async function clipPage(path: string, token: string | null, cursor?: string): Promise<ClipPage> {
+  const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
+  const res = await api(`${path}${query}`, { headers: authHeaders(token) });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t load the clips."));
+  return res.json();
+}
+
+export function getCommunityClips(token: string | null, communityId: number, cursor?: string) {
+  return clipPage(`/communities/${communityId}/clips`, token, cursor);
+}
+
+export function getUserClips(token: string | null, username: string, cursor?: string) {
+  return clipPage(`/users/${encodeURIComponent(username)}/clips`, token, cursor);
 }
 
 export async function connectDiscordServer(

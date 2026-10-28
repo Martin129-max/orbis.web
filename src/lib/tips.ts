@@ -50,6 +50,12 @@ export const tips: Tip[] = [
     body: "Type @ and a username in a post, thread, or comment to tag someone. They get a notification if they can see where you posted it.",
   },
   {
+    id: "twitch-clips",
+    title: "Watch Twitch clips on Orbis",
+    body: "Communities and people with Twitch connected have a Clips tab with their most-watched clips. To hide yours, go to Connections in your settings.",
+    action: { label: "Open Connections", href: "/settings?tab=connections" },
+  },
+  {
     id: "community-discord",
     title: "Show your community’s Discord server",
     body: "If you run a community, connect its Discord server in the community’s settings to show how many people are online there, with a button to join.",

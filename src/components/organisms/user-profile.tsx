@@ -3,6 +3,7 @@
 import {
   Boxes,
   CalendarDays,
+  Clapperboard,
   Library,
   Lock,
   Newspaper,
@@ -46,6 +47,7 @@ import { PostList } from "./post-list";
 import { ProfileSearchScope } from "./content-search";
 import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel } from "./side-panel";
+import { TwitchClips } from "./twitch-clips";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
 import { VerifyToggle } from "./verify-toggle";
@@ -58,6 +60,7 @@ const tabs = [
   { value: "library", label: "Library", icon: <Library size={16} /> },
   { value: "friends", label: "Friends", icon: <Users size={16} /> },
   { value: "communities", label: "Communities", icon: <Boxes size={16} /> },
+  { value: "clips", label: "Clips", icon: <Clapperboard size={16} /> },
 ] as const;
 
 type Tab = (typeof tabs)[number]["value"];
@@ -242,24 +245,26 @@ function ProfileTabs({ profile, tab }: { profile: Profile; tab: Tab }) {
       data-tour="profile-tabs"
       className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
     >
-      {tabs.map(({ value, label, icon }) => (
-        <Link
-          key={value}
-          href={`/users/${profile.username}${value === "posts" ? "" : `?tab=${value}`}`}
-          aria-current={tab === value ? "page" : undefined}
-          className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
-            tab === value
-              ? "border-accent text-accent"
-              : "border-transparent font-semibold text-foreground hover:text-accent"
-          }`}
-        >
-          {icon}
-          {label}
-          {counts[value] !== undefined && (
-            <span className="text-xs font-normal text-muted">{counts[value]}</span>
-          )}
-        </Link>
-      ))}
+      {tabs
+        .filter(({ value }) => value !== "clips" || profile.hasClips)
+        .map(({ value, label, icon }) => (
+          <Link
+            key={value}
+            href={`/users/${profile.username}${value === "posts" ? "" : `?tab=${value}`}`}
+            aria-current={tab === value ? "page" : undefined}
+            className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+              tab === value
+                ? "border-accent text-accent"
+                : "border-transparent font-semibold text-foreground hover:text-accent"
+            }`}
+          >
+            {icon}
+            {label}
+            {counts[value] !== undefined && (
+              <span className="text-xs font-normal text-muted">{counts[value]}</span>
+            )}
+          </Link>
+        ))}
       <p className="ml-auto hidden shrink-0 items-center gap-1.5 self-center text-xs text-muted sm:flex">
         <CalendarDays size={14} aria-hidden />
         Joined {joined}
@@ -834,6 +839,12 @@ export function UserProfile({ username }: { username: string }) {
             <FriendsTab profile={profile} myId={me?.userId} />
           ) : tab === "communities" ? (
             <CommunitiesTab profile={profile} />
+          ) : tab === "clips" && profile.hasClips ? (
+            <TwitchClips
+              key={profile.username}
+              username={profile.username}
+              name={displayName(profile)}
+            />
           ) : (
             <Wall
               key={profile.username}

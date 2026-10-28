@@ -3,6 +3,7 @@
 import {
   ArrowRight,
   BookOpen,
+  Clapperboard,
   Compass,
   FolderOpen,
   Link2,
@@ -37,6 +38,7 @@ const extras: { icon: ReactNode; label: string }[] = [
   { icon: <WifiOff size={18} />, label: "Appear offline anytime" },
   { icon: <Ticket size={18} />, label: "Feedback with ticket numbers" },
   { icon: <ShieldCheck size={18} />, label: "Owner and admin tools" },
+  { icon: <Clapperboard size={18} />, label: "Twitch clips and live badges" },
 ];
 
 export function LandingCommunities() {

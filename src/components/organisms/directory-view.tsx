@@ -199,8 +199,11 @@ function CommunityControls({
 
 function EmailStatus({ confirmedAt }: { confirmedAt: string | null }) {
   return (
-    <Tooltip title={confirmedAt ? `Email confirmed ${joined(confirmedAt)}` : "Email not confirmed"}>
-      <span className="flex shrink-0">
+    <Tooltip
+      title={confirmedAt ? `Email confirmed ${joined(confirmedAt)}` : "Email not confirmed"}
+      classNames={{ root: "touch-visible" }}
+    >
+      <span className="relative flex shrink-0">
         {confirmedAt ? (
           <MailCheck size={14} aria-hidden className="text-success" />
         ) : (

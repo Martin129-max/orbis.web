@@ -7,26 +7,48 @@ import { palette } from "@/lib/palette";
 import { useThemeStore } from "@/stores/theme-store";
 
 const darkQuery = "(prefers-color-scheme: dark)";
+const hoverQuery = "(hover: hover)";
 
-function subscribe(onChange: () => void) {
-  const media = window.matchMedia(darkQuery);
-  media.addEventListener("change", onChange);
-  return () => media.removeEventListener("change", onChange);
+function subscribeTo(query: string) {
+  return (onChange: () => void) => {
+    const media = window.matchMedia(query);
+    media.addEventListener("change", onChange);
+    return () => media.removeEventListener("change", onChange);
+  };
 }
+
+const subscribeDark = subscribeTo(darkQuery);
+const subscribeHover = subscribeTo(hoverQuery);
 
 function usePrefersDark() {
   return useSyncExternalStore(
-    subscribe,
+    subscribeDark,
     () => window.matchMedia(darkQuery).matches,
     () => false,
   );
 }
 
+function useCanHover() {
+  return useSyncExternalStore(
+    subscribeHover,
+    () => window.matchMedia(hoverQuery).matches,
+    () => true,
+  );
+}
+
 export function AntdProvider({ children }: { children: ReactNode }) {
   const prefersDark = usePrefersDark();
+  const touch = !useCanHover();
   const mode = useThemeStore((state) => state.mode);
   const isDark = mode === "dark" || (mode === "system" && prefersDark);
   const colors = isDark ? palette.dark : palette.light;
+  const algorithm = isDark ? theme.darkAlgorithm : theme.defaultAlgorithm;
+  const resting = touch
+    ? theme.getDesignToken({
+        algorithm,
+        token: { colorPrimary: colors.accent, colorLink: colors.accent, colorError: colors.danger },
+      })
+    : null;
 
   useEffect(() => {
     useThemeStore.persist.rehydrate();
@@ -36,7 +58,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
     <AntdRegistry layer>
       <ConfigProvider
         theme={{
-          algorithm: isDark ? theme.darkAlgorithm : theme.defaultAlgorithm,
+          algorithm,
           token: {
             fontFamily: "var(--font-inter), system-ui, sans-serif",
             fontSize: 14,
@@ -46,13 +68,13 @@ export function AntdProvider({ children }: { children: ReactNode }) {
             controlHeightLG: 44,
             controlHeightSM: 32,
             colorPrimary: colors.accent,
-            colorPrimaryHover: colors.accentHover,
+            colorPrimaryHover: resting ? resting.colorPrimary : colors.accentHover,
             colorPrimaryActive: colors.accentActive,
             colorLink: colors.accent,
-            colorLinkHover: colors.accentHover,
+            colorLinkHover: resting ? resting.colorLink : colors.accentHover,
             colorLinkActive: colors.accentActive,
             colorError: colors.danger,
-            colorErrorHover: colors.dangerHover,
+            colorErrorHover: resting ? resting.colorError : colors.dangerHover,
             colorErrorActive: colors.dangerActive,
             colorTextDisabled: colors.muted,
             colorBgContainerDisabled: colors.railItem,
@@ -69,6 +91,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
             colorBgElevated: colors.surface,
             colorBgLayout: colors.background,
             colorFillSecondary: colors.railItem,
+            ...(touch && { colorBgTextHover: "transparent", controlItemBgHover: "transparent" }),
           },
           components: {
             Segmented: {
@@ -78,6 +101,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
               itemHoverColor: colors.foreground,
               itemSelectedColor: colors.foreground,
               trackPadding: 4,
+              ...(touch && { itemHoverBg: "transparent" }),
             },
             Switch: {
               colorTextQuaternary: colors.railItem,
@@ -85,7 +109,7 @@ export function AntdProvider({ children }: { children: ReactNode }) {
             },
             Input: {
               activeBorderColor: colors.accent,
-              hoverBorderColor: colors.muted,
+              hoverBorderColor: touch ? colors.divider : colors.muted,
               activeShadow: `0 0 0 1px ${colors.accent}`,
               inputFontSizeLG: 14,
             },
@@ -94,6 +118,14 @@ export function AntdProvider({ children }: { children: ReactNode }) {
               verticalLabelPadding: "0 0 8px",
               itemMarginBottom: 0,
             },
+            Button: touch
+              ? {
+                  defaultHoverBg: colors.surface,
+                  defaultHoverColor: colors.foreground,
+                  defaultHoverBorderColor: colors.divider,
+                  textHoverBg: "transparent",
+                }
+              : {},
             Tooltip: {
               colorBgSpotlight: colors.foreground,
               colorTextLightSolid: colors.background,

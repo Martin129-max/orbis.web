@@ -55,6 +55,7 @@ function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
   return (
     <Tooltip
       placement="bottom"
+      classNames={{ root: "touch-visible" }}
       title={
         <>
           {remaining && <div>Next stream in {remaining}</div>}

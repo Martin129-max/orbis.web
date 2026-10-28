@@ -158,7 +158,10 @@ export function ReportButton({
       onPointerDown={(event) => event.stopPropagation()}
     >
       {variant === "text" ? (
-        <Tooltip title={readOnly ? tooltip : undefined}>
+        <Tooltip
+          title={readOnly ? tooltip : undefined}
+          classNames={readOnly ? { root: "touch-visible" } : undefined}
+        >
           <button
             type="button"
             aria-disabled={readOnly || undefined}
@@ -171,7 +174,10 @@ export function ReportButton({
           </button>
         </Tooltip>
       ) : (
-        <Tooltip title={tooltip}>
+        <Tooltip
+          title={tooltip}
+          classNames={readOnly ? { root: "touch-visible" } : undefined}
+        >
           <button
             type="button"
             aria-label={label}
