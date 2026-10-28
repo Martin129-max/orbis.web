@@ -1599,7 +1599,8 @@ export type NotificationType =
   | "report_status"
   | "report_assigned"
   | "report_comment"
-  | "wall_post";
+  | "wall_post"
+  | "mention";
 
 export type Notification = {
   id: number;

@@ -2,6 +2,7 @@
 
 import { Switch } from "antd";
 import {
+  AtSign,
   Bell,
   CheckCheck,
   CircleCheck,
@@ -43,6 +44,7 @@ const typeIcons: Record<NotificationType, ReactNode> = {
   report_assigned: <UserCheck size={12} />,
   report_comment: <MessageSquare size={12} />,
   wall_post: <PenLine size={12} />,
+  mention: <AtSign size={12} />,
 };
 
 const filters: { value: NotificationFilter; label: string; icon: ReactNode }[] = [

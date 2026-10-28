@@ -9,6 +9,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { previewFor, TEXT_LINK, trimLink, webUrl, youtubeVideo } from "@/lib/links";
 import { useAuthStore } from "@/stores/auth-store";
+import { useMentionSuggestions } from "./mention-suggestions";
 
 const PREVIEW_DELAY_MS = 500;
 const BARE_LINK = /^(?:https?:\/\/|www\.)\S+$/i;
@@ -85,6 +86,7 @@ export function PostComposer({
   const dismissed = useRef(false);
   const checking = useRef<string | null>(null);
   const rejected = useRef(new Set<string>());
+  const mentionKeys = useRef<(event: KeyboardEvent) => boolean>(() => false);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -103,6 +105,7 @@ export function PostComposer({
       }),
     ],
     editorProps: {
+      handleKeyDown: (_view, event) => mentionKeys.current(event),
       attributes: {
         class: "rich-text min-h-12 outline-none",
         "aria-label": "Write a post",
@@ -110,6 +113,11 @@ export function PostComposer({
         "aria-multiline": "true",
       },
     },
+  });
+
+  const mentions = useMentionSuggestions(editor);
+  useEffect(() => {
+    mentionKeys.current = mentions.handleKeyDown;
   });
 
   const state = useEditorState({
@@ -257,6 +265,7 @@ export function PostComposer({
             </p>
           )}
           <EditorContent editor={editor} />
+          {mentions.popup}
         </div>
         {attachment && <Molecule.LinkPreview url={attachment} onRemove={removeAttachment} />}
         <hr className="border-divider" />
