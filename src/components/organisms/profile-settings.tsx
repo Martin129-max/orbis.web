@@ -1,7 +1,7 @@
 "use client";
 
 import { App } from "antd";
-import { Link2, Lock, RotateCcw, SlidersHorizontal, UserRound } from "lucide-react";
+import { CircleCheck, Link2, Lock, RotateCcw, SlidersHorizontal, UserRound } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import * as Atom from "@atom";
@@ -11,6 +11,7 @@ import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { OAuthConnections } from "./oauth-connections";
 import { ChangelogSwitch } from "./changelog-switch";
+import { ResendConfirmation } from "./email-confirmation";
 import { NsfwSwitch } from "./nsfw-switch";
 import { FriendsPanel } from "./friends-panel";
 import { PrivateProfileSwitch } from "./private-profile-switch";
@@ -144,6 +145,19 @@ export function ProfileSettings({ profile }: { profile: Profile }) {
           content: (
             <Molecule.SettingsSection title="Email" description="Only you can see this.">
               <p className="truncate text-sm">{profile.email}</p>
+              {profile.emailVerifiedAt ? (
+                <p className="flex items-center gap-1.5 text-xs text-muted">
+                  <CircleCheck size={14} aria-hidden className="text-success" />
+                  Confirmed
+                </p>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-muted">
+                    Not confirmed yet. Open the link we emailed you to confirm it.
+                  </p>
+                  <ResendConfirmation />
+                </div>
+              )}
             </Molecule.SettingsSection>
           ),
         },

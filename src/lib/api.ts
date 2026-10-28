@@ -29,6 +29,7 @@ export type Profile = {
   showChangelog: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  emailVerifiedAt: string | null;
   createdAt: string;
 };
 
@@ -143,6 +144,27 @@ export function signup(details: SignupDetails) {
 
 export function login(credentials: LoginCredentials) {
   return authenticate("/auth/login", credentials);
+}
+
+export async function confirmEmail(token: string): Promise<void> {
+  const res = await api("/auth/confirm-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t confirm your email."));
+}
+
+export async function resendConfirmation(token: string): Promise<{ confirmed: boolean }> {
+  const res = await api("/auth/confirm-email/resend", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 429) throw new Error("You’ve asked for a few already. Try again in an hour.");
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t send the email."));
+  return res.json();
 }
 
 export async function getProfile(token: string): Promise<Profile | null> {
