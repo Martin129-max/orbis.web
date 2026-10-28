@@ -321,9 +321,11 @@ function WallInvite({ profile }: { profile: Profile }) {
       </div>
       {status !== "sent" && (
         <div>
-          <Atom.Button icon={<UserPlus size={16} />} loading={pending} onClick={handleAdd}>
-            {status === "incoming" ? "Accept friend request" : "Add friend"}
-          </Atom.Button>
+          <Molecule.ReadOnlyGate action="add friends">
+            <Atom.Button icon={<UserPlus size={16} />} loading={pending} onClick={handleAdd}>
+              {status === "incoming" ? "Accept friend request" : "Add friend"}
+            </Atom.Button>
+          </Molecule.ReadOnlyGate>
         </div>
       )}
     </section>
@@ -520,14 +522,16 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
                     Open
                   </Atom.ButtonLink>
                 ) : (
-                  <Atom.Button
-                    size="small"
-                    loading={joining === community.id}
-                    disabled={joining !== null && joining !== community.id}
-                    onClick={() => handleJoin(community.id)}
-                  >
-                    Join
-                  </Atom.Button>
+                  <Molecule.ReadOnlyGate action="join">
+                    <Atom.Button
+                      size="small"
+                      loading={joining === community.id}
+                      disabled={joining !== null && joining !== community.id}
+                      onClick={() => handleJoin(community.id)}
+                    >
+                      Join
+                    </Atom.Button>
+                  </Molecule.ReadOnlyGate>
                 )
               }
             />

@@ -1,5 +1,6 @@
 import { Tooltip } from "antd";
 import { Heart } from "lucide-react";
+import { useReadOnly } from "@/lib/read-only";
 
 export function LikeButton({
   liked,
@@ -12,7 +13,9 @@ export function LikeButton({
   onToggle: () => void;
   disabledReason?: string;
 }) {
-  const disabled = Boolean(disabledReason);
+  const readOnly = useReadOnly();
+  const reason = readOnly ? "Confirm your email first to like this." : disabledReason;
+  const disabled = Boolean(reason);
   const button = (
     <button
       type="button"
@@ -42,5 +45,5 @@ export function LikeButton({
     </button>
   );
 
-  return disabledReason ? <Tooltip title={disabledReason}>{button}</Tooltip> : button;
+  return reason ? <Tooltip title={reason}>{button}</Tooltip> : button;
 }

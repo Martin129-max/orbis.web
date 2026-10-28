@@ -175,31 +175,37 @@ export function FriendRequests() {
                   actions={
                     tab === "received" ? (
                       <>
-                        <Atom.Button
-                          size="small"
-                          className="flex-1"
-                          onClick={() => addFriend({ userId: person.userId }).catch(() => null)}
-                        >
-                          Accept
-                        </Atom.Button>
+                        <Molecule.ReadOnlyGate action="answer friend requests">
+                          <Atom.Button
+                            size="small"
+                            className="flex-1"
+                            onClick={() => addFriend({ userId: person.userId }).catch(() => null)}
+                          >
+                            Accept
+                          </Atom.Button>
+                        </Molecule.ReadOnlyGate>
+                        <Molecule.ReadOnlyGate action="answer friend requests">
+                          <Atom.Button
+                            size="small"
+                            variant="secondary"
+                            className="flex-1"
+                            onClick={() => removeFriend(person.userId).catch(() => null)}
+                          >
+                            Decline
+                          </Atom.Button>
+                        </Molecule.ReadOnlyGate>
+                      </>
+                    ) : (
+                      <Molecule.ReadOnlyGate action="cancel friend requests">
                         <Atom.Button
                           size="small"
                           variant="secondary"
                           className="flex-1"
                           onClick={() => removeFriend(person.userId).catch(() => null)}
                         >
-                          Decline
+                          Cancel request
                         </Atom.Button>
-                      </>
-                    ) : (
-                      <Atom.Button
-                        size="small"
-                        variant="secondary"
-                        className="flex-1"
-                        onClick={() => removeFriend(person.userId).catch(() => null)}
-                      >
-                        Cancel request
-                      </Atom.Button>
+                      </Molecule.ReadOnlyGate>
                     )
                   }
                 />

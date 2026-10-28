@@ -34,9 +34,11 @@ export function JoinCommunityPrompt({
         {guest ? (
           <Molecule.LoginLink>Log in to join</Molecule.LoginLink>
         ) : (
-          <Atom.Button loading={joining} onClick={onJoin}>
-            Join community
-          </Atom.Button>
+          <Molecule.ReadOnlyGate action="join">
+            <Atom.Button loading={joining} onClick={onJoin}>
+              Join community
+            </Atom.Button>
+          </Molecule.ReadOnlyGate>
         )}
       </div>
     </section>

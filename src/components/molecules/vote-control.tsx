@@ -1,6 +1,8 @@
 "use client";
 
+import { Tooltip } from "antd";
 import { ArrowDown, ArrowUp, ThumbsDown, ThumbsUp } from "lucide-react";
+import { useReadOnly } from "@/lib/read-only";
 
 const symbols = {
   arrows: { up: ArrowUp, down: ArrowDown },
@@ -22,13 +24,21 @@ export function VoteControl({
   orientation = "vertical",
   symbols: style = "arrows",
 }: VoteControlProps) {
+  const readOnly = useReadOnly();
   const { up: Up, down: Down } = symbols[style];
   const arrow = (active: boolean) =>
     `focus-ring flex rounded-sm transition-colors ${
-      active ? "text-accent" : "text-muted hover:text-foreground"
+      readOnly
+        ? "cursor-not-allowed text-muted opacity-60"
+        : active
+          ? "text-accent"
+          : "text-muted hover:text-foreground"
     }`;
+  const vote = (value: 1 | -1) => {
+    if (!readOnly) onVote(value);
+  };
 
-  return (
+  const control = (
     <div
       className={`flex shrink-0 items-center ${
         orientation === "vertical"
@@ -41,7 +51,8 @@ export function VoteControl({
         type="button"
         aria-label="Upvote"
         aria-pressed={myVote === 1}
-        onClick={() => onVote(1)}
+        aria-disabled={readOnly || undefined}
+        onClick={() => vote(1)}
         className={arrow(myVote === 1)}
       >
         <Up size={16} />
@@ -58,11 +69,18 @@ export function VoteControl({
         type="button"
         aria-label="Downvote"
         aria-pressed={myVote === -1}
-        onClick={() => onVote(-1)}
+        aria-disabled={readOnly || undefined}
+        onClick={() => vote(-1)}
         className={arrow(myVote === -1)}
       >
         <Down size={16} />
       </button>
     </div>
+  );
+
+  return readOnly ? (
+    <Tooltip title="Confirm your email first to vote.">{control}</Tooltip>
+  ) : (
+    control
   );
 }

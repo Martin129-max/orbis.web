@@ -1,6 +1,6 @@
 "use client";
 
-import { App, Dropdown, InputNumber, Modal, Radio, Switch } from "antd";
+import { App, Dropdown, InputNumber, Modal, Radio, Switch, Tooltip } from "antd";
 import { Check, Globe, Lock, MoreHorizontal, Plus, Trash2 } from "lucide-react";
 import { useId, useState } from "react";
 import * as Atom from "@atom";
@@ -14,6 +14,7 @@ import {
   type MediaType,
 } from "@/lib/api";
 import { libraryStatuses, statusLabel } from "@/lib/library";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 
 function token() {
@@ -63,17 +64,19 @@ export function AddToLibraryButton({
 
   return (
     <>
-      <Atom.Button
-        size={size}
-        icon={<Plus size={14} />}
-        aria-label={`Add ${media.title} to your library`}
-        onClick={() => {
-          setProgress(0);
-          setOpen(true);
-        }}
-      >
-        {label}
-      </Atom.Button>
+      <Molecule.ReadOnlyGate action="add to your library">
+        <Atom.Button
+          size={size}
+          icon={<Plus size={14} />}
+          aria-label={`Add ${media.title} to your library`}
+          onClick={() => {
+            setProgress(0);
+            setOpen(true);
+          }}
+        >
+          {label}
+        </Atom.Button>
+      </Molecule.ReadOnlyGate>
       <Modal
         open={open}
         title={null}
@@ -159,6 +162,7 @@ export function EntryMenu({
   trigger?: React.ReactElement;
 }) {
   const { message } = App.useApp();
+  const readOnly = useReadOnly();
 
   async function act(key: string) {
     try {
@@ -183,8 +187,9 @@ export function EntryMenu({
     }
   }
 
-  return (
+  const menu = (
     <Dropdown
+      disabled={readOnly}
       trigger={["click"]}
       menu={{
         items: [
@@ -234,5 +239,11 @@ export function EntryMenu({
         </button>
       )}
     </Dropdown>
+  );
+
+  return readOnly ? (
+    <Tooltip title="Confirm your email first to change your library.">{menu}</Tooltip>
+  ) : (
+    menu
   );
 }

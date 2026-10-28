@@ -33,6 +33,7 @@ import {
   updateLibraryEntry,
 } from "@/lib/api";
 import { libraryStatuses, mediaPath, statusLabel } from "@/lib/library";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 import { useSearchStore } from "@/stores/search-store";
 import {
@@ -55,6 +56,7 @@ export function ProgressControl({
   onChange: (entry: LibraryEntry) => void;
 }) {
   const { message } = App.useApp();
+  const readOnly = useReadOnly();
   const [draft, setDraft] = useState<number | null>(entry.progress);
   const [saving, setSaving] = useState(false);
   const [synced, setSynced] = useState(entry.progress);
@@ -92,7 +94,7 @@ export function ProgressControl({
       <button
         type="button"
         aria-label={`One fewer ${unit.slice(0, -1)}`}
-        disabled={saving || entry.progress <= 0}
+        disabled={readOnly || saving || entry.progress <= 0}
         onClick={() => save(entry.progress - 1)}
         className="icon-button cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
       >
@@ -103,7 +105,7 @@ export function ProgressControl({
         min={0}
         max={max}
         value={draft}
-        disabled={saving}
+        disabled={readOnly || saving}
         controls={false}
         aria-label={`${unit} done`}
         onChange={setDraft}
@@ -115,7 +117,7 @@ export function ProgressControl({
       <button
         type="button"
         aria-label={`One more ${unit.slice(0, -1)}`}
-        disabled={saving || (max !== undefined && entry.progress >= max)}
+        disabled={readOnly || saving || (max !== undefined && entry.progress >= max)}
         onClick={() => save(entry.progress + 1)}
         className="icon-button cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
       >
@@ -133,6 +135,7 @@ export function StatusSelect({
   onChange: (entry: LibraryEntry) => void;
 }) {
   const { message } = App.useApp();
+  const readOnly = useReadOnly();
 
   async function change(status: LibraryStatus) {
     const { token } = useAuthStore.getState();
@@ -149,6 +152,7 @@ export function StatusSelect({
       size="small"
       aria-label={`Status of ${entry.title}`}
       value={entry.status}
+      disabled={readOnly}
       onChange={change}
       popupMatchSelectWidth={false}
       className="w-36"
@@ -306,6 +310,7 @@ function ProgressStepper({
   className?: string;
 }) {
   const { message } = App.useApp();
+  const readOnly = useReadOnly();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<number | null>(entry.progress);
   const [saving, setSaving] = useState(false);
@@ -339,7 +344,7 @@ function ProgressStepper({
       <button
         type="button"
         aria-label={`One fewer ${unit}`}
-        disabled={saving || entry.progress <= 0}
+        disabled={readOnly || saving || entry.progress <= 0}
         onClick={() => save(entry.progress - 1)}
         className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
       >
@@ -363,11 +368,12 @@ function ProgressStepper({
         <button
           type="button"
           aria-label={`${entry.progress} of ${entry.total ?? "unknown"} ${unit}s. Type a number`}
+          disabled={readOnly}
           onClick={() => {
             setDraft(entry.progress);
             setEditing(true);
           }}
-          className="focus-ring min-w-0 cursor-text truncate rounded-sm px-1 text-[11px] font-semibold whitespace-nowrap"
+          className="focus-ring min-w-0 cursor-text truncate rounded-sm px-1 text-[11px] font-semibold whitespace-nowrap disabled:cursor-default"
         >
           {entry.progress} / {entry.total ?? "?"}
         </button>
@@ -375,7 +381,7 @@ function ProgressStepper({
       <button
         type="button"
         aria-label={`One more ${unit}`}
-        disabled={saving || finished}
+        disabled={readOnly || saving || finished}
         onClick={() => save(entry.progress + 1)}
         className="focus-ring flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-40 pointer-coarse:h-9 pointer-coarse:w-9"
       >
@@ -479,6 +485,9 @@ export function LibraryCard({
   onRemove: (id: number) => void;
   className?: string;
 }) {
+  const readOnly = useReadOnly();
+  if (readOnly) return <ReadOnlyLibraryCard entry={entry} className={className} />;
+
   return (
     <CardLayout
       entry={entry}

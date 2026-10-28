@@ -124,6 +124,7 @@ function Conversation({
   const loadOlder = useMessagesStore((state) => state.loadOlder);
   const markRead = useMessagesStore((state) => state.markRead);
   const react = useMessagesStore((state) => state.react);
+  const readOnly = useReadOnly();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
   const [draft, setDraft] = useState("");
@@ -319,12 +320,12 @@ function Conversation({
                           <Reactions
                             reactions={message.reactions}
                             me={me}
-                            disabled={request}
+                            disabled={request || readOnly}
                             onReact={reactWith}
                           />
                         )}
                       </div>
-                      {!request && (
+                      {!request && !readOnly && (
                         <MessageActions
                           mine={mine}
                           onReact={reactWith}

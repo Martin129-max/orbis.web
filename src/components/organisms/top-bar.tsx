@@ -4,6 +4,7 @@ import { MessageCircle, UserPlus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import { useFriendsStore } from "@/stores/friends-store";
 import { useMessagesStore } from "@/stores/messages-store";
 import { HEADER_POPOVER_LIMIT, HeaderPopover, HeaderPopoverNote } from "./header-popover";
@@ -68,19 +69,23 @@ function RequestsButton() {
                 person={user}
                 actions={
                   <>
-                    <Atom.Button
-                      size="small"
-                      onClick={() => addFriend({ userId: user.userId }).catch(() => null)}
-                    >
-                      Accept
-                    </Atom.Button>
-                    <Atom.Button
-                      size="small"
-                      variant="secondary"
-                      onClick={() => removeFriend(user.userId).catch(() => null)}
-                    >
-                      Decline
-                    </Atom.Button>
+                    <Molecule.ReadOnlyGate action="answer friend requests">
+                      <Atom.Button
+                        size="small"
+                        onClick={() => addFriend({ userId: user.userId }).catch(() => null)}
+                      >
+                        Accept
+                      </Atom.Button>
+                    </Molecule.ReadOnlyGate>
+                    <Molecule.ReadOnlyGate action="answer friend requests">
+                      <Atom.Button
+                        size="small"
+                        variant="secondary"
+                        onClick={() => removeFriend(user.userId).catch(() => null)}
+                      >
+                        Decline
+                      </Atom.Button>
+                    </Molecule.ReadOnlyGate>
                   </>
                 }
               />

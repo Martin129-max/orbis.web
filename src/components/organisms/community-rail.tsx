@@ -41,6 +41,7 @@ import {
 } from "react";
 import * as Atom from "@atom";
 import type { Community, RailFolder, RailItem } from "@/lib/api";
+import { useReadOnly } from "@/lib/read-only";
 import {
   communityKey,
   folderKey,
@@ -303,6 +304,7 @@ export function CommunityRail() {
   const fetchCommunities = useCommunityStore((state) => state.fetchCommunities);
   const updateLayout = useCommunityStore((state) => state.updateLayout);
   const [creating, setCreating] = useState(false);
+  const readOnly = useReadOnly();
   const [openFolders, setOpenFolders] = useState(readOpenFolders);
   const [closingFolders, setClosingFolders] = useState<Set<number>>(new Set());
   const [openingFolders, setOpeningFolders] = useState<Set<number>>(new Set());
@@ -728,13 +730,18 @@ export function CommunityRail() {
       </DndContext>
       <div aria-hidden className="h-px w-full shrink-0 bg-divider" />
       <ul className="flex w-full shrink-0 flex-col items-center gap-4">
-        <RailSlot label="Create a community">
+        <RailSlot
+          label={readOnly ? "Confirm your email first to create a community." : "Create a community"}
+        >
           <button
             type="button"
             aria-label="Create a community"
+            aria-disabled={readOnly || undefined}
             data-tour="create"
-            onClick={() => setCreating(true)}
-            className={itemClass(false)}
+            onClick={() => {
+              if (!readOnly) setCreating(true);
+            }}
+            className={`${itemClass(false)} ${readOnly ? "cursor-not-allowed opacity-50" : ""}`}
           >
             <Plus size={20} />
           </button>

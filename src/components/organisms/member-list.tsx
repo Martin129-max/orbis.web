@@ -91,25 +91,27 @@ export function FriendAction({
   const title = status === "incoming" ? "Accept friend request" : "Add friend";
 
   return (
-    <Atom.Button
-      size="small"
-      variant={status === "incoming" ? "primary" : "secondary"}
-      title={title}
-      aria-label={title}
-      icon={buttonFor ? <UserPlus size={12} /> : undefined}
-      onClick={() => addFriend({ userId }).catch(() => null)}
-      className={
-        buttonFor
-          ? `${profileButton} ${
-              status === "incoming"
-                ? "bg-success text-success-foreground"
-                : "bg-info text-info-foreground"
-            }`
-          : "shrink-0"
-      }
-    >
-      {status === "incoming" ? "Accept" : buttonFor ? "Add friend" : addLabel}
-    </Atom.Button>
+    <Molecule.ReadOnlyGate action="add friends">
+      <Atom.Button
+        size="small"
+        variant={status === "incoming" ? "primary" : "secondary"}
+        title={title}
+        aria-label={title}
+        icon={buttonFor ? <UserPlus size={12} /> : undefined}
+        onClick={() => addFriend({ userId }).catch(() => null)}
+        className={
+          buttonFor
+            ? `${profileButton} ${
+                status === "incoming"
+                  ? "bg-success text-success-foreground"
+                  : "bg-info text-info-foreground"
+              }`
+            : "shrink-0"
+        }
+      >
+        {status === "incoming" ? "Accept" : buttonFor ? "Add friend" : addLabel}
+      </Atom.Button>
+    </Molecule.ReadOnlyGate>
   );
 }
 

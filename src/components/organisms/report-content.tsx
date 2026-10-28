@@ -6,6 +6,7 @@ import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { reportContent, type ContentReportReason, type ContentReportTarget } from "@/lib/api";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 
 export const reportReasons: { value: ContentReportReason; label: string; hint: string }[] = [
@@ -139,11 +140,16 @@ export function ReportButton({
   className?: string;
 }) {
   const myId = useAuthStore((state) => state.profile?.userId);
+  const readOnly = useReadOnly();
   const [open, setOpen] = useState(false);
 
   if (myId === undefined || myId === ownerId) return null;
 
   const label = `Report ${nouns[type]}`;
+  const tooltip = readOnly ? "Confirm your email first to report." : label;
+  const report = () => {
+    if (!readOnly) setOpen(true);
+  };
 
   return (
     <span
@@ -152,20 +158,28 @@ export function ReportButton({
       onPointerDown={(event) => event.stopPropagation()}
     >
       {variant === "text" ? (
-        <button
-          type="button"
-          onClick={() => setOpen(true)}
-          className="focus-ring cursor-pointer rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-danger"
-        >
-          Report
-        </button>
+        <Tooltip title={readOnly ? tooltip : undefined}>
+          <button
+            type="button"
+            aria-disabled={readOnly || undefined}
+            onClick={report}
+            className={`focus-ring rounded-sm px-1 text-xs font-semibold text-muted transition-colors ${
+              readOnly ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:text-danger"
+            }`}
+          >
+            Report
+          </button>
+        </Tooltip>
       ) : (
-        <Tooltip title={label}>
+        <Tooltip title={tooltip}>
           <button
             type="button"
             aria-label={label}
-            onClick={() => setOpen(true)}
-            className="icon-button cursor-pointer hover:text-danger"
+            aria-disabled={readOnly || undefined}
+            onClick={report}
+            className={`icon-button ${
+              readOnly ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:text-danger"
+            }`}
           >
             <Flag size={16} />
           </button>

@@ -50,14 +50,16 @@ export function JoinAction({
       Open
     </Atom.ButtonLink>
   ) : (
-    <Atom.Button
-      size="small"
-      loading={joining === community.id}
-      disabled={joining !== null && joining !== community.id}
-      onClick={() => onJoin(community.id)}
-    >
-      Join
-    </Atom.Button>
+    <Molecule.ReadOnlyGate action="join">
+      <Atom.Button
+        size="small"
+        loading={joining === community.id}
+        disabled={joining !== null && joining !== community.id}
+        onClick={() => onJoin(community.id)}
+      >
+        Join
+      </Atom.Button>
+    </Molecule.ReadOnlyGate>
   );
 }
 
