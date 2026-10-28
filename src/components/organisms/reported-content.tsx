@@ -2,6 +2,7 @@
 
 import { App } from "antd";
 import { Boxes, CloudOff, Flag, MessageSquare, MessagesSquare, Newspaper, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -15,6 +16,7 @@ import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { reportReasons } from "./report-content";
+import { SearchScope } from "./site-search";
 
 const targetStyle: Record<ContentReportTarget, { label: string; icon: ReactNode }> = {
   post: { label: "Post", icon: <Newspaper size={12} /> },
@@ -35,11 +37,56 @@ function matches(item: ReportedItem, query: string) {
     item.target?.excerpt,
     item.target?.author?.username,
     item.target?.author?.name,
+    ...Object.keys(item.reasons).map(reasonLabel),
     ...item.reports.flatMap(({ details, reporter }) => [details, reporter.username, reporter.name]),
   ].some((value) => value?.toLowerCase().includes(text));
 }
 
-export function ReportedContent({ query }: { query: string }) {
+const SEARCH_LIMIT = 8;
+
+function ReportedSearchScope({ items }: { items: ReportedItem[] }) {
+  return (
+    <SearchScope
+      lead="tickets"
+      section={{
+        label: "Reported",
+        render: (query) => {
+          const shown = items.filter((item) => item.target && matches(item, query)).slice(0, SEARCH_LIMIT);
+
+          if (shown.length === 0) {
+            return (
+              <p className="py-4 text-center text-sm text-muted">
+                No reported content matches “{query}”.
+              </p>
+            );
+          }
+
+          return (
+            <ul>
+              {shown.map((item) => (
+                <li key={`${item.type}-${item.id}`}>
+                  <Link
+                    href={item.target!.link}
+                    className="focus-ring flex flex-col rounded-md px-2 py-2 text-foreground transition-colors hover:bg-rail-item/60 hover:text-foreground"
+                  >
+                    <span className="truncate text-sm font-semibold">{item.target!.title}</span>
+                    <span className="truncate text-xs text-muted">
+                      {targetStyle[item.type].label} · Reported{" "}
+                      {item.count === 1 ? "once" : `${item.count} times`}
+                      {item.target!.excerpt ? ` · ${item.target!.excerpt}` : ""}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          );
+        },
+      }}
+    />
+  );
+}
+
+export function ReportedContent() {
   const { message } = App.useApp();
   const [items, setItems] = useState<ReportedItem[] | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -84,26 +131,21 @@ export function ReportedContent({ query }: { query: string }) {
 
   if (!items) return <Molecule.FeedSkeleton label="Loading reported content…" />;
 
-  const shown = items.filter((item) => matches(item, query));
-
-  if (shown.length === 0) {
+  if (items.length === 0) {
     return (
       <Molecule.FeedState
-        eyebrow={items.length === 0 ? "All clear" : "No matches"}
+        eyebrow="All clear"
         icon={<Flag size={24} strokeWidth={1.5} />}
-        title={items.length === 0 ? "Nothing has been reported." : "Nothing matches your search."}
-        description={
-          items.length === 0
-            ? "When someone reports a post, comment, profile or community, it shows up here."
-            : "Try a different search."
-        }
+        title="Nothing has been reported."
+        description="When someone reports a post, comment, profile or community, it shows up here."
       />
     );
   }
 
   return (
     <ul className="mx-auto flex w-full max-w-[880px] flex-col gap-3">
-      {shown.map((item) => {
+      <ReportedSearchScope items={items} />
+      {items.map((item) => {
         const key = `${item.type}-${item.id}`;
         const style = targetStyle[item.type];
         const { target } = item;

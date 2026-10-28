@@ -91,25 +91,27 @@ export function FriendAction({
   const title = status === "incoming" ? "Accept friend request" : "Add friend";
 
   return (
-    <Atom.Button
-      size="small"
-      variant={status === "incoming" ? "primary" : "secondary"}
-      title={title}
-      aria-label={title}
-      icon={buttonFor ? <UserPlus size={12} /> : undefined}
-      onClick={() => addFriend({ userId }).catch(() => null)}
-      className={
-        buttonFor
-          ? `${profileButton} ${
-              status === "incoming"
-                ? "bg-success text-success-foreground"
-                : "bg-info text-info-foreground"
-            }`
-          : "shrink-0"
-      }
-    >
-      {status === "incoming" ? "Accept" : buttonFor ? "Add friend" : addLabel}
-    </Atom.Button>
+    <Molecule.ReadOnlyGate action="add friends">
+      <Atom.Button
+        size="small"
+        variant={status === "incoming" ? "primary" : "secondary"}
+        title={title}
+        aria-label={title}
+        icon={buttonFor ? <UserPlus size={12} /> : undefined}
+        onClick={() => addFriend({ userId }).catch(() => null)}
+        className={
+          buttonFor
+            ? `${profileButton} ${
+                status === "incoming"
+                  ? "bg-success text-success-foreground"
+                  : "bg-info text-info-foreground"
+              }`
+            : "shrink-0"
+        }
+      >
+        {status === "incoming" ? "Accept" : buttonFor ? "Add friend" : addLabel}
+      </Atom.Button>
+    </Molecule.ReadOnlyGate>
   );
 }
 
@@ -140,6 +142,7 @@ function MemberGroup({
                 label={label}
                 avatarUrl={member.avatarUrl}
                 coverUrl={member.coverUrl}
+                isVerified={member.isVerified}
                 badge={
                   member.isOwner ? (
                     <Atom.RoleBadge role="owner" />
@@ -178,12 +181,9 @@ export function MemberList({ communityId }: { communityId: number }) {
   );
 
   return (
-    <section className="flex flex-col gap-5 rounded-lg border border-divider bg-surface p-5">
-      <h2 className="font-display text-2xl font-bold">
-        Members / {members.length}
-      </h2>
+    <Molecule.TabSection title="Members" count={members.length}>
       <MemberGroup title="Owner & admins" members={staff} myId={myId} />
       <MemberGroup title="Members" members={everyoneElse} myId={myId} />
-    </section>
+    </Molecule.TabSection>
   );
 }

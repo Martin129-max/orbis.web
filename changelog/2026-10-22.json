@@ -1,0 +1,141 @@
+{
+  "date": "2026-10-22",
+  "versions": [
+    "v0.14.0",
+    "v0.14.1",
+    "v0.15.0",
+    "v0.16.0",
+    "v0.17.0",
+    "v0.18.0",
+    "v0.19.0",
+    "v0.20.0",
+    "v0.20.1",
+    "v0.21.0",
+    "v0.22.0",
+    "v0.23.0",
+    "v0.24.0",
+    "v0.24.1",
+    "v0.24.2",
+    "v0.24.3",
+    "v0.25.0",
+    "v0.25.1",
+    "v0.26.0",
+    "v0.26.1",
+    "v0.26.2",
+    "v0.26.3"
+  ],
+  "entries": [
+    {
+      "type": "new",
+      "title": "Track anime, manga, and games",
+      "description": "You can search for titles, add them to your library, and track your status and progress. Your library updates can appear in the feed.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Make your profile your own",
+      "description": "You can upload an avatar, cover photo, and wallpaper, visit other members’ profiles, and post on profile walls. Your account preferences now have a dedicated settings page.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Give your community a new look",
+      "description": "You can personalize communities you manage with an icon, cover photo, and background image. Image menus on avatars and headers make changes easier.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Notifications and feedback tracking",
+      "description": "You can keep up with comment, friend, and report updates in your notifications. You can also submit bugs or ideas and follow your tickets.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Invite people to your community",
+      "description": "You can share community invite links, including links with an expiry date or a limit on how many people can use them.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Like posts and discuss library updates",
+      "description": "You can like posts and library activity, comment on activity, and read comment previews directly in the feed.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Talk about your favorite titles",
+      "description": "You can post on anime, manga, and game pages and see other people tracking the same title.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Group your communities into folders",
+      "description": "You can drag communities together in the sidebar to organize them into folders.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Get help getting started",
+      "description": "You can follow a welcome tour and a checklist to find your way around Orbis.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "new",
+      "title": "Read the community rules and policies",
+      "description": "You can now find the community guidelines, privacy policy, and terms from the site footer.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "See who’s in your community",
+      "description": "You can browse a dedicated members tab and see online members in the side panel.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Your library remembers your view",
+      "description": "You can switch between library views and title types, and your choices are remembered when you return. Search is now in the library header.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "Clearer feeds and page layouts",
+      "description": "You’ll see loading placeholders, a marker when you reach the end of a feed, clearer badges, and simpler wording across the site. New accounts start with the dark theme.",
+      "platforms": [
+        "web"
+      ]
+    },
+    {
+      "type": "improved",
+      "title": "A richer welcome page",
+      "description": "You can preview Orbis features on the redesigned welcome page. Shared links also have a branded image and description.",
+      "platforms": [
+        "web"
+      ]
+    }
+  ]
+}

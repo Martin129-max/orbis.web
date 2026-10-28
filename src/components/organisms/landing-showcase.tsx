@@ -3,12 +3,14 @@
 import {
   ArrowRight,
   BookOpen,
+  Clapperboard,
   Compass,
   FolderOpen,
   Link2,
   MessageCircle,
   Moon,
   Send,
+  Share2,
   ShieldCheck,
   SlidersHorizontal,
   Ticket,
@@ -37,6 +39,8 @@ const extras: { icon: ReactNode; label: string }[] = [
   { icon: <WifiOff size={18} />, label: "Appear offline anytime" },
   { icon: <Ticket size={18} />, label: "Feedback with ticket numbers" },
   { icon: <ShieldCheck size={18} />, label: "Owner and admin tools" },
+  { icon: <Clapperboard size={18} />, label: "Twitch clips and live badges" },
+  { icon: <Share2 size={18} />, label: "New posts sent to your Discord" },
 ];
 
 export function LandingCommunities() {
@@ -143,6 +147,7 @@ export function LandingPeople() {
               label={displayName(person)}
               avatarUrl={person.avatarUrl}
               coverUrl={person.coverUrl}
+              isVerified={person.isVerified}
               presence={person.online ? "online" : "offline"}
             />
           </li>
@@ -156,7 +161,7 @@ const features = [
   {
     id: "discussions",
     icon: MessageCircle,
-    label: "Feed and forum",
+    label: "Feed and threads",
     title: "Talk it out.",
     text: "Share quick updates, start a thread, and keep the conversation going with replies and votes.",
   },

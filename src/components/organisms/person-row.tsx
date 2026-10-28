@@ -67,6 +67,7 @@ export function PersonRow({
             <span className="flex min-w-0 items-center gap-1.5">
               <Molecule.UserLink
                 username={person.username}
+                verified={person.isVerified}
                 className="truncate text-[13px] font-semibold"
               >
                 {label}

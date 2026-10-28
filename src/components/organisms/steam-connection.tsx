@@ -121,7 +121,7 @@ function ConnectedPrompt({
       remindOnDecline
       onClose={() => {
         setDismissed(true);
-        router.replace("/settings", { scroll: false });
+        router.replace("/settings?tab=connections", { scroll: false });
       }}
       onImported={onImported}
     />
@@ -164,7 +164,10 @@ export function SteamConnection() {
   const { account } = status;
 
   return (
-    <div className="flex flex-col gap-3 border-t border-divider pt-3">
+    <Molecule.SettingsSection
+      title="Steam"
+      description="Bring your Steam games, playtime, and achievements into your library. Steam isn’t used to log in to Orbis."
+    >
       <div className="flex items-center gap-3">
         <span
           aria-hidden
@@ -258,6 +261,6 @@ export function SteamConnection() {
           </Suspense>
         </>
       )}
-    </div>
+    </Molecule.SettingsSection>
   );
 }

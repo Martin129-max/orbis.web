@@ -2,6 +2,8 @@ import type { ThemeMode } from "@/stores/theme-store";
 
 export const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
+export const wakeServerScript = `fetch(${JSON.stringify(`${API_URL}/health`)}).catch(function(){});`;
+
 export type LoginCredentials = { identifier: string; password: string };
 
 export type SignupDetails = { email: string; username: string; password: string };
@@ -24,12 +26,25 @@ export type Profile = {
   status: UserStatus;
   isPublic: boolean;
   showNsfw: boolean;
+  showChangelog: boolean;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  emailVerifiedAt: string | null;
   createdAt: string;
 };
 
 export type CommunityRole = "owner" | "admin" | "member";
+
+export type CommunityLinkPlatform =
+  | "x"
+  | "youtube"
+  | "kick"
+  | "instagram"
+  | "tiktok"
+  | "reddit"
+  | "website";
+
+export type CommunityLinks = Partial<Record<CommunityLinkPlatform, string>>;
 
 export type Community = {
   id: number;
@@ -40,12 +55,21 @@ export type Community = {
   backgroundUrl: string | null;
   ownerId: number;
   isPublic: boolean;
+  isVerified: boolean;
   createdAt: string;
   role?: CommunityRole | null;
   memberCount?: number;
   twitchLogin?: string | null;
+  showTwitchLive?: boolean;
+  showTwitchClips?: boolean;
   live?: boolean;
   nextStream?: NextStream | null;
+  discordGuildName?: string | null;
+  showDiscordOnline?: boolean;
+  showDiscordInvite?: boolean;
+  discord?: DiscordStatus | null;
+  links?: CommunityLinks;
+  showLibraryUpdates?: boolean;
 };
 
 export type CommunityPerson = {
@@ -61,12 +85,15 @@ export type CommunitySearchResult = {
   description: string | null;
   iconUrl: string | null;
   coverUrl: string | null;
+  isVerified: boolean;
   memberCount: number;
   joined: boolean;
   members: CommunityPerson[];
   mutuals: CommunityPerson[];
   mutualCount: number;
 };
+
+export const EMAIL_UNCONFIRMED_EVENT = "orbis:email-unconfirmed";
 
 export async function api(path: string, init?: RequestInit) {
   let res: Response;
@@ -77,6 +104,15 @@ export async function api(path: string, init?: RequestInit) {
   }
   if (res.status === 429) {
     throw new Error("You’re doing that too often. Try again in a minute.");
+  }
+  if (res.status === 403 && typeof window !== "undefined") {
+    res
+      .clone()
+      .json()
+      .then((body) => {
+        if (body?.code === "email_unconfirmed") window.dispatchEvent(new Event(EMAIL_UNCONFIRMED_EVENT));
+      })
+      .catch(() => undefined);
   }
   return res;
 }
@@ -125,6 +161,27 @@ export function login(credentials: LoginCredentials) {
   return authenticate("/auth/login", credentials);
 }
 
+export async function confirmEmail(token: string): Promise<void> {
+  const res = await api("/auth/confirm-email", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t confirm your email."));
+}
+
+export async function resendConfirmation(token: string): Promise<{ confirmed: boolean }> {
+  const res = await api("/auth/confirm-email/resend", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 429) throw new Error("You’ve asked for a few already. Try again in an hour.");
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t send the email."));
+  return res.json();
+}
+
 export async function getProfile(token: string): Promise<Profile | null> {
   const res = await api("/users", {
     headers: { Authorization: `Bearer ${token}` },
@@ -162,6 +219,8 @@ export type Post = {
   liked: boolean;
   previewComments: PreviewComment[];
   hiddenAt?: string | null;
+  editedAt?: string | null;
+  canDelete?: boolean;
   createdAt: string;
   author: Author;
   community: CommunitySummary | null;
@@ -180,6 +239,8 @@ export type Thread = {
   myVote: number;
   previewComments?: PreviewComment[];
   hiddenAt?: string | null;
+  editedAt?: string | null;
+  canDelete?: boolean;
   createdAt: string;
   author: Author;
   community: CommunitySummary;
@@ -203,7 +264,18 @@ export type SteamLink = {
   achievements: { achieved: number; total: number } | null;
 };
 
-export type NextStream = { startsAt: string; endsAt: string | null; title: string | null };
+export type NextStream = {
+  startsAt: string;
+  endsAt: string | null;
+  title: string | null;
+  channel: string | null;
+};
+
+export type CommunityConnectionSetting =
+  | "showTwitchLive"
+  | "showTwitchClips"
+  | "showDiscordOnline"
+  | "showDiscordInvite";
 
 export type Activity = {
   type: "activity";
@@ -239,10 +311,12 @@ export type DirectoryUser = {
   username: string;
   name: string | null;
   email: string;
+  emailVerifiedAt: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  isVerified: boolean;
   communityCount: number;
   createdAt: string;
 };
@@ -253,6 +327,7 @@ export type DirectoryCommunity = {
   iconUrl: string | null;
   coverUrl: string | null;
   isPublic: boolean;
+  isVerified: boolean;
   memberCount: number;
   owner: { id: number; username: string; name: string | null; avatarUrl: string | null };
   createdAt: string;
@@ -292,6 +367,9 @@ export type Comment = {
   score: number;
   myVote: number;
   hidden?: "review" | "reported" | null;
+  editedAt?: string | null;
+  deleted?: boolean;
+  canDelete?: boolean;
   createdAt: string;
   author: Author;
 };
@@ -312,6 +390,7 @@ export type Member = {
   name: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
+  isVerified: boolean;
   online: boolean;
   status: PresenceStatus;
   playing?: string | null;
@@ -323,7 +402,9 @@ export type Member = {
 
 export async function updatePreferences(
   token: string,
-  preferences: Partial<Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic" | "showNsfw">>,
+  preferences: Partial<
+    Pick<Profile, "theme" | "appearOffline" | "status" | "isPublic" | "showNsfw" | "showChangelog">
+  >,
 ): Promise<Profile> {
   const res = await api("/users/me/preferences", {
     method: "PATCH",
@@ -461,7 +542,9 @@ export async function createCommunity(
 export async function updateCommunity(
   token: string,
   communityId: number,
-  changes: Partial<Pick<Community, "name" | "isPublic" | "description">>,
+  changes: Partial<
+    Pick<Community, "name" | "isPublic" | "description" | "links" | CommunityConnectionSetting>
+  >,
 ): Promise<Community> {
   const res = await api(`/communities/${communityId}`, {
     method: "PATCH",
@@ -600,7 +683,7 @@ export type InvitePreview = {
   creator: InviteCreator;
   community: Pick<
     Community,
-    "id" | "name" | "iconUrl" | "coverUrl" | "backgroundUrl" | "isPublic"
+    "id" | "name" | "iconUrl" | "coverUrl" | "backgroundUrl" | "isPublic" | "isVerified"
   > & {
     memberCount: number;
   };
@@ -635,6 +718,18 @@ export async function createPermanentInvite(
 
   if (!res.ok) throw new Error("Couldn’t create the permanent QR. Please try again.");
   return res.json();
+}
+
+export async function downloadInviteCard(
+  token: string,
+  communityId: number,
+): Promise<Blob> {
+  const res = await api(`/communities/${communityId}/invites/permanent/card`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t create the card. Please try again."));
+  return res.blob();
 }
 
 export async function setInviteEnabled(
@@ -715,7 +810,7 @@ export async function getPosts(
   communityId: number,
   cursor?: string,
   excludedTypes: FeedContentType[] = [],
-): Promise<Page<Post | Activity>> {
+): Promise<Page<FeedEntry>> {
   const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor, exclude: excludedTypes.join(",") }), {
     headers: authHeaders(token),
   });
@@ -755,6 +850,15 @@ export async function createWallPost(
   if (res.status === 400) throw new Error("Write something before posting.");
   if (res.status === 403) throw new Error("Only friends can post on this wall.");
   if (!res.ok) throw new Error("Could not post. Please try again.");
+  return res.json();
+}
+
+export async function searchPosts(token: string, q: string): Promise<FeedItem[]> {
+  const res = await api(withQuery("/feed/search", { q }), {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("Could not search posts.");
   return res.json();
 }
 
@@ -866,6 +970,21 @@ export async function getMembers(
   return res.ok ? res.json() : [];
 }
 
+export async function setShowLibraryUpdates(
+  token: string,
+  communityId: number,
+  show: boolean,
+): Promise<{ showLibraryUpdates: boolean }> {
+  const res = await api(`/communities/${communityId}/library-updates`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ show }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t save that. Please try again."));
+  return res.json();
+}
+
 export async function setNickname(
   token: string,
   communityId: number,
@@ -886,6 +1005,7 @@ export type FriendUser = {
   username: string;
   name: string | null;
   avatarUrl: string | null;
+  isVerified?: boolean;
 };
 
 export type Friend = FriendUser & {
@@ -1136,14 +1256,105 @@ export async function removeGroupMember(
   if (!res.ok) throw new Error(await errorMessage(res, "Could not update the group."));
 }
 
+export async function getCommunityPost(
+  token: string | null,
+  communityId: number,
+  postId: number,
+): Promise<Post> {
+  const res = await api(`/communities/${communityId}/posts/${postId}`, {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("That post isn’t available.");
+  return res.json();
+}
+
+export async function getCommunityActivity(
+  token: string | null,
+  communityId: number,
+  activityId: number,
+): Promise<Activity> {
+  const res = await api(`/communities/${communityId}/posts/activities/${activityId}`, {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("That library update isn’t available.");
+  return res.json();
+}
+
+export async function updatePost(
+  token: string,
+  postId: number,
+  content: string,
+  linkUrl?: string,
+): Promise<Post> {
+  const res = await api(`/posts/${postId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content, linkUrl }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save the post."));
+  return res.json();
+}
+
+export async function deletePost(token: string, postId: number): Promise<void> {
+  const res = await api(`/posts/${postId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not delete the post."));
+}
+
+export async function updateThread(
+  token: string,
+  threadId: number,
+  thread: { title: string; content: string; linkUrl?: string },
+): Promise<Thread> {
+  const res = await api(`/threads/${threadId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(thread),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save the thread."));
+  return res.json();
+}
+
+export async function deleteThread(token: string, threadId: number): Promise<void> {
+  const res = await api(`/threads/${threadId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not delete the thread."));
+}
+
+export async function getThread(token: string | null, threadId: number): Promise<Thread> {
+  const res = await api(`/threads/${threadId}`, { headers: authHeaders(token) });
+
+  if (!res.ok) throw new Error("That thread isn’t available.");
+  return res.json();
+}
+
+export type ThreadRange = "day" | "week" | "month" | "year" | "all";
+
 export async function getThreads(
   token: string | null,
   communityId: number,
   sort: ThreadSort,
   cursor?: string,
+  range: ThreadRange = "all",
 ): Promise<Page<Thread>> {
   const res = await api(
-    withQuery(`/communities/${communityId}/threads`, { sort, cursor }),
+    withQuery(`/communities/${communityId}/threads`, { sort, cursor, range }),
     { headers: authHeaders(token) },
   );
 
@@ -1201,6 +1412,34 @@ export async function createComment(
   if (res.status === 400) throw new Error("Write something before commenting.");
   if (!res.ok) throw new Error("Could not post the comment. Please try again.");
   return res.json();
+}
+
+export async function updateComment(
+  token: string,
+  commentId: number,
+  content: string,
+  linkUrl?: string,
+): Promise<Comment> {
+  const res = await api(`/comments/${commentId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content, linkUrl }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save the comment."));
+  return res.json();
+}
+
+export async function deleteComment(token: string, commentId: number): Promise<void> {
+  const res = await api(`/comments/${commentId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not delete the comment."));
 }
 
 export async function setLike(
@@ -1442,6 +1681,15 @@ export async function getReports(token: string, hidden = false): Promise<Report[
   return res.json();
 }
 
+export async function searchReports(token: string, query: string): Promise<Report[]> {
+  const res = await api(`/reports/search?${new URLSearchParams({ q: query })}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not search tickets.");
+  return res.json();
+}
+
 export async function updateReportStatus(
   token: string,
   reportId: number,
@@ -1528,7 +1776,8 @@ export type NotificationType =
   | "report_status"
   | "report_assigned"
   | "report_comment"
-  | "wall_post";
+  | "wall_post"
+  | "mention";
 
 export type Notification = {
   id: number;
@@ -1606,6 +1855,7 @@ export type Onboarding = {
   checklistDismissed: boolean;
   completedTours: string[];
   steps: Record<OnboardingStep, boolean>;
+  used: { steam: boolean; connections: boolean; folders: boolean };
 };
 
 export async function getOnboarding(token: string): Promise<Onboarding> {
@@ -1648,8 +1898,10 @@ export type PublicProfile = {
   backgroundUrl: string | null;
   isAdmin: boolean;
   isHeadAdmin: boolean;
+  isVerified: boolean;
   isPublic: boolean;
   restricted: boolean;
+  hasClips: boolean;
   createdAt: string;
   online: boolean;
   status: PresenceStatus;
@@ -1661,6 +1913,7 @@ export type PublicProfile = {
     name: string;
     iconUrl: string | null;
     coverUrl: string | null;
+    isVerified: boolean;
     memberCount: number;
     isOwner: boolean;
   }[];
@@ -1670,6 +1923,7 @@ export type PublicProfile = {
     name: string | null;
     avatarUrl: string | null;
     coverUrl: string | null;
+    isVerified: boolean;
     online: boolean;
     status: PresenceStatus;
     playing?: string | null;
@@ -1715,6 +1969,40 @@ export async function setSiteAdmin(
     throw new Error(await errorMessage(res, "Could not update admin access. Please try again."));
   }
   return (await res.json()).isAdmin;
+}
+
+export async function setProfileVerified(
+  token: string,
+  username: string,
+  isVerified: boolean,
+): Promise<boolean> {
+  const res = await api(`/users/${encodeURIComponent(username)}/verified`, {
+    method: isVerified ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the head admin can verify profiles.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not update verification. Please try again."));
+  }
+  return (await res.json()).isVerified;
+}
+
+export async function setCommunityVerified(
+  token: string,
+  communityId: number,
+  isVerified: boolean,
+): Promise<boolean> {
+  const res = await api(`/communities/${communityId}/verified`, {
+    method: isVerified ? "PUT" : "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (res.status === 403) throw new Error("Only the head admin can verify communities.");
+  if (!res.ok) {
+    throw new Error(await errorMessage(res, "Could not update verification. Please try again."));
+  }
+  return (await res.json()).isVerified;
 }
 
 export async function uploadUserCover(token: string, file: File): Promise<Profile> {
@@ -1907,6 +2195,7 @@ export type PublicUser = {
   name: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
+  isVerified: boolean;
   online: boolean;
   activity: number;
 };
@@ -1947,16 +2236,25 @@ export type OAuthConnection = {
   provider: OAuthProvider;
   username: string;
   showLive: boolean;
+  showClips: boolean;
   connectedAt: string;
 };
 
 export type OAuthConnections = { hasPassword: boolean; connections: OAuthConnection[] };
+
+export type DiscordStatus = { online: number | null; inviteUrl: string | null };
+
+export type DiscordServer = { id: string; name: string; iconUrl: string | null };
+
+export type UnfinishedDiscord = { id: number; name: string; discordGuildName: string | null };
 
 export type OAuthResult = {
   access_token?: string;
   linked?: OAuthProvider;
   communityId?: number;
   signup?: { token: string; username: string; avatarUrl: string | null };
+  avatar?: { url: string; token: string };
+  servers?: { token: string; options: DiscordServer[] };
 };
 
 export async function getOAuthProviders(): Promise<OAuthProvider[]> {
@@ -1972,10 +2270,12 @@ export async function getOAuthUrl(
   token?: string,
   communityId?: number,
   client: "web" | "mobile" = "web",
+  target?: "channel",
 ): Promise<string> {
   const params = new URLSearchParams({ nonce });
   if (client !== "web") params.set("client", client);
   if (communityId !== undefined) params.set("communityId", String(communityId));
+  if (target) params.set("target", target);
   const path = communityId !== undefined ? "community-url" : token ? "link-url" : "url";
   const res = await api(
     `/auth/oauth/${provider}/${path}?${params}`,
@@ -2020,6 +2320,20 @@ export async function finishOAuthSignup(
   return res.json();
 }
 
+export async function acceptLinkedAvatar(token: string, offer: string): Promise<string> {
+  const res = await api("/auth/oauth/avatar", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token: offer }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t use that picture. Please try again."));
+  return (await res.json()).avatarUrl;
+}
+
 export async function getOAuthConnections(token: string): Promise<OAuthConnections> {
   const res = await api("/auth/oauth/connections", {
     headers: { Authorization: `Bearer ${token}` },
@@ -2044,6 +2358,143 @@ export async function setShowLive(
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Could not update this setting."));
+}
+
+export async function setShowClips(
+  token: string,
+  provider: OAuthProvider,
+  showClips: boolean,
+): Promise<void> {
+  const res = await api(`/auth/oauth/connections/${provider}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ showClips }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not update this setting."));
+}
+
+export type Clip = {
+  id: string;
+  title: string;
+  url: string;
+  thumbnailUrl: string;
+  viewCount: number;
+  duration: number;
+  creatorName: string;
+  createdAt: string;
+};
+
+export type ClipPage = { items: Clip[]; nextCursor: string | null };
+
+async function clipPage(path: string, token: string | null, cursor?: string): Promise<ClipPage> {
+  const query = cursor ? `?${new URLSearchParams({ cursor })}` : "";
+  const res = await api(`${path}${query}`, { headers: authHeaders(token) });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Couldn’t load the clips."));
+  return res.json();
+}
+
+export function getCommunityClips(token: string | null, communityId: number, cursor?: string) {
+  return clipPage(`/communities/${communityId}/clips`, token, cursor);
+}
+
+export function getUserClips(token: string | null, username: string, cursor?: string) {
+  return clipPage(`/users/${encodeURIComponent(username)}/clips`, token, cursor);
+}
+
+export async function connectDiscordServer(
+  token: string,
+  servers: string,
+  serverId: string,
+): Promise<{ communityId: number; name: string } & DiscordStatus> {
+  const res = await api("/auth/oauth/community-server", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ token: servers, serverId }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not connect that server."));
+  return res.json();
+}
+
+export async function getUnfinishedDiscord(token: string): Promise<UnfinishedDiscord[]> {
+  const res = await api("/communities/discord-setup", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not check your Discord connections.");
+  return res.json();
+}
+
+export async function disconnectCommunityDiscord(token: string, communityId: number): Promise<void> {
+  const res = await api(`/communities/${communityId}/discord`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect Discord."));
+}
+
+export type DiscordChannel = {
+  guildId: string;
+  guildName: string | null;
+  channelId: string;
+  isForum: boolean;
+  sendPosts: boolean;
+  sendThreads: boolean;
+  sendLibrary: boolean;
+  lostAt: string | null;
+  createdAt: string;
+};
+
+export type DiscordChannelSettings = Partial<
+  Pick<DiscordChannel, "sendPosts" | "sendThreads" | "sendLibrary">
+>;
+
+export async function getDiscordChannel(
+  token: string,
+  communityId: number,
+): Promise<DiscordChannel | null> {
+  const res = await api(`/communities/${communityId}/discord-channel`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not load the Discord channel."));
+  return (await res.json()).channel;
+}
+
+export async function updateDiscordChannel(
+  token: string,
+  communityId: number,
+  settings: DiscordChannelSettings,
+): Promise<DiscordChannel | null> {
+  const res = await api(`/communities/${communityId}/discord-channel`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(settings),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save that."));
+  return (await res.json()).channel;
+}
+
+export async function disconnectDiscordChannel(token: string, communityId: number): Promise<void> {
+  const res = await api(`/communities/${communityId}/discord-channel`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect the channel."));
 }
 
 export async function disconnectCommunityTwitch(token: string, communityId: number): Promise<void> {

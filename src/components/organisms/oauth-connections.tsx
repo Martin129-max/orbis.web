@@ -1,19 +1,99 @@
 "use client";
 
-import { Switch } from "antd";
+import { App, Modal, Switch } from "antd";
 import { useEffect, useState } from "react";
 import * as Atom from "@atom";
+import * as Molecule from "@molecule";
 import {
+  acceptLinkedAvatar,
   disconnectOAuth,
   getOAuthConnections,
   getOAuthProviders,
+  setShowClips,
   setShowLive,
   type OAuthConnections as Connections,
   type OAuthProvider,
 } from "@/lib/api";
-import { OAUTH_PROVIDERS, oauthColors, oauthLabels, startOAuth } from "@/lib/oauth";
+import {
+  clearPendingAvatar,
+  OAUTH_PROVIDERS,
+  oauthColors,
+  oauthLabels,
+  readPendingAvatar,
+  startOAuth,
+  type PendingAvatar,
+} from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 import { OAuthIcon } from "./oauth-buttons";
+
+function LinkedAvatarPrompt() {
+  const { message } = App.useApp();
+  const profile = useAuthStore((state) => state.profile);
+  const [offer, setOffer] = useState<PendingAvatar | null>(readPendingAvatar);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!offer || !profile || profile.avatarUrl) return null;
+  const label = oauthLabels[offer.provider];
+
+  function close() {
+    clearPendingAvatar();
+    setOffer(null);
+  }
+
+  async function accept() {
+    const { token } = useAuthStore.getState();
+    if (!token || !offer) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const avatarUrl = await acceptLinkedAvatar(token, offer.token);
+      useAuthStore.setState((state) =>
+        state.profile ? { profile: { ...state.profile, avatarUrl } } : state,
+      );
+      message.success("Profile picture updated.");
+      close();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <Modal
+      open
+      title={null}
+      footer={null}
+      onCancel={saving ? undefined : close}
+      mask={{ closable: !saving }}
+      closable={!saving}
+      width={420}
+      centered
+      styles={{ container: { padding: 24 } }}
+    >
+      <div className="flex flex-col gap-6">
+        <Molecule.ModalHeader
+          eyebrow={`${label} connected`}
+          title={`Use your ${label} picture?`}
+          description="It becomes your Orbis profile picture. You can change it any time."
+        />
+        <div className="flex justify-center">
+          <Atom.Avatar size="lg" label={profile.username} src={offer.url} seed={profile.userId} />
+        </div>
+        {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        <div className="flex justify-end gap-2 border-t border-divider pt-6">
+          <Atom.Button variant="secondary" onClick={close} disabled={saving}>
+            Not now
+          </Atom.Button>
+          <Atom.Button onClick={accept} loading={saving}>
+            Use picture
+          </Atom.Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
 
 export function OAuthConnections() {
   const [data, setData] = useState<{ enabled: OAuthProvider[]; connections: Connections } | null>(null);
@@ -44,7 +124,7 @@ export function OAuthConnections() {
     }
   }
 
-  async function toggleLive(showLive: boolean) {
+  async function toggleTwitch(setting: "showLive" | "showClips", value: boolean) {
     const { token } = useAuthStore.getState();
     if (!token || !data) return;
     setError(null);
@@ -54,12 +134,12 @@ export function OAuthConnections() {
       connections: {
         ...data.connections,
         connections: data.connections.connections.map((item) =>
-          item.provider === "twitch" ? { ...item, showLive } : item,
+          item.provider === "twitch" ? { ...item, [setting]: value } : item,
         ),
       },
     });
     try {
-      await setShowLive(token, "twitch", showLive);
+      await (setting === "showLive" ? setShowLive : setShowClips)(token, "twitch", value);
     } catch (e) {
       setData(before);
       setError(e instanceof Error ? e.message : "Something went wrong.");
@@ -136,16 +216,31 @@ export function OAuthConnections() {
               )}
               </div>
               {provider === "twitch" && connection && (
-                <label className="flex items-center justify-between gap-3 pl-11 text-xs">
-                  <span className="text-muted">Show when I’m live on Twitch</span>
-                  <Switch size="small" checked={connection.showLive} onChange={toggleLive} />
-                </label>
+                <>
+                  <label className="flex items-center justify-between gap-3 pl-11 text-xs">
+                    <span className="text-muted">Show when I’m live on Twitch</span>
+                    <Switch
+                      size="small"
+                      checked={connection.showLive}
+                      onChange={(value) => toggleTwitch("showLive", value)}
+                    />
+                  </label>
+                  <label className="flex items-center justify-between gap-3 pl-11 text-xs">
+                    <span className="text-muted">Show my Twitch clips on my profile</span>
+                    <Switch
+                      size="small"
+                      checked={connection.showClips}
+                      onChange={(value) => toggleTwitch("showClips", value)}
+                    />
+                  </label>
+                </>
               )}
             </li>
           );
         })}
       </ul>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+      <LinkedAvatarPrompt />
     </div>
   );
 }

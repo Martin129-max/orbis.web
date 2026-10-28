@@ -5,7 +5,9 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import {
   createComment,
+  deleteComment,
   getComments,
+  updateComment,
   type Comment,
   type Commentable,
 } from "@/lib/api";
@@ -14,8 +16,8 @@ import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
 import { useAuthStore } from "@/stores/auth-store";
 import { useOnboardingStore } from "@/stores/onboarding-store";
+import { ContentActions } from "./content-actions";
 import { PostComposer } from "./post-composer";
-import { ReportButton } from "./report-content";
 
 const MAX_INDENT = 5;
 
@@ -50,94 +52,127 @@ function CommentItem({
   canReply,
   onReply,
   onChange,
+  onDelete,
 }: {
   node: CommentNode;
   depth: number;
   canReply: boolean;
   onReply: (content: string, parentId: number, linkUrl?: string) => Promise<void>;
   onChange: (comment: Comment) => void;
+  onDelete: (comment: Comment) => Promise<void>;
 }) {
   const [replying, setReplying] = useState(false);
+  const [editing, setEditing] = useState(false);
   const author = displayName(node.author);
+
+  async function save(content: string, linkUrl?: string) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    onChange(await updateComment(token, node.id, content, linkUrl));
+  }
 
   return (
     <li className="flex flex-col gap-3">
-      <div className="flex flex-col gap-3">
-        <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
-          <Atom.Avatar
-            size="xs"
-            label={author}
-            src={node.author.avatarUrl}
-            seed={node.author.id}
-          />
-          <Molecule.UserLink username={node.author.username} className="text-foreground">
-            {author}
-          </Molecule.UserLink>
-          <time
-            dateTime={node.createdAt}
-            title={new Date(node.createdAt).toLocaleString()}
-          >
-            {timeAgo(node.createdAt)}
-          </time>
-        </p>
-        {node.hidden ? (
-          <p className="text-sm text-muted italic">
-            {node.hidden === "reported"
-              ? "You reported this comment."
-              : "This comment is hidden while admins review it."}
-          </p>
-        ) : (
-          <>
-            {node.content && (
-              <div
-                className="rich-text"
-                dangerouslySetInnerHTML={{ __html: node.content }}
-              />
-            )}
-            {node.linkUrl && <Molecule.LinkPreview url={node.linkUrl} />}
-          </>
-        )}
-        <div className="flex items-center gap-2">
-          <Molecule.VoteControl
-            symbols="thumbs"
-            orientation="horizontal"
-            score={node.score}
-            myVote={node.myVote}
-            onVote={(value) =>
-              castVote({ type: "comment", id: node.id }, node, value, (result) =>
-                onChange({ ...node, ...result }),
-              )
-            }
-          />
-          {canReply && (
-            <button
-              type="button"
-              onClick={() => setReplying((open) => !open)}
-              aria-expanded={replying}
-              className="focus-ring rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-foreground"
+      {node.deleted ? (
+        <p className="text-sm text-muted italic">Comment deleted</p>
+      ) : (
+        <div className="flex flex-col gap-3">
+          <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted">
+            <Atom.Avatar
+              size="xs"
+              label={author}
+              src={node.author.avatarUrl}
+              seed={node.author.id}
+            />
+            <Molecule.UserLink username={node.author.username} className="text-foreground">
+              {author}
+            </Molecule.UserLink>
+            <time
+              dateTime={node.createdAt}
+              title={new Date(node.createdAt).toLocaleString()}
             >
-              Reply
-            </button>
+              {timeAgo(node.createdAt)}
+            </time>
+            <Molecule.EditedMark editedAt={node.editedAt} />
+          </p>
+          {editing ? (
+            <PostComposer
+              autoFocus
+              linkPreview
+              initialContent={node.content}
+              initialLink={node.linkUrl}
+              submitLabel="Save"
+              onPost={save}
+              onPosted={() => setEditing(false)}
+              onCancel={() => setEditing(false)}
+            />
+          ) : node.hidden ? (
+            <p className="text-sm text-muted italic">
+              {node.hidden === "reported"
+                ? "You reported this comment."
+                : "This comment is hidden while admins review it."}
+            </p>
+          ) : (
+            <>
+              {node.content && (
+                <div
+                  className="rich-text"
+                  dangerouslySetInnerHTML={{ __html: node.content }}
+                />
+              )}
+              {node.linkUrl && <Molecule.LinkPreview url={node.linkUrl} />}
+            </>
           )}
-          <ReportButton type="comment" id={node.id} ownerId={node.author.id} variant="text" />
+          <div className="flex items-center gap-2">
+            <Molecule.VoteControl
+              symbols="thumbs"
+              orientation="horizontal"
+              score={node.score}
+              myVote={node.myVote}
+              onVote={(value) =>
+                castVote({ type: "comment", id: node.id }, node, value, (result) =>
+                  onChange({ ...node, ...result }),
+                )
+              }
+            />
+            {canReply && (
+              <button
+                type="button"
+                onClick={() => setReplying((open) => !open)}
+                aria-expanded={replying}
+                className="focus-ring rounded-sm px-1 text-xs font-semibold text-muted transition-colors hover:text-foreground"
+              >
+                Reply
+              </button>
+            )}
+            <ContentActions
+              type="comment"
+              id={node.id}
+              ownerId={node.author.id}
+              canDelete={node.canDelete}
+              onEdit={() => setEditing(true)}
+              onDelete={() => onDelete(node)}
+              variant="text"
+            />
+          </div>
+          {replying && (
+            <PostComposer
+              autoFocus
+              linkPreview
+              target={
+                <p className="text-xs text-muted">
+                  Replying to @{node.author.username}
+                </p>
+              }
+              placeholder="Write a reply…"
+              submitLabel="Reply"
+              onPost={(content, linkUrl) => onReply(content, node.id, linkUrl)}
+              onPosted={() => setReplying(false)}
+              onCancel={() => setReplying(false)}
+            />
+          )}
         </div>
-        {replying && (
-          <PostComposer
-            autoFocus
-            linkPreview
-            target={
-              <p className="text-xs text-muted">
-                Replying to @{node.author.username}
-              </p>
-            }
-            placeholder="Write a reply…"
-            submitLabel="Reply"
-            onPost={(content, linkUrl) => onReply(content, node.id, linkUrl)}
-            onPosted={() => setReplying(false)}
-            onCancel={() => setReplying(false)}
-          />
-        )}
-      </div>
+      )}
       {node.replies.length > 0 && (
         <ul
           className={`flex flex-col gap-6 ${
@@ -152,6 +187,7 @@ function CommentItem({
               canReply={canReply}
               onReply={onReply}
               onChange={onChange}
+              onDelete={onDelete}
             />
           ))}
         </ul>
@@ -194,8 +230,20 @@ export function CommentSection({
     useOnboardingStore.getState().refresh();
     const next = [...(comments ?? []), comment];
     setComments(next);
-    onCommentsChange(next);
+    onCommentsChange(next.filter((existing) => !existing.deleted));
   }
+
+  async function handleDelete(comment: Comment) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    await deleteComment(token, comment.id);
+    const next = await getComments(token, { type, id });
+    setComments(next);
+    onCommentsChange(next.filter((existing) => !existing.deleted));
+  }
+
+  const visible = comments?.filter((comment) => !comment.deleted);
 
   function handleChange(comment: Comment) {
     setComments((current) =>
@@ -209,8 +257,8 @@ export function CommentSection({
     <section aria-label="Comments" className="flex flex-col gap-6">
       <div className="flex items-baseline justify-between gap-3">
         <h3 className="font-display text-2xl font-bold">
-          {comments
-            ? `${comments.length} ${comments.length === 1 ? "comment" : "comments"}`
+          {visible
+            ? `${visible.length} ${visible.length === 1 ? "comment" : "comments"}`
             : "Comments"}
         </h3>
         <span className="text-xs text-muted">Oldest first</span>
@@ -259,6 +307,7 @@ export function CommentSection({
                 canReply={canComment}
                 onReply={handleReply}
                 onChange={handleChange}
+                onDelete={handleDelete}
               />
             ))}
           </ul>

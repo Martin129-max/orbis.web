@@ -9,6 +9,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { submitReport, type ReportCategory } from "@/lib/api";
 import { ticketNumber } from "@/lib/ticket";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 
 const categories: { value: ReportCategory; label: string }[] = [
@@ -138,6 +139,7 @@ function FeedbackModal({ open, onClose }: { open: boolean; onClose: () => void }
 
 export function FeedbackDock() {
   const profile = useAuthStore((state) => state.profile);
+  const readOnly = useReadOnly();
   const [open, setOpen] = useState(false);
   const dock = useRef<HTMLDivElement>(null);
   const signedIn = profile !== null;
@@ -192,13 +194,22 @@ export function FeedbackDock() {
             <Inbox size={20} />
           </Link>
         </Tooltip>
-        <Tooltip title="Send feedback" placement="left">
+        <Tooltip
+          title={readOnly ? "Confirm your email first to send feedback." : "Send feedback"}
+          placement="left"
+          classNames={readOnly ? { root: "touch-visible" } : undefined}
+        >
           <button
             type="button"
             aria-label="Send feedback"
+            aria-disabled={readOnly || undefined}
             data-tour="feedback"
-            onClick={() => setOpen(true)}
-            className={`${dockButton} border-transparent bg-accent text-accent-foreground hover:bg-accent/90`}
+            onClick={() => {
+              if (!readOnly) setOpen(true);
+            }}
+            className={`${dockButton} border-transparent bg-accent text-accent-foreground ${
+              readOnly ? "cursor-not-allowed! opacity-50" : "hover:bg-accent/90"
+            }`}
           >
             <MessageSquareWarning size={20} />
           </button>

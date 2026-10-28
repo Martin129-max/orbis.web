@@ -35,7 +35,7 @@ export const tourStops: TourStop[] = [
     placement: "right",
     title: "Your communities",
     description:
-      "Every community you’ve joined lives in this rail. Drag them to reorder, drop one onto another to make a folder, and click one to open its feed, forum, and members.",
+      "Every community you’ve joined lives in this rail. Drag them to reorder, drop one onto another to make a folder, and click one to open its feed, threads, and members.",
   },
   {
     target: "create",
@@ -55,13 +55,13 @@ export const tourStops: TourStop[] = [
     placement: "bottom",
     title: "Share something",
     description:
-      "Write a post for your wall, or pick one of your communities to share it there. Use the forum tab inside a community for longer discussions with votes.",
+      "Write a post for your wall, or pick one of your communities to share it there. Use the Threads tab inside a community for longer discussions with votes.",
   },
   {
     target: "feed-filters",
     placement: "bottom",
     title: "Choose your feed",
-    description: "Switch between Card and Compact view, and show or hide posts, forum threads, and library updates. Your choices are remembered across feeds on this browser.",
+    description: "Switch between Card and Compact view, and show or hide posts, threads, and library updates. Your choices are remembered across feeds on this browser.",
   },
   {
     target: "friend-requests",
@@ -77,10 +77,11 @@ export const tourStops: TourStop[] = [
       "Chat one-on-one or in groups of up to 20. New messages pop up in the corner, and messages from people who aren’t your friends wait in Requests.",
   },
   {
-    target: "add-friend",
+    target: "search",
     placement: "bottom",
-    title: "Find people",
-    description: "Search by name or username, then connect to send a friend request.",
+    title: "Search everything",
+    description:
+      "Find people, communities, anime, manga, games, and posts in one place. Open it from any page, or press Ctrl K (⌘K on a Mac).",
   },
   {
     target: "side-panel",
@@ -152,12 +153,12 @@ export const checklistItems: ChecklistItem[] = [
       </>
     ),
   },
-  { key: "post", title: "Share your first post", hint: "Use the box below or a community’s forum." },
+  { key: "post", title: "Share your first post", hint: "Use the box below or a community’s Threads tab." },
   { key: "comment", title: "Join a discussion", hint: "Open any post or thread and leave a comment." },
   {
     key: "friend",
     title: "Add a friend",
-    hint: "Search for someone at the top of the home page and connect.",
+    hint: "Use the search at the top to find someone, then connect.",
   },
   {
     key: "library",
@@ -301,9 +302,9 @@ export const pageTours = {
     {
       target: "community-tabs",
       placement: "bottom",
-      title: "Feed, forum, members",
+      title: "Posts and threads",
       description:
-        "The feed is for quick updates, the forum for longer discussions with votes, and Members shows everyone here.",
+        "Turn on Thread to start a longer discussion with a title and votes. Under the composer, All shows everything, and Hot, New, and Top show just threads.",
     },
     {
       target: "community-composer",
@@ -352,10 +353,10 @@ export const pageTours = {
   ],
   library: [
     {
-      target: "library-search",
+      target: "search",
       placement: "bottom",
       title: "Add anime, manga, and games",
-      description: "Search for a title and add it with a status and your episode or chapter progress.",
+      description: "Search for a title and add it to your library. On this page, titles show up first.",
     },
     {
       target: "library-tabs",
@@ -386,10 +387,10 @@ export const pageTours = {
   ],
   explore: [
     {
-      target: "explore-search",
+      target: "search",
       placement: "bottom",
       title: "Search communities",
-      description: "Find public communities by name and join them.",
+      description: "Find public communities by name and join them right from the results.",
     },
     {
       target: "explore-communities",
@@ -399,6 +400,13 @@ export const pageTours = {
     },
   ],
   reports: [
+    {
+      target: "search",
+      placement: "bottom",
+      title: "Search tickets",
+      description:
+        "Find a ticket by its number, message, or who sent it. On this page, tickets show up first, and on the Reported tab you can search reported content too.",
+    },
     {
       target: "reports-tabs",
       placement: "bottom",

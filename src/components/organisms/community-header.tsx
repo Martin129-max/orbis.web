@@ -1,12 +1,14 @@
 "use client";
 
-import { TwitchFilled } from "@ant-design/icons";
+import { DiscordFilled, TwitchFilled } from "@ant-design/icons";
+import { Tooltip } from "antd";
 import Image from "next/image";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { Community, CommunityImage, NextStream } from "@/lib/api";
 import { useCommunityStore } from "@/stores/community-store";
+import { CommunityLinkIcons } from "./community-links";
 import { ReportButton } from "./report-content";
 
 type ImageChange = (image: CommunityImage, file: File | null) => Promise<unknown>;
@@ -32,59 +34,100 @@ function countdown(ms: number) {
   return `${minutes}m ${seconds % 60}s`;
 }
 
-const scheduleTime = new Intl.DateTimeFormat(undefined, {
-  weekday: "long",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
 function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
   const now = useNow();
   const startsAt = Date.parse(next.startsAt);
   const endsAt = next.endsAt ? Date.parse(next.endsAt) : startsAt + STARTING_SOON_MS;
   if (now >= endsAt) return null;
 
-  const when = scheduleTime.format(startsAt);
-  const label = now < startsAt ? `Next stream in ${countdown(startsAt - now)}` : "Starting soon";
+  const remaining = now < startsAt ? countdown(startsAt - now) : null;
 
   return (
-    <a
-      href={`https://www.twitch.tv/${login}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      title={next.title ? `${next.title} · ${when}` : when}
-      className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
+    <Tooltip
+      placement="bottom"
+      classNames={{ root: "touch-visible" }}
+      title={`Follow ${next.channel ?? login} on Twitch`}
     >
-      <TwitchFilled aria-hidden className="text-[#9146FF]" />
-      {label}
-    </a>
+      <a
+        href={`https://www.twitch.tv/${login}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
+      >
+        <TwitchFilled aria-hidden className="text-[#9146FF]" />
+        {remaining ? (
+          <>
+            <span className="sr-only">Next stream in </span>
+            {remaining}
+          </>
+        ) : (
+          "Starting soon"
+        )}
+      </a>
+    </Tooltip>
   );
 }
 
 function StreamCorner({ community, live }: { community: Community; live: boolean }) {
   const login = community.twitchLogin;
-  if (!login || (!live && !community.nextStream)) return null;
+  if (!login || community.showTwitchLive === false) return null;
+  if (!live && !community.nextStream) return null;
 
-  return (
-    <div className="absolute top-2.5 left-4 sm:top-4 sm:left-8">
-      {live ? (
-        <a
-          href={`https://www.twitch.tv/${login}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-[#9146FF] px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#772ce8]"
-        >
-          <TwitchFilled aria-hidden />
-          Watch on Twitch
-        </a>
-      ) : (
-        community.nextStream && <StreamCountdown login={login} next={community.nextStream} />
-      )}
-    </div>
+  return live ? (
+    <a
+      href={`https://www.twitch.tv/${login}`}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-[#9146FF] px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#772ce8]"
+    >
+      <TwitchFilled aria-hidden />
+      Watch on Twitch
+    </a>
+  ) : (
+    community.nextStream && <StreamCountdown login={login} next={community.nextStream} />
   );
 }
+
+function DiscordCorner({ community }: { community: Community }) {
+  const name = community.discordGuildName;
+  const discord = community.discord;
+  const online = community.showDiscordOnline === false ? null : (discord?.online ?? null);
+  const inviteUrl = community.showDiscordInvite === false ? null : (discord?.inviteUrl ?? null);
+  if (!name || (online === null && !inviteUrl)) return null;
+
+  const className =
+    "focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur";
+  const content = (
+    <>
+      <DiscordFilled aria-hidden className="text-[#5865F2]" />
+      <span className="sr-only">{name} on Discord: </span>
+      {online === null ? "Join Discord" : `${online.toLocaleString()} online`}
+    </>
+  );
+
+  return (
+    <Tooltip
+      placement="bottom"
+      title={inviteUrl ? `Join ${name} on Discord` : `${name} on Discord`}
+    >
+      {inviteUrl ? (
+        <a
+          href={inviteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={`${className} transition-colors hover:bg-surface`}
+        >
+          {content}
+        </a>
+      ) : (
+        <span className={className}>{content}</span>
+      )}
+    </Tooltip>
+  );
+}
+
+const ICON_MAX_SIZE = 512;
+const COVER_HEIGHT = { phone: 176, desktop: 256 };
 
 function CommunityBadge({
   community,
@@ -114,6 +157,7 @@ function CommunityBadge({
       hasImage={Boolean(community.iconUrl)}
       onUpload={(file) => onImage("icon", file)}
       onRemove={() => onImage("icon", null)}
+      crop={{ aspect: 1, round: true, maxSize: ICON_MAX_SIZE }}
     >
       {(busy) => (
         <button
@@ -134,21 +178,36 @@ export function CommunityHeader({
   community,
   collapsed,
   actions,
+  adminAction,
   onImage,
 }: {
   community: Community;
   collapsed: boolean;
   actions: ReactNode;
+  adminAction?: ReactNode;
   onImage?: ImageChange;
 }) {
   const storeLive = useCommunityStore(
     (state) => state.communities.find((item) => item.id === community.id)?.live,
   );
   const live = storeLive ?? community.live ?? false;
+  const header = useRef<HTMLElement>(null);
+
+  function coverAspect() {
+    const desktop = window.matchMedia("(min-width: 40rem)").matches;
+    return Molecule.coverAspect(
+      header.current?.offsetWidth ?? 0,
+      community.coverUrl
+        ? (header.current?.offsetHeight ?? 0)
+        : desktop
+          ? COVER_HEIGHT.desktop
+          : COVER_HEIGHT.phone,
+    );
+  }
 
   if (!community.coverUrl) {
     return (
-      <header className="flex h-14 shrink-0 items-center gap-6 border-b border-divider px-4 sm:h-[72px] sm:px-8">
+      <header ref={header} className="flex h-14 shrink-0 items-center gap-6 border-b border-divider px-4 sm:h-[72px] sm:px-8">
         <div className="flex min-w-0 flex-1 items-center gap-3">
           <CommunityBadge
             community={community}
@@ -156,13 +215,18 @@ export function CommunityHeader({
             className="h-8 w-8 text-[17px] sm:h-10 sm:w-10 sm:text-[22px]"
             live={live ? { ring: "ring-2 ring-danger ring-offset-2 ring-offset-background" } : undefined}
           />
-          <Atom.Heading className="min-w-0 truncate">{community.name}</Atom.Heading>
+          <Atom.Heading className="flex min-w-0 items-center gap-1.5">
+            <span className="truncate">{community.name}</span>
+            {community.isVerified && <Atom.VerifiedBadge size="heading" />}
+          </Atom.Heading>
           {live && <span className="sr-only">Live on Twitch</span>}
         </div>
         <div className="flex shrink-0 items-center gap-2">
+          {adminAction}
           {onImage && (
             <Molecule.CoverButton
               hasImage={false}
+              aspect={coverAspect}
               onUpload={(file) => onImage("cover", file)}
               onRemove={() => onImage("cover", null)}
             />
@@ -178,6 +242,7 @@ export function CommunityHeader({
 
   return (
     <header
+      ref={header}
       className={`relative shrink-0 overflow-hidden border-b border-divider transition-[height] duration-300 ease-out motion-reduce:transition-none ${
         collapsed ? "h-14 sm:h-[72px]" : "h-44 sm:h-64"
       }`}
@@ -207,22 +272,39 @@ export function CommunityHeader({
           live={live ? { ring: "ring-2 ring-danger", large: !collapsed } : undefined}
         />
         <Atom.Heading
-          className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+          className={`flex min-w-0 items-center gap-1.5 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
             collapsed ? "" : "sm:text-4xl"
           }`}
         >
-          {community.name}
+          <span className="truncate">{community.name}</span>
+          {community.isVerified && <Atom.VerifiedBadge size="heading" />}
         </Atom.Heading>
         {live && <span className="sr-only">Live on Twitch</span>}
       </div>
-      {!collapsed && <StreamCorner community={community} live={live} />}
-      <div className="absolute top-2.5 right-4 flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur sm:top-4 sm:right-8">
-        <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
-        {actions}
+      <div className="pointer-events-none absolute top-2.5 right-4 left-4 flex items-start gap-2 sm:top-4 sm:right-8 sm:left-8">
+        {!collapsed && (
+          <div className="pointer-events-auto flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <StreamCorner community={community} live={live} />
+            <DiscordCorner community={community} />
+            <CommunityLinkIcons name={community.name} links={community.links} />
+          </div>
+        )}
+        <div className="pointer-events-auto ml-auto flex shrink-0 items-center gap-2">
+          {adminAction && !collapsed && (
+            <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+              {adminAction}
+            </div>
+          )}
+          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur empty:hidden">
+            <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
+            {actions}
+          </div>
+        </div>
       </div>
       {onImage && !collapsed && (
         <Molecule.CoverButton
           hasImage
+          aspect={coverAspect}
           onUpload={(file) => onImage("cover", file)}
           onRemove={() => onImage("cover", null)}
           className="absolute right-4 bottom-4 sm:right-8 sm:bottom-6"

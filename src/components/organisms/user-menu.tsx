@@ -1,7 +1,7 @@
 "use client";
 
 import { Popover } from "antd";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Settings, Sparkles, User } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -84,6 +84,10 @@ export function UserMenu() {
           <Link href="/settings" onClick={() => setOpen(false)} className={menuRow}>
             <Settings size={18} />
             Settings
+          </Link>
+          <Link href="/changelog" onClick={() => setOpen(false)} className={menuRow}>
+            <Sparkles size={18} />
+            What’s new
           </Link>
           <button
             type="button"

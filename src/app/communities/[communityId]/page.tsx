@@ -1,12 +1,11 @@
 "use client";
 
 import {
+  Clapperboard,
   Globe,
   Lock,
-  MessagesSquare,
   Newspaper,
   UserCog,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -18,6 +17,7 @@ import * as Template from "@template";
 import {
   canManage,
   getCommunity,
+  setCommunityVerified,
   type Community,
   type CommunityImage,
 } from "@/lib/api";
@@ -27,19 +27,20 @@ import { useCommunityStore } from "@/stores/community-store";
 type Loaded = { id: string; community: Community | null; failed?: boolean };
 
 const tabs = [
-  { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
-  { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
-  { value: "members", label: "Members", icon: <Users size={16} /> },
+  { value: "feed", label: "Posts", icon: <Newspaper size={16} /> },
+  { value: "clips", label: "Clips", icon: <Clapperboard size={16} /> },
 ] as const;
 
-type Tab = (typeof tabs)[number]["value"];
+const pages = ["feed", "forum", "members", "clips"] as const;
+
+type Tab = (typeof pages)[number];
 
 export default function CommunityPage() {
   const { communityId } = useParams<{ communityId: string }>();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const requested = useSearchParams().get("tab");
-  const tab: Tab =
-    tabs.find(({ value }) => value === requested)?.value ?? "feed";
+  const tab: Tab = pages.find((value) => value === requested) ?? "feed";
+  const section = tab === "forum" ? "feed" : tab;
   const [collapsed, setCollapsed] = useState(false);
   const setCommunityImage = useCommunityStore(
     (state) => state.setCommunityImage,
@@ -74,6 +75,18 @@ export default function CommunityPage() {
     }
   }
 
+  async function handleVerified(isVerified: boolean) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const verified = await setCommunityVerified(token, Number(communityId), isVerified);
+    setLoaded((current) =>
+      current?.id === communityId && current.community
+        ? { ...current, community: { ...current.community, isVerified: verified } }
+        : current,
+    );
+  }
+
   function handleScroll(event: UIEvent<HTMLDivElement>) {
     const { scrollTop, scrollHeight, clientHeight } = event.currentTarget;
     const room = scrollHeight - clientHeight;
@@ -94,6 +107,7 @@ export default function CommunityPage() {
 
   const current = loaded?.id === communityId ? loaded : null;
   const signedIn = useAuthStore((state) => Boolean(state.token));
+  const headAdmin = useAuthStore((state) => Boolean(state.profile?.isHeadAdmin));
   const joinPrompt =
     current?.community && !current.community.role ? (
       <Organism.JoinCommunityPrompt
@@ -124,17 +138,24 @@ export default function CommunityPage() {
         </Template.CenteredTemplate>
       ) : (
         <main className="flex min-h-0 flex-1 flex-col">
-          <Organism.PageSearch>
-            <Organism.CommunityContentSearch
-              key={current.community.id}
-              communityId={current.community.id}
-              communityName={current.community.name}
-            />
-          </Organism.PageSearch>
+          <Organism.CommunitySearchScope
+            key={current.community.id}
+            communityId={current.community.id}
+            communityName={current.community.name}
+          />
           <Organism.CommunityHeader
             community={current.community}
             collapsed={collapsed}
             onImage={canManage(current.community) ? handleImage : undefined}
+            adminAction={
+              headAdmin && (
+                <Organism.VerifyToggle
+                  compact
+                  verified={current.community.isVerified}
+                  onToggle={handleVerified}
+                />
+              )
+            }
             actions={
               current.community.role && (
                 <>
@@ -156,29 +177,38 @@ export default function CommunityPage() {
             }
           />
           {!joinPrompt && <Organism.PageTour name="community" />}
+          <Organism.LinkedDiscussion
+            key={`linked-${current.community.id}`}
+            communityId={current.community.id}
+          />
           <nav
             aria-label="Community sections"
-            data-tour="community-tabs"
-            className="flex shrink-0 items-end gap-6 border-b border-divider px-4 sm:px-8"
+            className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
           >
-            {tabs.map(({ value, label, icon }) => (
-              <Link
-                key={value}
-                href={`/communities/${current.community!.id}${
-                  value === "feed" ? "" : `?tab=${value}`
-                }`}
-                aria-current={tab === value ? "page" : undefined}
-                className={`focus-ring -mb-px flex items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
-                  tab === value
-                    ? "border-accent text-accent"
-                    : "border-transparent font-semibold text-foreground hover:text-accent"
-                }`}
-              >
-                {icon}
-                {label}
-              </Link>
-            ))}
-            <p className="ml-auto hidden items-center gap-2 self-center text-xs text-muted sm:flex">
+            {tabs
+              .filter(
+                ({ value }) =>
+                  value !== "clips" ||
+                  (current.community!.twitchLogin && current.community!.showTwitchClips !== false),
+              )
+              .map(({ value, label, icon }) => (
+                <Link
+                  key={value}
+                  href={`/communities/${current.community!.id}${
+                    value === "feed" ? "" : `?tab=${value}`
+                  }`}
+                  aria-current={section === value ? "page" : undefined}
+                  className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+                    section === value
+                      ? "border-accent text-accent"
+                      : "border-transparent font-semibold text-foreground hover:text-accent"
+                  }`}
+                >
+                  {icon}
+                  {label}
+                </Link>
+              ))}
+            <p className="ml-auto hidden shrink-0 items-center gap-2 self-center text-xs text-muted sm:flex">
               {current.community.isPublic ? (
                 <Globe size={14} aria-hidden />
               ) : (
@@ -208,22 +238,25 @@ export default function CommunityPage() {
               }
             />
             <Template.PageColumn onScroll={handleScroll}>
-              {tab === "members" ? (
+              {tab === "clips" &&
+              current.community.twitchLogin &&
+              current.community.showTwitchClips !== false ? (
+                <Organism.TwitchClips
+                  key={current.community.id}
+                  communityId={current.community.id}
+                  name={current.community.name}
+                />
+              ) : tab === "members" ? (
                 <Organism.MemberList
                   key={current.community.id}
                   communityId={current.community.id}
                 />
-              ) : tab === "forum" ? (
-                <Organism.CommunityForum
-                  key={current.community.id}
-                  communityId={current.community.id}
-                  joinPrompt={joinPrompt}
-                />
               ) : (
                 <Organism.CommunityFeed
-                  key={current.community.id}
+                  key={`${current.community.id}-${tab}`}
                   communityId={current.community.id}
                   joinPrompt={joinPrompt}
+                  initialSort={tab === "forum" ? "hot" : "all"}
                 />
               )}
             </Template.PageColumn>
@@ -243,6 +276,7 @@ export default function CommunityPage() {
               <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}
+                seeAllHref={`/communities/${current.community.id}?tab=members`}
               />
             </Organism.SidePanel>
           </div>

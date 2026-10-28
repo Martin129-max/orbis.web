@@ -18,7 +18,7 @@ const labels: { key: keyof Stats; label: string; icon: LucideIcon }[] = [
   { key: "members", label: "Members", icon: Users },
   { key: "communities", label: "Communities", icon: Building2 },
   { key: "posts", label: "Posts", icon: FileText },
-  { key: "threads", label: "Forum threads", icon: MessagesSquare },
+  { key: "threads", label: "Threads", icon: MessagesSquare },
   { key: "comments", label: "Comments", icon: MessageCircle },
 ];
 

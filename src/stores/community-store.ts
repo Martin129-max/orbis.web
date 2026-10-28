@@ -1,18 +1,26 @@
 import { create } from "zustand";
 import * as api from "@/lib/api";
-import type { Community, CommunityImage, RailItem } from "@/lib/api";
+import type {
+  Community,
+  CommunityConnectionSetting,
+  CommunityImage,
+  RailItem,
+} from "@/lib/api";
 import { useAuthStore } from "./auth-store";
 
 type CommunityState = {
   communities: Community[];
   layout: RailItem[];
+  loaded: boolean;
   fetchCommunities: () => Promise<void>;
   createCommunity: (name: string, isPublic: boolean) => Promise<Community>;
   joinCommunity: (communityId: number) => Promise<Community>;
   acceptInvite: (code: string) => Promise<Community>;
   updateCommunity: (
     communityId: number,
-    changes: Partial<Pick<Community, "name" | "isPublic" | "description">>,
+    changes: Partial<
+      Pick<Community, "name" | "isPublic" | "description" | "links" | CommunityConnectionSetting>
+    >,
   ) => Promise<Community>;
   setCommunityImage: (
     communityId: number,
@@ -41,11 +49,12 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
       ),
     })),
   communities: [],
+  loaded: false,
   layout: [],
   fetchCommunities: async () => {
     const { token } = useAuthStore.getState();
     if (!token) {
-      set({ communities: [], layout: [] });
+      set({ communities: [], layout: [], loaded: false });
       return;
     }
 
@@ -53,7 +62,7 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
       api.getCommunities(token).catch(() => null),
       api.getRailLayout(token).catch(() => null),
     ]);
-    if (communities) set({ communities });
+    if (communities) set({ communities, loaded: true });
     if (layout) set({ layout });
   },
   createCommunity: async (name, isPublic) => {
@@ -96,6 +105,10 @@ export const useCommunityStore = create<CommunityState>()((set, get) => ({
               name: updated.name,
               description: updated.description,
               isPublic: updated.isPublic,
+              showTwitchLive: updated.showTwitchLive,
+              showTwitchClips: updated.showTwitchClips,
+              showDiscordOnline: updated.showDiscordOnline,
+              showDiscordInvite: updated.showDiscordInvite,
             }
           : community,
       ),

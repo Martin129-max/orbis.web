@@ -8,6 +8,7 @@ import { displayName } from "@/lib/display-name";
 import { activityText, mediaPath, progressText } from "@/lib/library";
 import { timeAgo } from "@/lib/time";
 import { castVote, toggleLike } from "@/lib/votes";
+import { useLikeBlockedReason } from "./post-card";
 import { HiddenNotice, ReportButton } from "./report-content";
 
 export function CompactFeedItem({
@@ -22,6 +23,7 @@ export function CompactFeedItem({
   onChange: (item: FeedEntry) => void;
 }) {
   const community = item.type !== "activity" ? item.community : null;
+  const likeBlockedReason = useLikeBlockedReason(item.type === "post" ? item : null);
   const wallUser =
     item.type === "post" && item.wallUser?.id !== item.author.id
       ? item.wallUser
@@ -136,6 +138,7 @@ export function CompactFeedItem({
             <Molecule.LikeButton
               liked={item.liked}
               count={item.likeCount}
+              disabledReason={likeBlockedReason}
               onToggle={() =>
                 toggleLike({ type: item.type, id: item.id }, item, (result) =>
                   onChange({ ...item, ...result }),

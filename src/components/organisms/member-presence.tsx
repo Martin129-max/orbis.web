@@ -6,6 +6,7 @@ import { getMembers, type Member, type PresenceStatus } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { useAuthStore } from "@/stores/auth-store";
 import { useFriendsStore } from "@/stores/friends-store";
+import { useLayoutStore } from "@/stores/layout-store";
 import { PersonRow } from "./person-row";
 import { PanelHeading } from "./side-panel";
 
@@ -49,7 +50,13 @@ function PresenceGroup({
   );
 }
 
-export function MemberPresence({ communityId }: { communityId: number }) {
+export function MemberPresence({
+  communityId,
+  seeAllHref,
+}: {
+  communityId: number;
+  seeAllHref?: string;
+}) {
   const [members, setMembers] = useState<Member[]>([]);
   const profile = useAuthStore((state) => state.profile);
   const presence = useFriendsStore((state) => state.presence);
@@ -88,6 +95,13 @@ export function MemberPresence({ communityId }: { communityId: number }) {
         online={false}
         emptyText="Everyone is online."
       />
+      {seeAllHref && (
+        <div onClick={() => useLayoutStore.getState().closeDrawer()}>
+          <Atom.ButtonLink href={seeAllHref} variant="secondary" block>
+            See all members
+          </Atom.ButtonLink>
+        </div>
+      )}
     </>
   );
 }

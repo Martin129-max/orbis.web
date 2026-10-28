@@ -1,7 +1,7 @@
 "use client";
 
 import { Select, Tooltip } from "antd";
-import { EyeOff, Flag, Inbox, KanbanSquare, List, Search } from "lucide-react";
+import { EyeOff, Flag, Inbox, KanbanSquare, List } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -24,6 +24,7 @@ import {
 } from "./report-board";
 import { SidePanel } from "./side-panel";
 import { PageTour } from "./onboarding";
+import { SearchScope } from "./site-search";
 
 const tabs = [
   { value: "board", label: "Board", icon: <KanbanSquare size={16} /> },
@@ -75,7 +76,7 @@ function AdminReports() {
     hidden: "list",
     reported: "list",
   });
-  const [filter, setFilter] = useState<ReportFilter>({ assignee: "anyone", category: "all", query: "" });
+  const [filter, setFilter] = useState<ReportFilter>({ assignee: "anyone", category: "all" });
   const [patch, setPatch] = useState<Report | null>(null);
 
   useEffect(() => {
@@ -98,19 +99,8 @@ function AdminReports() {
 
   return (
     <>
-      <Template.PageHeader
-        center={
-          <Atom.Input
-            aria-label="Search reports"
-            allowClear
-            prefix={<Search size={16} className="text-muted" />}
-            placeholder="Search by ticket, message or name…"
-            autoComplete="off"
-            value={filter.query}
-            onChange={(event) => setFilter({ ...filter, query: event.target.value })}
-          />
-        }
-      >
+      <SearchScope lead="tickets" />
+      <Template.PageHeader>
         <Atom.Heading>Reports</Atom.Heading>
       </Template.PageHeader>
       <nav
@@ -196,7 +186,7 @@ function AdminReports() {
       <div className="flex min-h-0 flex-1">
         <div className={content}>
           {tab === "reported" ? (
-            <ReportedContent query={filter.query} />
+            <ReportedContent />
           ) : tab === "hidden" ? (
             <HiddenReports {...listProps} />
           ) : (

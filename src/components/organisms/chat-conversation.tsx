@@ -1,7 +1,7 @@
 "use client";
 
 import { Popover } from "antd";
-import { Check, CornerUpLeft, Pencil, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
+import { Check, CornerUpLeft, Lock, Pencil, SendHorizontal, Smile, SmilePlus, X } from "lucide-react";
 import {
   useEffect,
   useLayoutEffect,
@@ -25,6 +25,7 @@ import type {
 import { chatTitle, MESSAGE_REACTIONS } from "@/lib/chat";
 import { displayName } from "@/lib/display-name";
 import { TEXT_LINK, trimLink, webUrl } from "@/lib/links";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 import { emitTyping } from "@/stores/friends-store";
 import { markViewing, useMessagesStore } from "@/stores/messages-store";
@@ -123,6 +124,7 @@ function Conversation({
   const loadOlder = useMessagesStore((state) => state.loadOlder);
   const markRead = useMessagesStore((state) => state.markRead);
   const react = useMessagesStore((state) => state.react);
+  const readOnly = useReadOnly();
   const [replyTo, setReplyTo] = useState<ChatMessage | null>(null);
   const [editing, setEditing] = useState<ChatMessage | null>(null);
   const [draft, setDraft] = useState("");
@@ -318,12 +320,12 @@ function Conversation({
                           <Reactions
                             reactions={message.reactions}
                             me={me}
-                            disabled={request}
+                            disabled={request || readOnly}
                             onReact={reactWith}
                           />
                         )}
                       </div>
-                      {!request && (
+                      {!request && !readOnly && (
                         <MessageActions
                           mine={mine}
                           onReact={reactWith}
@@ -581,6 +583,7 @@ function Composer({
   const { id } = conversation;
   const send = useMessagesStore((state) => state.send);
   const edit = useMessagesStore((state) => state.edit);
+  const readOnly = useReadOnly();
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLTextAreaElement>(null);
   const [picking, setPicking] = useState(false);
@@ -690,6 +693,15 @@ function Composer({
       event.preventDefault();
       submit();
     }
+  }
+
+  if (readOnly) {
+    return (
+      <p className="flex items-center gap-2 border-t border-divider p-3 text-xs text-muted">
+        <Lock size={14} aria-hidden className="shrink-0" />
+        Confirm your email to send messages.
+      </p>
+    );
   }
 
   return (

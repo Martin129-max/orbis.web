@@ -20,12 +20,17 @@ type PostListProps<T extends FeedEntry> = {
   empty: { title: ReactNode; description: ReactNode; action?: ReactNode };
   end?: ReactNode;
   showCommunity?: boolean;
+  filterControl?: ReactNode;
 };
 
 export function PostList<T extends FeedEntry>(props: PostListProps<T>) {
   return (
     <div className="flex flex-col gap-3">
-      <FeedFilters types={props.feed.contentTypes} trailing={props.trailing} />
+      <FeedFilters
+        types={props.feed.contentTypes}
+        trailing={props.trailing}
+        filterControl={props.filterControl}
+      />
       <PostListContent {...props} />
     </div>
   );
@@ -43,6 +48,7 @@ function PostListContent<T extends FeedEntry>({
   const [openKey, setOpenKey] = useState<string | null>(null);
   const open = items?.find((item) => itemKey(item) === openKey) ?? null;
   const update = (item: FeedEntry) => feed.update(item as T);
+  const remove = (item: FeedEntry) => feed.remove(item as T);
 
   if (failed && !items) {
     return (
@@ -124,6 +130,7 @@ function PostListContent<T extends FeedEntry>({
               showCommunity={showCommunity}
               onOpen={() => setOpenKey(itemKey(item))}
               onChange={update}
+              onDelete={remove}
             />
           ) : (
             <PostCard
@@ -132,6 +139,7 @@ function PostListContent<T extends FeedEntry>({
               showCommunity={showCommunity}
               onOpenComments={() => setOpenKey(itemKey(item))}
               onChange={update}
+              onDelete={remove}
             />
           ),
         )}
@@ -149,6 +157,7 @@ function PostListContent<T extends FeedEntry>({
         item={open}
         onClose={() => setOpenKey(null)}
         onChange={update}
+        onDelete={remove}
       />
     </div>
   );

@@ -25,8 +25,9 @@ export function InviteSummary({ invite }: { invite: InvitePreview }) {
           <p className="text-xs text-muted">
             {displayName(creator)} invited you to join
           </p>
-          <h2 className="truncate font-display text-2xl leading-tight font-bold">
-            {community.name}
+          <h2 className="flex min-w-0 items-center gap-1.5 font-display text-2xl leading-tight font-bold">
+            <span className="truncate">{community.name}</span>
+            {community.isVerified && <Atom.VerifiedBadge size="heading" />}
           </h2>
           <p className="flex items-center gap-3 text-xs text-muted">
             <span className="flex items-center gap-1">

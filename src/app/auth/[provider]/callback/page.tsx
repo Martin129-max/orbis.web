@@ -10,6 +10,8 @@ import {
   isMobileOAuthState,
   isOAuthProvider,
   oauthLabels,
+  saveDiscordServers,
+  savePendingAvatar,
   savePendingSignup,
   takeOAuthNonce,
 } from "@/lib/oauth";
@@ -61,9 +63,13 @@ function Callback() {
         savePendingSignup({ provider, ...result.signup });
         router.replace("/register/username");
       } else if (result.communityId) {
-        router.replace(`/communities/${result.communityId}/settings`);
+        if (result.servers) {
+          saveDiscordServers({ communityId: result.communityId, ...result.servers });
+        }
+        router.replace(`/communities/${result.communityId}/settings?tab=connections`);
       } else {
-        router.replace("/settings");
+        if (result.avatar) savePendingAvatar({ provider, ...result.avatar });
+        router.replace("/settings?tab=connections");
       }
     }
 
@@ -78,7 +84,7 @@ function Callback() {
         <Atom.Heading>Couldn’t continue with {label}</Atom.Heading>
         <Atom.ErrorMessage>{error}</Atom.ErrorMessage>
         <Link
-          href={signedIn ? "/settings" : "/login"}
+          href={signedIn ? "/settings?tab=connections" : "/login"}
           className="focus-ring rounded-sm text-sm text-accent hover:underline"
         >
           {signedIn ? "Back to settings" : "Back to log in"}

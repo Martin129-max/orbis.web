@@ -3,11 +3,11 @@
 import {
   Boxes,
   CalendarDays,
+  Clapperboard,
   Library,
   Lock,
   Newspaper,
-  ShieldCheck,
-  ShieldOff,
+  UserPlus,
   Users,
   UserX,
 } from "lucide-react";
@@ -15,7 +15,7 @@ import { App, Tooltip } from "antd";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState, type ReactNode, type UIEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type UIEvent } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Template from "@template";
@@ -26,7 +26,7 @@ import {
   removeAvatar,
   removeUserBackground,
   removeUserCover,
-  setSiteAdmin,
+  setProfileVerified,
   uploadAvatar,
   uploadUserBackground,
   uploadUserCover,
@@ -44,12 +44,14 @@ import { FriendAction } from "./member-list";
 import { ReportButton } from "./report-content";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
-import { ProfileContentSearch } from "./content-search";
-import { PageSearch } from "./page-search";
+import { ProfileSearchScope } from "./content-search";
 import { ProfileLibrary } from "./profile-library";
 import { PanelHeading, SidePanel } from "./side-panel";
+import { TwitchClips } from "./twitch-clips";
 import { PageTour } from "./onboarding";
 import { PersonRow } from "./person-row";
+import { VerifyToggle } from "./verify-toggle";
+import { AdminToggle } from "./admin-toggle";
 import type { PresenceStatus } from "@/lib/api";
 import { presenceDot, presenceLabel } from "@/lib/presence";
 
@@ -58,6 +60,7 @@ const tabs = [
   { value: "library", label: "Library", icon: <Library size={16} /> },
   { value: "friends", label: "Friends", icon: <Users size={16} /> },
   { value: "communities", label: "Communities", icon: <Boxes size={16} /> },
+  { value: "clips", label: "Clips", icon: <Clapperboard size={16} /> },
 ] as const;
 
 type Tab = (typeof tabs)[number]["value"];
@@ -70,6 +73,8 @@ type ImageEditor = {
 };
 
 type ProfileImages = { avatar: ImageEditor; cover: ImageEditor; background: ImageEditor };
+
+const AVATAR_MAX_SIZE = 384;
 
 function ProfileAvatar({
   profile,
@@ -96,6 +101,7 @@ function ProfileAvatar({
       hasImage={Boolean(profile.avatarUrl)}
       onUpload={editor.upload}
       onRemove={editor.remove}
+      crop={{ aspect: 1, round: true, maxSize: AVATAR_MAX_SIZE }}
     >
       {(busy) => (
         <button
@@ -130,9 +136,11 @@ function ProfileHeader({
 }) {
   const name = profile.name || profile.username;
   const backdrop = profile.coverUrl ?? profile.avatarUrl;
+  const header = useRef<HTMLElement>(null);
 
   return (
     <header
+      ref={header}
       className={`relative shrink-0 overflow-hidden border-b border-divider bg-gradient-to-br from-accent-soft to-rail-item transition-[height] duration-300 ease-out motion-reduce:transition-none ${
         collapsed ? "h-14 sm:h-[72px]" : "h-52 sm:h-64"
       }`}
@@ -173,11 +181,12 @@ function ProfileHeader({
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
           <Atom.Heading
-            className={`min-w-0 truncate text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+            className={`flex min-w-0 items-center gap-1.5 text-white drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
               collapsed ? "" : "sm:text-4xl"
             }`}
           >
-            {name}
+            <span className="truncate">{name}</span>
+            {profile.isVerified && <Atom.VerifiedBadge size="heading" />}
           </Atom.Heading>
           {!collapsed && (
             <p className="flex flex-wrap items-center gap-x-2 text-sm text-white/85">
@@ -193,18 +202,23 @@ function ProfileHeader({
         </div>
       </div>
       <div className="absolute top-2.5 right-4 flex items-center gap-2 sm:top-4 sm:right-8">
-        {adminAction && (
+        {adminAction && !collapsed && (
           <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
             {adminAction}
           </div>
         )}
-        <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
-          {actions}
-        </div>
+        {actions && (
+          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+            {actions}
+          </div>
+        )}
       </div>
       {images && !collapsed && (
         <Molecule.CoverButton
           hasImage={Boolean(profile.coverUrl)}
+          aspect={() =>
+            Molecule.coverAspect(header.current?.offsetWidth ?? 0, header.current?.offsetHeight ?? 0)
+          }
           onUpload={images.cover.upload}
           onRemove={images.cover.remove}
           className="absolute right-4 bottom-4 sm:right-8 sm:bottom-6"
@@ -231,29 +245,95 @@ function ProfileTabs({ profile, tab }: { profile: Profile; tab: Tab }) {
       data-tour="profile-tabs"
       className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
     >
-      {tabs.map(({ value, label, icon }) => (
-        <Link
-          key={value}
-          href={`/users/${profile.username}${value === "posts" ? "" : `?tab=${value}`}`}
-          aria-current={tab === value ? "page" : undefined}
-          className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
-            tab === value
-              ? "border-accent text-accent"
-              : "border-transparent font-semibold text-foreground hover:text-accent"
-          }`}
-        >
-          {icon}
-          {label}
-          {counts[value] !== undefined && (
-            <span className="text-xs font-normal text-muted">{counts[value]}</span>
-          )}
-        </Link>
-      ))}
+      {tabs
+        .filter(({ value }) => value !== "clips" || profile.hasClips)
+        .map(({ value, label, icon }) => (
+          <Link
+            key={value}
+            href={`/users/${profile.username}${value === "posts" ? "" : `?tab=${value}`}`}
+            aria-current={tab === value ? "page" : undefined}
+            className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
+              tab === value
+                ? "border-accent text-accent"
+                : "border-transparent font-semibold text-foreground hover:text-accent"
+            }`}
+          >
+            {icon}
+            {label}
+            {counts[value] !== undefined && (
+              <span className="text-xs font-normal text-muted">{counts[value]}</span>
+            )}
+          </Link>
+        ))}
       <p className="ml-auto hidden shrink-0 items-center gap-1.5 self-center text-xs text-muted sm:flex">
         <CalendarDays size={14} aria-hidden />
         Joined {joined}
       </p>
     </nav>
+  );
+}
+
+function WallInvite({ profile }: { profile: Profile }) {
+  const { message } = App.useApp();
+  const status = useFriendsStore((state) =>
+    !state.loaded
+      ? "unknown"
+      : state.friends.some((friend) => friend.userId === profile.userId)
+        ? "friend"
+        : state.outgoing.some((user) => user.userId === profile.userId)
+          ? "sent"
+          : state.incoming.some((user) => user.userId === profile.userId)
+            ? "incoming"
+            : "none",
+  );
+  const addFriend = useFriendsStore((state) => state.addFriend);
+  const [pending, setPending] = useState(false);
+  const name = displayName(profile);
+
+  if (status === "unknown" || status === "friend") return null;
+
+  async function handleAdd() {
+    setPending(true);
+    try {
+      await addFriend({ userId: profile.userId });
+    } catch (e) {
+      message.error(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  const copy = {
+    none: {
+      title: `Become friends with ${name}`,
+      description: `Add ${name} as a friend to post on their wall and like and comment on their posts.`,
+    },
+    sent: {
+      title: "Friend request sent",
+      description: `Once ${name} accepts, you can post on their wall and like and comment on their posts.`,
+    },
+    incoming: {
+      title: `${name} wants to be friends`,
+      description: `Accept their request to post on their wall and like and comment on their posts.`,
+    },
+  }[status];
+
+  return (
+    <section className="flex flex-col gap-4 rounded-xl border border-divider bg-surface p-5 sm:p-6">
+      <div>
+        <h2 className="font-display text-xl font-bold">{copy.title}</h2>
+        <p className="mt-1 text-sm text-muted">{copy.description}</p>
+      </div>
+      {status !== "sent" && (
+        <div>
+          <Molecule.ReadOnlyGate action="add friends">
+            <Atom.Button icon={<UserPlus size={16} />} loading={pending} onClick={handleAdd}>
+              {status === "incoming" ? "Accept friend request" : "Add friend"}
+            </Atom.Button>
+          </Molecule.ReadOnlyGate>
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -300,6 +380,7 @@ function Wall({
           </div>
         </section>
       )}
+      {signedIn && !canPost && <WallInvite profile={profile} />}
       {canPost && (
         <div data-tour="profile-wall">
           <PostComposer
@@ -357,8 +438,7 @@ function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
-      <h3 className="font-display text-xl font-bold">Friends / {profile.friends.length}</h3>
+    <Molecule.TabSection title="Friends" count={profile.friends.length}>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {profile.friends.map((friend) => (
           <li key={friend.userId}>
@@ -368,6 +448,7 @@ function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
               label={displayName(friend)}
               avatarUrl={friend.avatarUrl}
               coverUrl={friend.coverUrl}
+              isVerified={friend.isVerified}
               presence={
                 (livePresence[friend.userId] ?? friend.online)
                   ? (liveStatuses[friend.userId] ?? friend.status)
@@ -382,7 +463,7 @@ function FriendsTab({ profile, myId }: { profile: Profile; myId?: number }) {
           </li>
         ))}
       </ul>
-    </section>
+    </Molecule.TabSection>
   );
 }
 
@@ -421,8 +502,7 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
   }
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
-      <h3 className="font-display text-xl font-bold">Communities / {profile.communityCount}</h3>
+    <Molecule.TabSection title="Communities" count={profile.communityCount}>
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {profile.communities.map((community) => (
@@ -432,6 +512,7 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
               iconUrl={community.iconUrl}
               coverUrl={community.coverUrl}
               memberCount={community.memberCount}
+              isVerified={community.isVerified}
               href={`/communities/${community.id}`}
               badge={community.isOwner ? <Atom.RoleBadge role="owner" /> : undefined}
               action={
@@ -444,14 +525,16 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
                     Open
                   </Atom.ButtonLink>
                 ) : (
-                  <Atom.Button
-                    size="small"
-                    loading={joining === community.id}
-                    disabled={joining !== null && joining !== community.id}
-                    onClick={() => handleJoin(community.id)}
-                  >
-                    Join
-                  </Atom.Button>
+                  <Molecule.ReadOnlyGate action="join">
+                    <Atom.Button
+                      size="small"
+                      loading={joining === community.id}
+                      disabled={joining !== null && joining !== community.id}
+                      onClick={() => handleJoin(community.id)}
+                    >
+                      Join
+                    </Atom.Button>
+                  </Molecule.ReadOnlyGate>
                 )
               }
             />
@@ -463,7 +546,7 @@ function CommunitiesTab({ profile }: { profile: Profile }) {
           Plus {hidden} private {hidden === 1 ? "community" : "communities"} you’re not part of.
         </p>
       )}
-    </section>
+    </Molecule.TabSection>
   );
 }
 
@@ -527,6 +610,7 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
                     name={community.name}
                     iconUrl={community.iconUrl}
                     role={community.isOwner ? "owner" : "member"}
+                    isVerified={community.isVerified}
                   />
                 </li>
               ))}
@@ -538,46 +622,6 @@ function ProfileSidePanel({ profile }: { profile: Profile }) {
         )}
       </div>
     </>
-  );
-}
-
-function AdminToggle({
-  profile,
-  onChange,
-}: {
-  profile: Profile;
-  onChange: (isAdmin: boolean) => void;
-}) {
-  const { message } = App.useApp();
-  const [pending, setPending] = useState(false);
-  const label = profile.isAdmin ? "Remove admin" : "Make admin";
-
-  async function toggle() {
-    const { token } = useAuthStore.getState();
-    if (!token) return;
-
-    setPending(true);
-    try {
-      onChange(await setSiteAdmin(token, profile.username, !profile.isAdmin));
-    } catch (e) {
-      message.error(e instanceof Error ? e.message : "Something went wrong.");
-    } finally {
-      setPending(false);
-    }
-  }
-
-  return (
-    <Atom.Button
-      size="small"
-      variant="secondary"
-      danger={profile.isAdmin}
-      loading={pending}
-      icon={profile.isAdmin ? <ShieldOff size={14} /> : <ShieldCheck size={14} />}
-      onClick={toggle}
-      className="shrink-0"
-    >
-      {label}
-    </Atom.Button>
   );
 }
 
@@ -627,6 +671,18 @@ export function UserProfile({ username }: { username: string }) {
       upload: (file) => save((token) => upload(token, file)),
       remove: () => save(remove),
     };
+  }
+
+  async function handleVerified(isVerified: boolean) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+
+    const verified = await setProfileVerified(token, username, isVerified);
+    setLoaded((current) =>
+      current?.profile
+        ? { ...current, profile: { ...current.profile, isVerified: verified } }
+        : current,
+    );
   }
 
   function handleScroll(event: UIEvent<HTMLDivElement>) {
@@ -719,9 +775,7 @@ export function UserProfile({ username }: { username: string }) {
 
   return (
     <main className="flex min-h-0 flex-1 flex-col">
-      <PageSearch>
-        <ProfileContentSearch key={profile.username} profile={profile} />
-      </PageSearch>
+      <ProfileSearchScope key={profile.username} profile={profile} />
       <PageTour name="profile" />
       <ProfileHeader
         profile={profile}
@@ -730,31 +784,31 @@ export function UserProfile({ username }: { username: string }) {
         images={images}
         social={social}
         adminAction={
-          !isSelf && me?.isHeadAdmin ? (
-            <AdminToggle
-              profile={profile}
-              onChange={(isAdmin) =>
-                setLoaded((current) =>
-                  current?.profile
-                    ? { ...current, profile: { ...current.profile, isAdmin } }
-                    : current,
-                )
-              }
-            />
+          me?.isHeadAdmin ? (
+            <>
+              <VerifyToggle verified={profile.isVerified} onToggle={handleVerified} />
+              {!isSelf && (
+                <AdminToggle
+                  username={profile.username}
+                  isAdmin={profile.isAdmin}
+                  onChange={(isAdmin) =>
+                    setLoaded((current) =>
+                      current?.profile
+                        ? { ...current, profile: { ...current.profile, isAdmin } }
+                        : current,
+                    )
+                  }
+                />
+              )}
+            </>
           ) : null
         }
         actions={
-          <>
-            {isSelf ? (
-              <Molecule.SettingsLink href="/settings" label="Profile settings" />
-            ) : (
-              me && (
-                <>
-                  <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
-                </>
-              )
-            )}
-          </>
+          isSelf ? (
+            <Molecule.SettingsLink href="/settings" label="Profile settings" />
+          ) : (
+            me && <ReportButton type="user" id={profile.userId} ownerId={profile.userId} />
+          )
         }
       />
       <ProfileTabs profile={profile} tab={tab} />
@@ -783,6 +837,12 @@ export function UserProfile({ username }: { username: string }) {
             <FriendsTab profile={profile} myId={me?.userId} />
           ) : tab === "communities" ? (
             <CommunitiesTab profile={profile} />
+          ) : tab === "clips" && profile.hasClips ? (
+            <TwitchClips
+              key={profile.username}
+              username={profile.username}
+              name={displayName(profile)}
+            />
           ) : (
             <Wall
               key={profile.username}

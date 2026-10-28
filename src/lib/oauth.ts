@@ -1,13 +1,27 @@
-import { getOAuthUrl, getSteamConnectUrl, type OAuthProvider } from "./api";
+import { getOAuthUrl, getSteamConnectUrl, type DiscordServer, type OAuthProvider } from "./api";
 
 const NONCE_KEY = "oauth-nonce";
 const SIGNUP_KEY = "oauth-signup";
+const AVATAR_KEY = "oauth-avatar";
+const SERVERS_KEY = "oauth-discord-servers";
 
 export type PendingSignup = {
   provider: OAuthProvider;
   token: string;
   username: string;
   avatarUrl?: string | null;
+};
+
+export type PendingAvatar = {
+  provider: OAuthProvider;
+  url: string;
+  token: string;
+};
+
+export type PendingServers = {
+  communityId: number;
+  token: string;
+  options: DiscordServer[];
 };
 
 export const OAUTH_PROVIDERS: OAuthProvider[] = ["discord", "twitch"];
@@ -44,10 +58,18 @@ export function isMobileOAuthState(state: string | null): boolean {
   }
 }
 
-export async function startOAuth(provider: OAuthProvider, token?: string, communityId?: number) {
+export async function startOAuth(
+  provider: OAuthProvider,
+  token?: string,
+  communityId?: number,
+  target?: "channel",
+  client: "web" | "mobile" = "web",
+) {
   const nonce = crypto.randomUUID().replaceAll("-", "");
   sessionStorage.setItem(NONCE_KEY, nonce);
-  window.location.assign(await getOAuthUrl(provider, nonce, token, communityId));
+  window.location.assign(
+    await getOAuthUrl(provider, nonce, token, communityId, client, target),
+  );
 }
 
 export function savePendingSignup(signup: PendingSignup) {
@@ -77,6 +99,49 @@ export function parsePendingSignup(raw: string | null | undefined): PendingSignu
   } catch {
     return null;
   }
+}
+
+export function savePendingAvatar(avatar: PendingAvatar) {
+  sessionStorage.setItem(AVATAR_KEY, JSON.stringify(avatar));
+}
+
+export function readPendingAvatar(): PendingAvatar | null {
+  try {
+    const avatar = JSON.parse(sessionStorage.getItem(AVATAR_KEY) ?? "null");
+    return avatar &&
+      isOAuthProvider(avatar.provider) &&
+      typeof avatar.url === "string" &&
+      typeof avatar.token === "string"
+      ? avatar
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearPendingAvatar() {
+  sessionStorage.removeItem(AVATAR_KEY);
+}
+
+export function saveDiscordServers(servers: PendingServers) {
+  sessionStorage.setItem(SERVERS_KEY, JSON.stringify(servers));
+}
+
+export function readDiscordServers(communityId: number): PendingServers | null {
+  try {
+    const servers = JSON.parse(sessionStorage.getItem(SERVERS_KEY) ?? "null");
+    return servers?.communityId === communityId &&
+      typeof servers.token === "string" &&
+      Array.isArray(servers.options)
+      ? servers
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+export function clearDiscordServers() {
+  sessionStorage.removeItem(SERVERS_KEY);
 }
 
 export async function startSteamConnect(token: string) {

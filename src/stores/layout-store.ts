@@ -39,16 +39,12 @@ type LayoutState = {
   panelCollapsed: boolean;
   dockOpen: boolean;
   drawerOpen: boolean;
-  searchSlot: HTMLElement | null;
-  pageSearches: number;
   panelLabel: string | null;
   togglePanel: (isDesktop: boolean) => void;
   restorePanel: () => void;
   setDockOpen: (open: boolean) => void;
   restoreDock: () => void;
   closeDrawer: () => void;
-  setSearchSlot: (slot: HTMLElement | null) => void;
-  registerPageSearch: () => () => void;
   setPanelLabel: (label: string | null) => void;
 };
 
@@ -56,8 +52,6 @@ export const useLayoutStore = create<LayoutState>()((set, get) => ({
   panelCollapsed: false,
   dockOpen: false,
   drawerOpen: false,
-  searchSlot: null,
-  pageSearches: 0,
   panelLabel: null,
   togglePanel: (isDesktop) => {
     if (!isDesktop) {
@@ -75,10 +69,5 @@ export const useLayoutStore = create<LayoutState>()((set, get) => ({
   },
   restoreDock: () => set({ dockOpen: savedDock() }),
   closeDrawer: () => set({ drawerOpen: false }),
-  setSearchSlot: (searchSlot) => set({ searchSlot }),
   setPanelLabel: (panelLabel) => set({ panelLabel }),
-  registerPageSearch: () => {
-    set((state) => ({ pageSearches: state.pageSearches + 1 }));
-    return () => set((state) => ({ pageSearches: state.pageSearches - 1 }));
-  },
 }));

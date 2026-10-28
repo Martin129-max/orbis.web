@@ -7,6 +7,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import * as Organism from "@organism";
 import { getInvitePreview, type InvitePreview } from "@/lib/api";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 
@@ -21,6 +22,7 @@ export default function InvitePage() {
     () => null,
   );
   const acceptInvite = useCommunityStore((state) => state.acceptInvite);
+  const readOnly = useReadOnly();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [joining, setJoining] = useState(false);
@@ -100,9 +102,22 @@ export default function InvitePage() {
               ) : (
                 <>
                   {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-                  <Atom.Button size="large" block loading={joining} onClick={join}>
-                    Join {current.invite.community.name}
-                  </Atom.Button>
+                  {readOnly && (
+                    <div className="flex flex-col gap-1 rounded-lg bg-warning/15 p-3 text-[13px]">
+                      <p>
+                        <strong>Confirm your email first to join.</strong>{" "}
+                        <span className="text-muted">
+                          Open the link we emailed you, then come back to this invite.
+                        </span>
+                      </p>
+                      <Organism.ResendConfirmation />
+                    </div>
+                  )}
+                  <Molecule.ReadOnlyGate action="join">
+                    <Atom.Button size="large" block loading={joining} onClick={join}>
+                      Join {current.invite.community.name}
+                    </Atom.Button>
+                  </Molecule.ReadOnlyGate>
                 </>
               )}
             </div>

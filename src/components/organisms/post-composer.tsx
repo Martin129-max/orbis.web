@@ -3,12 +3,14 @@
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Modal, Tooltip } from "antd";
-import { Link2 } from "lucide-react";
+import { Link2, Lock } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { previewFor, TEXT_LINK, trimLink, webUrl, youtubeVideo } from "@/lib/links";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
+import { useMentionSuggestions } from "./mention-suggestions";
 
 const PREVIEW_DELAY_MS = 500;
 const BARE_LINK = /^(?:https?:\/\/|www\.)\S+$/i;
@@ -62,6 +64,10 @@ type PostComposerProps = {
   onCancel?: () => void;
   onPosted?: () => void;
   linkPreview?: boolean;
+  initialContent?: string;
+  initialLink?: string | null;
+  actions?: ReactNode;
+  submitDisabled?: boolean;
 };
 
 export function PostComposer({
@@ -74,21 +80,27 @@ export function PostComposer({
   onCancel,
   onPosted,
   linkPreview = false,
+  initialContent,
+  initialLink = null,
+  actions,
+  submitDisabled = false,
 }: PostComposerProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [attachment, setAttachment] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<string | null>(initialLink);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkDraft, setLinkDraft] = useState("");
   const [linkError, setLinkError] = useState<string | null>(null);
-  const attached = useRef<string | null>(null);
+  const attached = useRef<string | null>(initialLink);
   const dismissed = useRef(false);
   const checking = useRef<string | null>(null);
   const rejected = useRef(new Set<string>());
+  const mentionKeys = useRef<(event: KeyboardEvent) => boolean>(() => false);
 
   const editor = useEditor({
     immediatelyRender: false,
     autofocus: autoFocus,
+    content: initialContent,
     extensions: [
       StarterKit.configure({
         heading: false,
@@ -103,6 +115,7 @@ export function PostComposer({
       }),
     ],
     editorProps: {
+      handleKeyDown: (_view, event) => mentionKeys.current(event),
       attributes: {
         class: "rich-text min-h-12 outline-none",
         "aria-label": "Write a post",
@@ -110,6 +123,12 @@ export function PostComposer({
         "aria-multiline": "true",
       },
     },
+  });
+
+  const mentions = useMentionSuggestions(editor);
+  const readOnly = useReadOnly();
+  useEffect(() => {
+    mentionKeys.current = mentions.handleKeyDown;
   });
 
   const state = useEditorState({
@@ -174,7 +193,9 @@ export function PostComposer({
   }
 
   async function submit() {
-    if (!editor || (editor.isEmpty && !allowEmpty && !attachment) || pending) return;
+    if (!editor || submitDisabled || (editor.isEmpty && !allowEmpty && !attachment) || pending) {
+      return;
+    }
     setError(null);
     setPending(true);
 
@@ -238,6 +259,16 @@ export function PostComposer({
     { label: state?.link ? "Remove link" : "Add link", glyph: <Link2 size={14} aria-hidden />, active: state?.link, run: toggleLink },
   ];
 
+  if (readOnly) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg border border-dashed border-divider bg-surface p-4 text-[13px] text-muted">
+        <Lock size={16} aria-hidden className="shrink-0" />
+        <p>Confirm your email to post, comment, and react. Until then, you can read everything.</p>
+        {actions && <div className="ml-auto shrink-0">{actions}</div>}
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div
@@ -257,6 +288,7 @@ export function PostComposer({
             </p>
           )}
           <EditorContent editor={editor} />
+          {mentions.popup}
         </div>
         {attachment && <Molecule.LinkPreview url={attachment} onRemove={removeAttachment} />}
         <hr className="border-divider" />
@@ -286,6 +318,7 @@ export function PostComposer({
             ))}
           </div>
           <div className="flex items-center gap-2">
+            {actions}
             {onCancel && (
               <Atom.Button size="small" variant="secondary" onClick={onCancel}>
                 Cancel
@@ -295,7 +328,7 @@ export function PostComposer({
               size="small"
               onClick={submit}
               loading={pending}
-              disabled={state?.empty && !allowEmpty && !attachment}
+              disabled={submitDisabled || (state?.empty && !allowEmpty && !attachment)}
             >
               {submitLabel}
             </Atom.Button>

@@ -1,7 +1,8 @@
 "use client";
 
 import { App } from "antd";
-import { RotateCcw } from "lucide-react";
+import { CircleCheck, Link2, Lock, RotateCcw, SlidersHorizontal, UserRound } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
@@ -9,8 +10,13 @@ import type { Profile } from "@/lib/api";
 import { useOnboardingStore } from "@/stores/onboarding-store";
 import { AppearOfflineSwitch } from "./appear-offline-switch";
 import { OAuthConnections } from "./oauth-connections";
+import { ChangelogSwitch } from "./changelog-switch";
+import { ResendConfirmation } from "./email-confirmation";
 import { NsfwSwitch } from "./nsfw-switch";
+import { FriendsPanel } from "./friends-panel";
 import { PrivateProfileSwitch } from "./private-profile-switch";
+import { SettingsTabs } from "./settings-tabs";
+import { SidePanel } from "./side-panel";
 import { SteamConnection } from "./steam-connection";
 import { ThemeToggle } from "./theme-toggle";
 
@@ -32,80 +38,130 @@ function RestartTours() {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-sm font-semibold">Guided tours</p>
-      <p className="text-xs text-muted">
-        Watch the welcome tour on Home and the tips on each page again.
-      </p>
-      <Atom.Button
-        variant="secondary"
-        icon={<RotateCcw size={14} />}
-        loading={pending}
-        onClick={restart}
-        className="w-fit"
-      >
-        Restart tours
-      </Atom.Button>
-    </div>
+    <Atom.Button
+      variant="secondary"
+      icon={<RotateCcw size={14} />}
+      loading={pending}
+      onClick={restart}
+      className="w-fit"
+    >
+      Restart tours
+    </Atom.Button>
   );
 }
 
 export function ProfileSettings({ profile }: { profile: Profile }) {
   return (
-    <div className="flex flex-col gap-8">
-      <Molecule.PageIntro
-        eyebrow={`@${profile.username}`}
-        title="Settings"
-        description="Change how Orbis looks and how others see you. Edit your picture, cover, and wallpaper right on your profile."
-      />
-      <Molecule.SettingsSection title="Preferences">
-        <div className="flex flex-col gap-2">
-          <p className="text-sm font-semibold">Theme</p>
-          <ThemeToggle block />
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="flex items-center justify-between gap-4">
-            <span className="text-sm font-semibold">Appear offline</span>
-            <AppearOfflineSwitch />
-          </label>
-          <p className="text-xs text-muted">
-            Friends see you as offline. You can still post as usual.
-          </p>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="flex items-center justify-between gap-4">
-            <span className="text-sm font-semibold">Private profile</span>
-            <PrivateProfileSwitch />
-          </label>
-          <p className="text-xs text-muted">
-            Only your friends can see your posts, friends, communities, and library. Everyone else sees just your name and picture.
-          </p>
-        </div>
-        <div className="flex flex-col gap-1">
-          <label className="flex items-center justify-between gap-4">
-            <span className="text-sm font-semibold">Show NSFW content</span>
-            <NsfwSwitch />
-          </label>
-          <p className="text-xs text-muted">
-            Show 18+ anime, manga, and games in search, title pages, feeds, and libraries.
-          </p>
-        </div>
-        <RestartTours />
-      </Molecule.SettingsSection>
-      <Molecule.SettingsSection title="Account">
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-semibold">Email</p>
-          <p className="truncate text-sm">{profile.email}</p>
-          <p className="text-xs text-muted">Only you can see this.</p>
-        </div>
-      </Molecule.SettingsSection>
-      <Molecule.SettingsSection
-        title="Connections"
-        description="Log in with Discord or Twitch. If their verified email matches your Orbis email, they connect automatically. Connect Steam to bring your games into your library."
-      >
-        <OAuthConnections />
-        <SteamConnection />
-      </Molecule.SettingsSection>
-    </div>
+    <SettingsTabs
+      label="Settings sections"
+      aside={
+        <SidePanel label="Friends">
+          <FriendsPanel />
+        </SidePanel>
+      }
+      tabs={[
+        {
+          key: "general",
+          label: "General",
+          icon: <SlidersHorizontal size={16} aria-hidden />,
+          content: (
+            <>
+              <Molecule.SettingsSection title="Appearance">
+                <ThemeToggle block />
+              </Molecule.SettingsSection>
+              <Molecule.SettingsSection title="Content">
+                <Molecule.SettingsRow
+                  label="Show NSFW content"
+                  description="Show 18+ anime, manga, and games in search, title pages, feeds, and libraries."
+                >
+                  <NsfwSwitch />
+                </Molecule.SettingsRow>
+                <Molecule.SettingsRow
+                  label="Show update notes"
+                  description={
+                    <>
+                      Show a note on your home feed when Orbis gets new features or fixes. You can
+                      always read them in the{" "}
+                      <Link href="/changelog" className="font-semibold text-accent hover:underline">
+                        changelog
+                      </Link>
+                      .
+                    </>
+                  }
+                >
+                  <ChangelogSwitch />
+                </Molecule.SettingsRow>
+              </Molecule.SettingsSection>
+              <Molecule.SettingsSection
+                title="Guided tours"
+                description="Watch the welcome tour on Home and the tips on each page again."
+              >
+                <RestartTours />
+              </Molecule.SettingsSection>
+            </>
+          ),
+        },
+        {
+          key: "privacy",
+          label: "Privacy",
+          icon: <Lock size={16} aria-hidden />,
+          content: (
+            <Molecule.SettingsSection title="Visibility">
+              <Molecule.SettingsRow
+                label="Appear offline"
+                description="Friends see you as offline. You can still post as usual."
+              >
+                <AppearOfflineSwitch />
+              </Molecule.SettingsRow>
+              <Molecule.SettingsRow
+                label="Private profile"
+                description="Only your friends can see your posts, friends, communities, and library. Everyone else sees just your name and picture."
+              >
+                <PrivateProfileSwitch />
+              </Molecule.SettingsRow>
+            </Molecule.SettingsSection>
+          ),
+        },
+        {
+          key: "connections",
+          label: "Connections",
+          icon: <Link2 size={16} aria-hidden />,
+          content: (
+            <>
+              <Molecule.SettingsSection
+                title="Log in with Discord or Twitch"
+                description="Use Discord or Twitch to log in to Orbis. If their verified email matches your Orbis email, they connect automatically."
+              >
+                <OAuthConnections />
+              </Molecule.SettingsSection>
+              <SteamConnection />
+            </>
+          ),
+        },
+        {
+          key: "account",
+          label: "Account",
+          icon: <UserRound size={16} aria-hidden />,
+          content: (
+            <Molecule.SettingsSection title="Email" description="Only you can see this.">
+              <p className="truncate text-sm">{profile.email}</p>
+              {profile.emailVerifiedAt ? (
+                <p className="flex items-center gap-1.5 text-xs text-muted">
+                  <CircleCheck size={14} aria-hidden className="text-success" />
+                  Confirmed
+                </p>
+              ) : (
+                <div className="flex flex-col gap-1">
+                  <p className="text-xs text-muted">
+                    Not confirmed yet. Open the link we emailed you to confirm it.
+                  </p>
+                  <ResendConfirmation />
+                </div>
+              )}
+            </Molecule.SettingsSection>
+          ),
+        },
+      ]}
+    />
   );
 }

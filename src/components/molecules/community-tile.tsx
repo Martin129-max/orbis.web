@@ -6,11 +6,13 @@ export function CommunityTile({
   name,
   iconUrl,
   role,
+  isVerified = false,
 }: {
   id: number;
   name: string;
   iconUrl: string | null;
   role: Atom.Role;
+  isVerified?: boolean;
 }) {
   return (
     <Link
@@ -24,7 +26,10 @@ export function CommunityTile({
         <Atom.CommunityIcon name={name} src={iconUrl} />
       </span>
       <span className="flex min-w-0 flex-1 flex-col items-start gap-1">
-        <span className="w-full truncate text-sm font-semibold">{name}</span>
+        <span className="flex w-full min-w-0 items-center gap-1 text-sm font-semibold">
+          <span className="truncate">{name}</span>
+          {isVerified && <Atom.VerifiedBadge />}
+        </span>
         <Atom.RoleBadge role={role} />
       </span>
     </Link>

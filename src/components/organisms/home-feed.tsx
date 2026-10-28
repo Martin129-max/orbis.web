@@ -9,20 +9,32 @@ import { createPost, createWallPost, getFeed } from "@/lib/api";
 import { usePaged } from "@/lib/use-paged";
 import { useAuthStore } from "@/stores/auth-store";
 import { useOnboardingStore } from "@/stores/onboarding-store";
+import type { ChangelogDay } from "@/lib/changelog";
 import { useCommunityStore } from "@/stores/community-store";
+import { ChangelogBanner, useChangelogShown } from "./changelog-banner";
+import { DiscordSetupReminder, useUnfinishedDiscord } from "./discord-setup";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { OnboardingChecklist, OnboardingTour } from "./onboarding";
+import { TipOfTheWeek } from "./tip-of-the-week";
 
 type Destination = "wall" | number;
 
-export function HomeFeed() {
+export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | null }) {
   const feed = usePaged(getFeed, { live: true });
   const profile = useAuthStore((state) => state.profile);
   const communities = useCommunityStore((state) => state.communities);
   const [selected, setSelected] = useState<Destination>("wall");
   const community =
     selected === "wall" ? undefined : communities.find((item) => item.id === selected);
+  const changelogShown = useChangelogShown(latestChangelog);
+  const checklistHidden = useOnboardingStore(
+    (state) => state.onboarding?.checklistDismissed === true,
+  );
+  const [unfinishedDiscord] = useUnfinishedDiscord();
+  const reminder = unfinishedDiscord ? (
+    <DiscordSetupReminder community={unfinishedDiscord} />
+  ) : null;
 
   async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
@@ -37,8 +49,15 @@ export function HomeFeed() {
 
   return (
     <div className="flex flex-col gap-3">
-      <OnboardingChecklist />
+      {reminder ?? <OnboardingChecklist />}
       <OnboardingTour />
+      {!reminder &&
+        checklistHidden &&
+        (latestChangelog && changelogShown ? (
+          <ChangelogBanner day={latestChangelog} />
+        ) : (
+          <TipOfTheWeek />
+        ))}
       {profile && (
         <div data-tour="composer">
         <PostComposer

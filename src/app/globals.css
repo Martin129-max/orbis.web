@@ -271,6 +271,23 @@ body {
     color: var(--accent);
     text-decoration: underline;
   }
+
+  .rich-text a.mention {
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  @media (hover: hover) {
+    .rich-text a.mention:hover {
+      text-decoration: underline;
+    }
+  }
+
+  @media (hover: none) {
+    .ant-tooltip:not(.touch-visible) {
+      display: none;
+    }
+  }
 }
 
 html:not([data-auth]):has([data-landing-page]) {
