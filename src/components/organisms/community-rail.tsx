@@ -567,7 +567,7 @@ export function CommunityRail() {
   return (
     <nav
       aria-label="Communities"
-      className="flex h-dvh w-14 shrink-0 flex-col items-center gap-4 bg-rail px-2 py-5 sm:w-20 sm:px-4"
+      className="flex h-full w-14 shrink-0 flex-col items-center gap-4 bg-rail px-2 py-5 sm:w-20 sm:px-4"
       onClickCapture={(event) => {
         if (!suppressClick.current) return;
         event.preventDefault();

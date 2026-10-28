@@ -3,11 +3,12 @@
 import { EditorContent, useEditor, useEditorState, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { Modal, Tooltip } from "antd";
-import { Link2 } from "lucide-react";
+import { Link2, Lock } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import { previewFor, TEXT_LINK, trimLink, webUrl, youtubeVideo } from "@/lib/links";
+import { useReadOnly } from "@/lib/read-only";
 import { useAuthStore } from "@/stores/auth-store";
 import { useMentionSuggestions } from "./mention-suggestions";
 
@@ -116,6 +117,7 @@ export function PostComposer({
   });
 
   const mentions = useMentionSuggestions(editor);
+  const readOnly = useReadOnly();
   useEffect(() => {
     mentionKeys.current = mentions.handleKeyDown;
   });
@@ -245,6 +247,15 @@ export function PostComposer({
     { label: "Numbered list", glyph: "1.", active: state?.orderedList, run: () => editor?.chain().focus().toggleOrderedList().run() },
     { label: state?.link ? "Remove link" : "Add link", glyph: <Link2 size={14} aria-hidden />, active: state?.link, run: toggleLink },
   ];
+
+  if (readOnly) {
+    return (
+      <div className="flex items-center gap-3 rounded-lg border border-dashed border-divider bg-surface p-4 text-[13px] text-muted">
+        <Lock size={16} aria-hidden className="shrink-0" />
+        <p>Confirm your email to post, comment, and react. Until then, you can read everything.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-3">

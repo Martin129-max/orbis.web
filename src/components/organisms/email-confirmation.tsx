@@ -1,9 +1,9 @@
 "use client";
 
 import { MailCheck } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import * as Atom from "@atom";
-import { resendConfirmation } from "@/lib/api";
+import { EMAIL_UNCONFIRMED_EVENT, resendConfirmation } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
 export function ResendConfirmation() {
@@ -46,28 +46,50 @@ export function ResendConfirmation() {
   );
 }
 
-export function EmailConfirmReminder({ email }: { email: string }) {
+const ALERT_MS = 6000;
+
+export function EmailConfirmBanner() {
+  const profile = useAuthStore((state) => state.profile);
+  const [alerted, setAlerted] = useState(false);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const alert = () => {
+      setAlerted(true);
+      clearTimeout(timer);
+      timer = setTimeout(() => setAlerted(false), ALERT_MS);
+    };
+    window.addEventListener(EMAIL_UNCONFIRMED_EVENT, alert);
+    return () => {
+      window.removeEventListener(EMAIL_UNCONFIRMED_EVENT, alert);
+      clearTimeout(timer);
+    };
+  }, []);
+
+  if (!profile || profile.emailVerifiedAt !== null) return null;
+
   return (
     <section
       aria-label="Confirm your email"
-      className="flex items-start gap-3 rounded-lg border border-warning/50 bg-warning/10 p-4"
+      className={`flex shrink-0 flex-wrap items-center justify-center gap-x-3 gap-y-1 border-b border-warning/40 px-4 py-2 text-[13px] transition-colors ${
+        alerted ? "bg-warning/30" : "bg-warning/15"
+      }`}
     >
-      <span
-        aria-hidden
-        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-warning text-warning-foreground"
-      >
-        <MailCheck size={18} />
-      </span>
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
-        <p className="text-[11px] font-bold text-muted uppercase">Confirm your email</p>
-        <p className="text-sm font-semibold">Check your inbox for a link from Orbis</p>
-        <p className="text-[13px] text-muted">
-          Open the link we email you to confirm{" "}
-          <span className="font-semibold break-all text-foreground">{email}</span> is yours. If you
-          don’t have one, or it has expired, send a new one.
-        </p>
-        <ResendConfirmation />
-      </div>
+      <MailCheck size={16} aria-hidden className="shrink-0 text-warning" />
+      <p role="status" className="min-w-0 text-center">
+        {alerted ? (
+          <strong>Confirm your email first to do that.</strong>
+        ) : (
+          <>
+            <strong>Confirm your email to start posting.</strong>{" "}
+            <span className="hidden text-muted sm:inline">
+              Until then, Orbis is read-only. Look for the link we sent to{" "}
+              <span className="text-foreground">{profile.email}</span>.
+            </span>
+          </>
+        )}
+      </p>
+      <ResendConfirmation />
     </section>
   );
 }

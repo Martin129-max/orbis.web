@@ -1,5 +1,6 @@
 "use client";
 
+import { CircleAlert, CircleCheck } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react";
@@ -10,6 +11,8 @@ import { confirmEmail } from "@/lib/api";
 import { useAuthStore } from "@/stores/auth-store";
 
 const MISSING_TOKEN = "This link is incomplete. Open the link from the email again.";
+const CARD =
+  "flex w-full max-w-sm flex-col items-center gap-4 rounded-xl border border-divider bg-surface p-8 text-center";
 
 function Confirm() {
   const params = useSearchParams();
@@ -35,32 +38,43 @@ function Confirm() {
 
   if (failure) {
     return (
-      <div className="flex max-w-sm flex-col items-center gap-4 text-center">
+      <section className={CARD}>
+        <span
+          aria-hidden
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-danger/15 text-danger"
+        >
+          <CircleAlert size={24} />
+        </span>
         <Atom.Heading>Couldn’t confirm your email</Atom.Heading>
-        <Atom.ErrorMessage>{failure}</Atom.ErrorMessage>
+        <p className="text-sm text-muted">{failure}</p>
         {signedIn ? (
           <Organism.ResendConfirmation />
         ) : (
-          <Link href="/login" className="focus-ring rounded-sm text-sm text-accent hover:underline">
+          <Link href="/login" className="focus-ring rounded-sm text-sm font-semibold text-accent hover:underline">
             Log in to send a new link
           </Link>
         )}
-      </div>
+      </section>
     );
   }
 
   if (confirmed) {
     return (
-      <div className="flex max-w-sm flex-col items-center gap-4 text-center">
-        <Atom.Heading>Your email is confirmed</Atom.Heading>
-        <p className="text-sm text-muted">Thanks for confirming. You’re all set.</p>
-        <Link
-          href={signedIn ? "/" : "/login"}
-          className="focus-ring rounded-sm text-sm text-accent hover:underline"
+      <section className={CARD}>
+        <span
+          aria-hidden
+          className="flex h-12 w-12 items-center justify-center rounded-full bg-success/15 text-success"
         >
+          <CircleCheck size={24} />
+        </span>
+        <Atom.Heading>Your email is confirmed</Atom.Heading>
+        <p className="text-sm text-muted">
+          Thanks for confirming. You can post, comment, and chat now.
+        </p>
+        <Atom.ButtonLink href={signedIn ? "/" : "/login"}>
           {signedIn ? "Go to Orbis" : "Log in"}
-        </Link>
-      </div>
+        </Atom.ButtonLink>
+      </section>
     );
   }
 

@@ -13,7 +13,6 @@ import type { ChangelogDay } from "@/lib/changelog";
 import { useCommunityStore } from "@/stores/community-store";
 import { ChangelogBanner, useChangelogShown } from "./changelog-banner";
 import { DiscordSetupReminder, useUnfinishedDiscord } from "./discord-setup";
-import { EmailConfirmReminder } from "./email-confirmation";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { OnboardingChecklist, OnboardingTour } from "./onboarding";
@@ -33,12 +32,9 @@ export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | 
     (state) => state.onboarding?.checklistDismissed === true,
   );
   const [unfinishedDiscord] = useUnfinishedDiscord();
-  const reminder =
-    profile && profile.emailVerifiedAt === null ? (
-      <EmailConfirmReminder email={profile.email} />
-    ) : unfinishedDiscord ? (
-      <DiscordSetupReminder community={unfinishedDiscord} />
-    ) : null;
+  const reminder = unfinishedDiscord ? (
+    <DiscordSetupReminder community={unfinishedDiscord} />
+  ) : null;
 
   async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();

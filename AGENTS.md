@@ -18,3 +18,7 @@ Step-by-step instructions live in skills in `.agents/skills/`, linked as `.claud
   - `onboarding-updates` (`.agents/skills/onboarding-updates/SKILL.md`): add or update tour stops, checklist items, and tips of the week for anything people need to know about.
   - `landing-page-updates` (`.agents/skills/landing-page-updates/SKILL.md`): show it on the landing page if it's something a visitor would sign up for.
 - **Adding or changing anything people could look for by name or text** (new content, a page with its own items, or new names or text on existing items) → `search-updates` (`.agents/skills/search-updates/SKILL.md`): keep the site search covering it, with the same privacy rules as where it's shown.
+
+## Rules
+
+- **Unconfirmed emails are read-only.** Until someone confirms their email, the server refuses anything they try to create or change, and a banner at the top of every page tells them (`EmailConfirmBanner`; it also lights up whenever the server refuses something for this reason). When you add a way to post, send, react, join, or edit, check `useReadOnly()` (`src/lib/read-only.ts`) and show a short "Confirm your email to …" note instead of the control, the way `PostComposer` and the chat composer do. Reading, settings for the person's own preferences, and marking notifications read stay available.

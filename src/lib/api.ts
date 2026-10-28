@@ -89,6 +89,8 @@ export type CommunitySearchResult = {
   mutualCount: number;
 };
 
+export const EMAIL_UNCONFIRMED_EVENT = "orbis:email-unconfirmed";
+
 export async function api(path: string, init?: RequestInit) {
   let res: Response;
   try {
@@ -98,6 +100,15 @@ export async function api(path: string, init?: RequestInit) {
   }
   if (res.status === 429) {
     throw new Error("You’re doing that too often. Try again in a minute.");
+  }
+  if (res.status === 403 && typeof window !== "undefined") {
+    res
+      .clone()
+      .json()
+      .then((body) => {
+        if (body?.code === "email_unconfirmed") window.dispatchEvent(new Event(EMAIL_UNCONFIRMED_EVENT));
+      })
+      .catch(() => undefined);
   }
   return res;
 }
