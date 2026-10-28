@@ -159,7 +159,7 @@ const features = [
   {
     id: "discussions",
     icon: MessageCircle,
-    label: "Feed and forum",
+    label: "Feed and threads",
     title: "Talk it out.",
     text: "Share quick updates, start a thread, and keep the conversation going with replies and votes.",
   },

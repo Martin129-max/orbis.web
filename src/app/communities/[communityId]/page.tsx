@@ -30,7 +30,7 @@ type Loaded = { id: string; community: Community | null; failed?: boolean };
 
 const tabs = [
   { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
-  { value: "forum", label: "Forum", icon: <MessagesSquare size={16} /> },
+  { value: "forum", label: "Threads", icon: <MessagesSquare size={16} /> },
   { value: "members", label: "Members", icon: <Users size={16} /> },
   { value: "clips", label: "Clips", icon: <Clapperboard size={16} /> },
 ] as const;

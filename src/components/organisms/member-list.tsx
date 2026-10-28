@@ -181,12 +181,9 @@ export function MemberList({ communityId }: { communityId: number }) {
   );
 
   return (
-    <section className="flex flex-col gap-5 rounded-lg border border-divider bg-surface p-5">
-      <h2 className="font-display text-2xl font-bold">
-        Members / {members.length}
-      </h2>
+    <Molecule.TabSection title="Members" count={members.length}>
       <MemberGroup title="Owner & admins" members={staff} myId={myId} />
       <MemberGroup title="Members" members={everyoneElse} myId={myId} />
-    </section>
+    </Molecule.TabSection>
   );
 }

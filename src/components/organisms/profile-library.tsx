@@ -1,8 +1,8 @@
 "use client";
 
 import { Segmented } from "antd";
-import { Library } from "lucide-react";
 import { useState, type ReactNode } from "react";
+import * as Molecule from "@molecule";
 import type { LibraryStatus, MediaType, SteamLink } from "@/lib/api";
 import { libraryStatuses, statusLabel } from "@/lib/library";
 import { ReadOnlyLibraryCard } from "./library-view";
@@ -34,12 +34,10 @@ export function ProfileLibrary({
   );
 
   return (
-    <section className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h3 className="flex items-center gap-2 font-display text-xl font-bold">
-          <Library size={18} className="text-muted" />
-          Library / {entries.length}
-        </h3>
+    <Molecule.TabSection
+      title="Library"
+      count={entries.length}
+      actions={
         <div className="flex flex-wrap items-center gap-2">
           {entries.length > 0 && (
             <Segmented<"all" | LibraryStatus>
@@ -58,7 +56,8 @@ export function ProfileLibrary({
           )}
           {action}
         </div>
-      </div>
+      }
+    >
       {entries.length === 0 ? (
         <p className="text-sm text-muted">Nothing in the library yet.</p>
       ) : (
@@ -70,6 +69,6 @@ export function ProfileLibrary({
           ))}
         </ul>
       )}
-    </section>
+    </Molecule.TabSection>
   );
 }

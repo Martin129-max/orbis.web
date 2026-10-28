@@ -71,17 +71,19 @@ export function TwitchClips({ communityId, username, name }: ClipSource & { name
 
   if (clips === null) {
     return error ? (
-      <Molecule.FeedState
-        role="alert"
-        icon={<Clapperboard size={24} strokeWidth={1.5} />}
-        title="Couldn’t load the clips."
-        description={error}
-        action={
-          <Atom.Button variant="secondary" onClick={() => setAttempt((count) => count + 1)}>
-            Try again
-          </Atom.Button>
-        }
-      />
+      <div className="sm:pt-8">
+        <Molecule.FeedState
+          role="alert"
+          icon={<Clapperboard size={24} strokeWidth={1.5} />}
+          title="Couldn’t load the clips."
+          description={error}
+          action={
+            <Atom.Button variant="secondary" onClick={() => setAttempt((count) => count + 1)}>
+              Try again
+            </Atom.Button>
+          }
+        />
+      </div>
     ) : (
       <div className="flex justify-center py-12">
         <Atom.Loader />
@@ -91,24 +93,28 @@ export function TwitchClips({ communityId, username, name }: ClipSource & { name
 
   if (clips.length === 0) {
     return (
-      <Molecule.FeedState
-        icon={<Clapperboard size={24} strokeWidth={1.5} />}
-        title="No clips yet."
-        description={`When people clip ${name}’s streams on Twitch, the most-watched ones show up here.`}
-      />
+      <div className="sm:pt-8">
+        <Molecule.FeedState
+          icon={<Clapperboard size={24} strokeWidth={1.5} />}
+          title="No clips yet."
+          description={`When people clip ${name}’s streams on Twitch, the most-watched ones show up here.`}
+        />
+      </div>
     );
   }
 
   return (
-    <section className="flex flex-col gap-4">
-      <h2 className="sr-only">Twitch clips</h2>
-      <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+    <Molecule.TabSection
+      title="Clips"
+      actions={<span className="text-xs text-muted">Most viewed on Twitch</span>}
+    >
+      <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {clips.map((clip) => (
           <li key={clip.id}>
             <button
               type="button"
               onClick={() => setPlaying(clip)}
-              className="group focus-ring flex w-full cursor-pointer flex-col overflow-hidden rounded-xl border border-divider bg-surface text-left"
+              className="group focus-ring flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-lg border border-divider bg-surface text-left transition-colors hover:border-muted"
             >
               <span className="relative block aspect-video w-full bg-rail-item">
                 <Image
@@ -188,6 +194,6 @@ export function TwitchClips({ communityId, username, name }: ClipSource & { name
           </div>
         )}
       </Modal>
-    </section>
+    </Molecule.TabSection>
   );
 }

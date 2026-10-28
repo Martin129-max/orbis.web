@@ -35,7 +35,7 @@ export const tourStops: TourStop[] = [
     placement: "right",
     title: "Your communities",
     description:
-      "Every community you’ve joined lives in this rail. Drag them to reorder, drop one onto another to make a folder, and click one to open its feed, forum, and members.",
+      "Every community you’ve joined lives in this rail. Drag them to reorder, drop one onto another to make a folder, and click one to open its feed, threads, and members.",
   },
   {
     target: "create",
@@ -55,13 +55,13 @@ export const tourStops: TourStop[] = [
     placement: "bottom",
     title: "Share something",
     description:
-      "Write a post for your wall, or pick one of your communities to share it there. Use the forum tab inside a community for longer discussions with votes.",
+      "Write a post for your wall, or pick one of your communities to share it there. Use the Threads tab inside a community for longer discussions with votes.",
   },
   {
     target: "feed-filters",
     placement: "bottom",
     title: "Choose your feed",
-    description: "Switch between Card and Compact view, and show or hide posts, forum threads, and library updates. Your choices are remembered across feeds on this browser.",
+    description: "Switch between Card and Compact view, and show or hide posts, threads, and library updates. Your choices are remembered across feeds on this browser.",
   },
   {
     target: "friend-requests",
@@ -153,7 +153,7 @@ export const checklistItems: ChecklistItem[] = [
       </>
     ),
   },
-  { key: "post", title: "Share your first post", hint: "Use the box below or a community’s forum." },
+  { key: "post", title: "Share your first post", hint: "Use the box below or a community’s Threads tab." },
   { key: "comment", title: "Join a discussion", hint: "Open any post or thread and leave a comment." },
   {
     key: "friend",
@@ -302,9 +302,9 @@ export const pageTours = {
     {
       target: "community-tabs",
       placement: "bottom",
-      title: "Feed, forum, members",
+      title: "Feed, threads, members",
       description:
-        "The feed is for quick updates, the forum for longer discussions with votes, and Members shows everyone here.",
+        "The feed is for quick updates, Threads for longer discussions with votes, and Members shows everyone here.",
     },
     {
       target: "community-composer",

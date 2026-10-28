@@ -96,7 +96,7 @@ export function DiscussionModal({
               item.type === "activity"
                 ? `${displayName(item.author)} / Library`
                 : item.community
-                  ? `${item.community.name} / ${item.type === "thread" ? "Forum" : "Feed"}`
+                  ? `${item.community.name} / ${item.type === "thread" ? "Threads" : "Feed"}`
                   : `${item.type === "post" && item.wallUser ? displayName(item.wallUser) : "Profile"} / Wall`
             }
             title="The discussion"

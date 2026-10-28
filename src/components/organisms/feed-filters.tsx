@@ -15,7 +15,7 @@ import { shownTypes, useFeedPreferencesStore } from "@/stores/feed-preferences-s
 
 const labels = {
   post: "Posts",
-  thread: "Forum threads",
+  thread: "Threads",
   activity: "Library updates",
 };
 

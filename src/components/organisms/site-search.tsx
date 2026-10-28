@@ -439,7 +439,7 @@ function SearchPanel({
       const text = plainText(item.content).trim();
       const place =
         item.type === "thread"
-          ? `Forum in ${item.community.name}`
+          ? `Threads in ${item.community.name}`
           : item.community
             ? `In ${item.community.name}`
             : `On ${displayName(item.wallUser ?? item.author)}’s wall`;
