@@ -130,7 +130,12 @@ export function CommunityLinkIcons({ name, links }: { name: string; links?: Comm
         </Dropdown>
       )}
       {shown.map(({ key, label, icon, href }) => (
-        <Tooltip key={key} placement="bottom" title={label}>
+        <Tooltip
+          key={key}
+          placement="bottom"
+          title={label}
+          styles={{ container: { textAlign: "center" } }}
+        >
           <a
             href={href}
             target="_blank"
