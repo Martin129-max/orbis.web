@@ -150,6 +150,7 @@ export default function CommunityPage() {
             adminAction={
               headAdmin && (
                 <Organism.VerifyToggle
+                  compact
                   verified={current.community.isVerified}
                   onToggle={handleVerified}
                 />

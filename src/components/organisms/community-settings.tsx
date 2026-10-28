@@ -17,6 +17,7 @@ import {
   revokeInvite,
   setCommunityAdmin,
   type Community,
+  type CommunityLinks,
   type DiscordStatus,
   type Invite,
   type Member,
@@ -32,6 +33,7 @@ import {
 } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
+import { linkPlatforms, normalizeLink } from "./community-links";
 import { DISCORD_CHECK_MS, DiscordWidgetSteps } from "./discord-setup";
 import { OAuthIcon } from "./oauth-buttons";
 import { SettingsTabs } from "./settings-tabs";
@@ -130,6 +132,80 @@ function GeneralSettings({ community }: { community: Community }) {
         <div className="flex items-center gap-3">
           <Atom.Button type="submit" loading={pending} disabled={!changed}>
             Save changes
+          </Atom.Button>
+          {message && <span className="text-xs text-muted">{message}</span>}
+        </div>
+      </form>
+    </Molecule.SettingsSection>
+  );
+}
+
+function LinksSettings({ community }: { community: Community }) {
+  const updateCommunity = useCommunityStore((state) => state.updateCommunity);
+  const [saved, setSaved] = useState<CommunityLinks>(community.links ?? {});
+  const [values, setValues] = useState<CommunityLinks>(community.links ?? {});
+  const [error, setError] = useState<string | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
+  const [pending, setPending] = useState(false);
+  const links: CommunityLinks = {};
+  for (const { key } of linkPlatforms) {
+    const link = normalizeLink(values[key] ?? "");
+    if (link) links[key] = link;
+  }
+  const invalid = linkPlatforms.some(({ key, pattern }) => links[key] && !pattern.test(links[key]));
+  const changed = linkPlatforms.some(({ key }) => links[key] !== saved[key]);
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (invalid) return;
+    setError(null);
+    setMessage(null);
+    setPending(true);
+
+    try {
+      const updated = await updateCommunity(community.id, { links });
+      setSaved(updated.links ?? {});
+      setValues(updated.links ?? {});
+      setMessage("Links saved.");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return (
+    <Molecule.SettingsSection
+      title="Links"
+      description="Add the community’s other places. They show as icons on the cover photo, next to Twitch and Discord."
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        {linkPlatforms.map(({ key, label, icon, example, pattern }) => {
+          const wrong = Boolean(links[key] && !pattern.test(links[key]));
+          return (
+            <Molecule.FormField
+              key={key}
+              label={label}
+              name={key}
+              inputMode="url"
+              autoComplete="off"
+              maxLength={300}
+              prefix={<span className="text-muted">{icon}</span>}
+              placeholder={example}
+              status={wrong ? "error" : undefined}
+              extra={wrong ? `Use a link like ${example}` : undefined}
+              value={values[key] ?? ""}
+              onChange={(event) => {
+                setValues({ ...values, [key]: event.target.value });
+                setMessage(null);
+              }}
+            />
+          );
+        })}
+        {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+        <div className="flex items-center gap-3">
+          <Atom.Button type="submit" loading={pending} disabled={!changed || invalid}>
+            Save links
           </Atom.Button>
           {message && <span className="text-xs text-muted">{message}</span>}
         </div>
@@ -756,6 +832,7 @@ export function CommunitySettings({
             <>
               <TwitchSettings community={community} />
               <DiscordSettings community={community} />
+              <LinksSettings community={community} />
             </>
           ),
         },

@@ -34,6 +34,17 @@ export type Profile = {
 
 export type CommunityRole = "owner" | "admin" | "member";
 
+export type CommunityLinkPlatform =
+  | "x"
+  | "youtube"
+  | "kick"
+  | "instagram"
+  | "tiktok"
+  | "reddit"
+  | "website";
+
+export type CommunityLinks = Partial<Record<CommunityLinkPlatform, string>>;
+
 export type Community = {
   id: number;
   name: string;
@@ -52,6 +63,7 @@ export type Community = {
   nextStream?: NextStream | null;
   discordGuildName?: string | null;
   discord?: DiscordStatus | null;
+  links?: CommunityLinks;
   showLibraryUpdates?: boolean;
 };
 
@@ -474,7 +486,7 @@ export async function createCommunity(
 export async function updateCommunity(
   token: string,
   communityId: number,
-  changes: Partial<Pick<Community, "name" | "isPublic" | "description">>,
+  changes: Partial<Pick<Community, "name" | "isPublic" | "description" | "links">>,
 ): Promise<Community> {
   const res = await api(`/communities/${communityId}`, {
     method: "PATCH",

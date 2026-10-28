@@ -50,6 +50,11 @@ export const tips: Tip[] = [
     body: "If you run a community, connect its Discord server in the community’s settings to show how many people are online there, with a button to join.",
   },
   {
+    id: "community-links",
+    title: "Link your community’s other places",
+    body: "If you run a community, add its X, YouTube, Kick, and other links under Connections in the community’s settings. They show as icons on the cover photo.",
+  },
+  {
     id: "library-dock",
     title: "Update your library from any page",
     body: "Pull up the bar at the bottom of the screen to change what you’re watching, reading, or playing without leaving the page.",

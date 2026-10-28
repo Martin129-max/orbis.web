@@ -8,6 +8,7 @@ import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { Community, CommunityImage, NextStream } from "@/lib/api";
 import { useCommunityStore } from "@/stores/community-store";
+import { CommunityLinkIcons } from "./community-links";
 import { ReportButton } from "./report-content";
 
 type ImageChange = (image: CommunityImage, file: File | null) => Promise<unknown>;
@@ -53,6 +54,7 @@ function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
 
   return (
     <Tooltip
+      placement="bottom"
       title={
         <>
           {remaining && <div>Next stream in {remaining}</div>}
@@ -64,7 +66,7 @@ function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
         href={`https://www.twitch.tv/${login}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
+        className="focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur transition-colors hover:bg-surface"
       >
         <TwitchFilled aria-hidden className="text-[#9146FF]" />
         {remaining ? (
@@ -89,7 +91,7 @@ function StreamCorner({ community, live }: { community: Community; live: boolean
       href={`https://www.twitch.tv/${login}`}
       target="_blank"
       rel="noopener noreferrer"
-      className="focus-ring flex h-9 items-center gap-2 rounded-lg bg-[#9146FF] px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#772ce8]"
+      className="focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-[#9146FF] px-3 text-xs font-semibold text-white shadow-sm transition-colors hover:bg-[#772ce8]"
     >
       <TwitchFilled aria-hidden />
       Watch on Twitch
@@ -105,7 +107,7 @@ function DiscordCorner({ community }: { community: Community }) {
   if (!name || !discord || discord.online === null) return null;
 
   const className =
-    "focus-ring flex h-9 items-center gap-2 rounded-lg bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur";
+    "focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur";
   const content = (
     <>
       <DiscordFilled aria-hidden className="text-[#5865F2]" />
@@ -115,7 +117,10 @@ function DiscordCorner({ community }: { community: Community }) {
   );
 
   return (
-    <Tooltip title={discord.inviteUrl ? `Join ${name} on Discord` : `${name} on Discord`}>
+    <Tooltip
+      placement="bottom"
+      title={discord.inviteUrl ? `Join ${name} on Discord` : `${name} on Discord`}
+    >
       {discord.inviteUrl ? (
         <a
           href={discord.inviteUrl}
@@ -287,21 +292,24 @@ export function CommunityHeader({
         </Atom.Heading>
         {live && <span className="sr-only">Live on Twitch</span>}
       </div>
-      {!collapsed && (
-        <div className="absolute top-2.5 left-4 flex flex-col items-start gap-2 empty:hidden sm:top-4 sm:left-8 sm:flex-row">
-          <StreamCorner community={community} live={live} />
-          <DiscordCorner community={community} />
-        </div>
-      )}
-      <div className="absolute top-2.5 right-4 flex items-center gap-2 sm:top-4 sm:right-8">
-        {adminAction && !collapsed && (
-          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
-            {adminAction}
+      <div className="pointer-events-none absolute top-2.5 right-4 left-4 flex items-start gap-2 sm:top-4 sm:right-8 sm:left-8">
+        {!collapsed && (
+          <div className="pointer-events-auto flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <StreamCorner community={community} live={live} />
+            <DiscordCorner community={community} />
+            <CommunityLinkIcons name={community.name} links={community.links} />
           </div>
         )}
-        <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur empty:hidden">
-          <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
-          {actions}
+        <div className="pointer-events-auto ml-auto flex shrink-0 items-center gap-2">
+          {adminAction && !collapsed && (
+            <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur">
+              {adminAction}
+            </div>
+          )}
+          <div className="flex items-center gap-1 rounded-lg bg-surface/85 p-0.5 backdrop-blur empty:hidden">
+            <ReportButton type="community" id={community.id} ownerId={community.ownerId} />
+            {actions}
+          </div>
         </div>
       </div>
       {onImage && !collapsed && (

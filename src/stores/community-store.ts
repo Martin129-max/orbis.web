@@ -13,7 +13,7 @@ type CommunityState = {
   acceptInvite: (code: string) => Promise<Community>;
   updateCommunity: (
     communityId: number,
-    changes: Partial<Pick<Community, "name" | "isPublic" | "description">>,
+    changes: Partial<Pick<Community, "name" | "isPublic" | "description" | "links">>,
   ) => Promise<Community>;
   setCommunityImage: (
     communityId: number,

@@ -8,9 +8,11 @@ import * as Atom from "@atom";
 export function VerifyToggle({
   verified,
   onToggle,
+  compact = false,
 }: {
   verified: boolean;
   onToggle: (verified: boolean) => Promise<void>;
+  compact?: boolean;
 }) {
   const { message } = App.useApp();
   const [pending, setPending] = useState(false);
@@ -34,9 +36,12 @@ export function VerifyToggle({
       loading={pending}
       icon={verified ? <BadgeX size={14} /> : <BadgeCheck size={14} />}
       onClick={toggle}
+      aria-label={compact ? (verified ? "Unverify" : "Verify") : undefined}
       className="shrink-0"
     >
-      {verified ? "Unverify" : "Verify"}
+      <span className={compact ? "max-sm:hidden" : undefined}>
+        {verified ? "Unverify" : "Verify"}
+      </span>
     </Atom.Button>
   );
 }
