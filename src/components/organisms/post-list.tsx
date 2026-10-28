@@ -20,12 +20,17 @@ type PostListProps<T extends FeedEntry> = {
   empty: { title: ReactNode; description: ReactNode; action?: ReactNode };
   end?: ReactNode;
   showCommunity?: boolean;
+  filterControl?: ReactNode;
 };
 
 export function PostList<T extends FeedEntry>(props: PostListProps<T>) {
   return (
     <div className="flex flex-col gap-3">
-      <FeedFilters types={props.feed.contentTypes} trailing={props.trailing} />
+      <FeedFilters
+        types={props.feed.contentTypes}
+        trailing={props.trailing}
+        filterControl={props.filterControl}
+      />
       <PostListContent {...props} />
     </div>
   );

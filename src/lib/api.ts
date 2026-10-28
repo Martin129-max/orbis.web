@@ -810,7 +810,7 @@ export async function getPosts(
   communityId: number,
   cursor?: string,
   excludedTypes: FeedContentType[] = [],
-): Promise<Page<Post | Activity>> {
+): Promise<Page<FeedEntry>> {
   const res = await api(withQuery(`/communities/${communityId}/posts`, { cursor, exclude: excludedTypes.join(",") }), {
     headers: authHeaders(token),
   });
@@ -1344,14 +1344,17 @@ export async function getThread(token: string | null, threadId: number): Promise
   return res.json();
 }
 
+export type ThreadRange = "day" | "week" | "month" | "year" | "all";
+
 export async function getThreads(
   token: string | null,
   communityId: number,
   sort: ThreadSort,
   cursor?: string,
+  range: ThreadRange = "all",
 ): Promise<Page<Thread>> {
   const res = await api(
-    withQuery(`/communities/${communityId}/threads`, { sort, cursor }),
+    withQuery(`/communities/${communityId}/threads`, { sort, cursor, range }),
     { headers: authHeaders(token) },
   );
 

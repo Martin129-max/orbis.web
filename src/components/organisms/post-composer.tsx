@@ -66,6 +66,8 @@ type PostComposerProps = {
   linkPreview?: boolean;
   initialContent?: string;
   initialLink?: string | null;
+  actions?: ReactNode;
+  submitDisabled?: boolean;
 };
 
 export function PostComposer({
@@ -80,6 +82,8 @@ export function PostComposer({
   linkPreview = false,
   initialContent,
   initialLink = null,
+  actions,
+  submitDisabled = false,
 }: PostComposerProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -189,7 +193,9 @@ export function PostComposer({
   }
 
   async function submit() {
-    if (!editor || (editor.isEmpty && !allowEmpty && !attachment) || pending) return;
+    if (!editor || submitDisabled || (editor.isEmpty && !allowEmpty && !attachment) || pending) {
+      return;
+    }
     setError(null);
     setPending(true);
 
@@ -258,6 +264,7 @@ export function PostComposer({
       <div className="flex items-center gap-3 rounded-lg border border-dashed border-divider bg-surface p-4 text-[13px] text-muted">
         <Lock size={16} aria-hidden className="shrink-0" />
         <p>Confirm your email to post, comment, and react. Until then, you can read everything.</p>
+        {actions && <div className="ml-auto shrink-0">{actions}</div>}
       </div>
     );
   }
@@ -311,6 +318,7 @@ export function PostComposer({
             ))}
           </div>
           <div className="flex items-center gap-2">
+            {actions}
             {onCancel && (
               <Atom.Button size="small" variant="secondary" onClick={onCancel}>
                 Cancel
@@ -320,7 +328,7 @@ export function PostComposer({
               size="small"
               onClick={submit}
               loading={pending}
-              disabled={state?.empty && !allowEmpty && !attachment}
+              disabled={submitDisabled || (state?.empty && !allowEmpty && !attachment)}
             >
               {submitLabel}
             </Atom.Button>

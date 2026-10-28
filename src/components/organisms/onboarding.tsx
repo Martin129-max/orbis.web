@@ -302,9 +302,9 @@ export const pageTours = {
     {
       target: "community-tabs",
       placement: "bottom",
-      title: "Feed, threads, members",
+      title: "Posts and threads",
       description:
-        "The feed is for quick updates, Threads for longer discussions with votes, and Members shows everyone here.",
+        "Turn on Thread to start a longer discussion with a title and votes. Under the composer, All shows everything, and Hot, New, and Top show just threads.",
     },
     {
       target: "community-composer",

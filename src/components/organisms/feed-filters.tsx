@@ -22,9 +22,11 @@ const labels = {
 export function FeedFilters({
   types,
   trailing,
+  filterControl,
 }: {
   types: FeedContentType[];
   trailing?: ReactNode;
+  filterControl?: ReactNode;
 }) {
   const excluded = useFeedPreferencesStore((state) => state.excludedTypes);
   const setShown = useFeedPreferencesStore((state) => state.setShown);
@@ -74,7 +76,8 @@ export function FeedFilters({
       </Dropdown>
       <div className="ml-auto flex items-center gap-2">
         {trailing}
-        {types.length > 1 && (
+        {filterControl}
+        {!filterControl && types.length > 1 && (
           <>
             {filtered && (
               <Atom.Button

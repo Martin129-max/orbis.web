@@ -4,10 +4,8 @@ import {
   Clapperboard,
   Globe,
   Lock,
-  MessagesSquare,
   Newspaper,
   UserCog,
-  Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useSearchParams } from "next/navigation";
@@ -29,20 +27,20 @@ import { useCommunityStore } from "@/stores/community-store";
 type Loaded = { id: string; community: Community | null; failed?: boolean };
 
 const tabs = [
-  { value: "feed", label: "Feed", icon: <Newspaper size={16} /> },
-  { value: "forum", label: "Threads", icon: <MessagesSquare size={16} /> },
-  { value: "members", label: "Members", icon: <Users size={16} /> },
+  { value: "feed", label: "Posts", icon: <Newspaper size={16} /> },
   { value: "clips", label: "Clips", icon: <Clapperboard size={16} /> },
 ] as const;
 
-type Tab = (typeof tabs)[number]["value"];
+const pages = ["feed", "forum", "members", "clips"] as const;
+
+type Tab = (typeof pages)[number];
 
 export default function CommunityPage() {
   const { communityId } = useParams<{ communityId: string }>();
   const [loaded, setLoaded] = useState<Loaded | null>(null);
   const requested = useSearchParams().get("tab");
-  const tab: Tab =
-    tabs.find(({ value }) => value === requested)?.value ?? "feed";
+  const tab: Tab = pages.find((value) => value === requested) ?? "feed";
+  const section = tab === "forum" ? "feed" : tab;
   const [collapsed, setCollapsed] = useState(false);
   const setCommunityImage = useCommunityStore(
     (state) => state.setCommunityImage,
@@ -185,7 +183,6 @@ export default function CommunityPage() {
           />
           <nav
             aria-label="Community sections"
-            data-tour="community-tabs"
             className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
           >
             {tabs
@@ -200,9 +197,9 @@ export default function CommunityPage() {
                   href={`/communities/${current.community!.id}${
                     value === "feed" ? "" : `?tab=${value}`
                   }`}
-                  aria-current={tab === value ? "page" : undefined}
+                  aria-current={section === value ? "page" : undefined}
                   className={`focus-ring -mb-px flex shrink-0 items-center gap-2 rounded-t-sm border-b-2 px-1 py-3 text-sm transition-colors ${
-                    tab === value
+                    section === value
                       ? "border-accent text-accent"
                       : "border-transparent font-semibold text-foreground hover:text-accent"
                   }`}
@@ -254,17 +251,12 @@ export default function CommunityPage() {
                   key={current.community.id}
                   communityId={current.community.id}
                 />
-              ) : tab === "forum" ? (
-                <Organism.CommunityForum
-                  key={current.community.id}
-                  communityId={current.community.id}
-                  joinPrompt={joinPrompt}
-                />
               ) : (
                 <Organism.CommunityFeed
-                  key={current.community.id}
+                  key={`${current.community.id}-${tab}`}
                   communityId={current.community.id}
                   joinPrompt={joinPrompt}
+                  initialSort={tab === "forum" ? "hot" : "all"}
                 />
               )}
             </Template.PageColumn>
@@ -284,6 +276,7 @@ export default function CommunityPage() {
               <Organism.MemberPresence
                 key={current.community.id}
                 communityId={current.community.id}
+                seeAllHref={`/communities/${current.community.id}?tab=members`}
               />
             </Organism.SidePanel>
           </div>

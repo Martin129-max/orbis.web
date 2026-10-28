@@ -41,6 +41,7 @@ export function ThreadEditor({
         initialLink={thread.linkUrl}
         placeholder="Add details or context…"
         submitLabel="Save"
+        submitDisabled={!title.trim()}
         target={
           <Atom.Input
             variant="borderless"
