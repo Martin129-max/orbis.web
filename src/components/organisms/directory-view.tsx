@@ -1,7 +1,7 @@
 "use client";
 
 import { Pagination, Tooltip } from "antd";
-import { Boxes, Globe, LayoutGrid, List, Lock, Users } from "lucide-react";
+import { Boxes, Globe, LayoutGrid, List, Lock, MailCheck, MailWarning, Users } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
@@ -197,6 +197,23 @@ function CommunityControls({
   );
 }
 
+function EmailStatus({ confirmedAt }: { confirmedAt: string | null }) {
+  return (
+    <Tooltip title={confirmedAt ? `Email confirmed ${joined(confirmedAt)}` : "Email not confirmed"}>
+      <span className="flex shrink-0">
+        {confirmedAt ? (
+          <MailCheck size={14} aria-hidden className="text-success" />
+        ) : (
+          <MailWarning size={14} aria-hidden className="text-warning" />
+        )}
+        <span className="sr-only">
+          {confirmedAt ? "Email confirmed" : "Email not confirmed"}
+        </span>
+      </span>
+    </Tooltip>
+  );
+}
+
 function UserCard({
   user,
   onChange,
@@ -296,8 +313,11 @@ function UserRow({
             user.isAdmin && <Atom.RoleBadge role="site-admin" />
           )}
         </span>
-        <span className="truncate text-xs text-muted">
-          @{user.username} · {user.email}
+        <span className="flex min-w-0 items-center gap-1 text-xs text-muted">
+          <span className="truncate">
+            @{user.username} · {user.email}
+          </span>
+          <EmailStatus confirmedAt={user.emailVerifiedAt} />
         </span>
       </div>
       {onChange && <UserControls user={user} onChange={onChange} />}

@@ -292,6 +292,7 @@ export type DirectoryUser = {
   username: string;
   name: string | null;
   email: string;
+  emailVerifiedAt: string | null;
   avatarUrl: string | null;
   coverUrl: string | null;
   isAdmin: boolean;
