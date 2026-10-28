@@ -30,7 +30,7 @@ export function LinkPreview({ url, onRemove }: { url: string; onRemove?: () => v
   if (!video && !data) return null;
 
   return (
-    <div className="relative">
+    <div className={gif && data?.image ? "relative w-fit max-w-full" : "relative"}>
       {video ? (
         <YouTubeEmbed link={url} video={video} preview={data} />
       ) : (
@@ -116,15 +116,24 @@ function LinkCard({
     </span>
   );
 
-  if (media && image) {
+  if (media && image && preview.image) {
     return (
       <a
         href={link}
         {...external}
         aria-label={preview.title}
-        className="focus-ring block overflow-hidden rounded-xl border border-divider bg-rail-item/40 transition-opacity hover:opacity-90"
+        className="focus-ring block w-fit max-w-full overflow-hidden rounded-xl border border-divider bg-rail-item/40 transition-opacity hover:opacity-90"
       >
-        {image}
+        <Image
+          src={preview.image}
+          alt=""
+          width={0}
+          height={0}
+          unoptimized
+          referrerPolicy="no-referrer"
+          onError={() => setImageFailed(true)}
+          className="block h-auto max-h-96 w-auto max-w-full"
+        />
       </a>
     );
   }
