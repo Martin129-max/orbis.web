@@ -1,13 +1,74 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
-import type { Thread } from "@/lib/api";
+import { deleteThread, updateThread, type Thread } from "@/lib/api";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { castVote } from "@/lib/votes";
-import { HiddenNotice, ReportButton } from "./report-content";
+import { useAuthStore } from "@/stores/auth-store";
+import { ContentActions } from "./content-actions";
+import { PostComposer } from "./post-composer";
+import { HiddenNotice } from "./report-content";
+
+export function ThreadEditor({
+  thread,
+  onSaved,
+  onCancel,
+}: {
+  thread: Thread;
+  onSaved: (thread: Thread) => void;
+  onCancel: () => void;
+}) {
+  const [title, setTitle] = useState(thread.title);
+
+  async function save(content: string, linkUrl?: string) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    if (!title.trim()) throw new Error("Add a title for your thread.");
+    onSaved(await updateThread(token, thread.id, { title: title.trim(), content, linkUrl }));
+  }
+
+  return (
+    <div onClick={(event) => event.stopPropagation()} className="cursor-auto">
+      <PostComposer
+        allowEmpty
+        autoFocus
+        linkPreview
+        initialContent={thread.content}
+        initialLink={thread.linkUrl}
+        placeholder="Add details or context…"
+        submitLabel="Save"
+        target={
+          <Atom.Input
+            variant="borderless"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            maxLength={300}
+            placeholder="Thread title"
+            aria-label="Thread title"
+            className="font-display text-2xl font-bold"
+          />
+        }
+        onPost={save}
+        onPosted={onCancel}
+        onCancel={onCancel}
+      />
+    </div>
+  );
+}
+
+export function useThreadActions(thread: Thread, onDelete?: (thread: Thread) => void) {
+  async function remove() {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    await deleteThread(token, thread.id);
+    onDelete?.(thread);
+  }
+  return { remove };
+}
 
 export function ThreadMeta({
   thread,
@@ -46,7 +107,8 @@ export function ThreadMeta({
           title={new Date(thread.createdAt).toLocaleString()}
         >
           {timeAgo(thread.createdAt)}
-        </time>
+        </time>{" "}
+        <Molecule.EditedMark editedAt={thread.editedAt} />
       </p>
     </div>
   );
@@ -57,6 +119,7 @@ type ThreadCardProps = {
   showCommunity?: boolean;
   onOpen: () => void;
   onChange: (thread: Thread) => void;
+  onDelete?: (thread: Thread) => void;
 };
 
 export function ThreadCard({
@@ -64,10 +127,14 @@ export function ThreadCard({
   showCommunity = false,
   onOpen,
   onChange,
+  onDelete,
 }: ThreadCardProps) {
+  const [editing, setEditing] = useState(false);
+  const { remove } = useThreadActions(thread, onDelete);
+
   return (
     <article
-      onClick={onOpen}
+      onClick={editing ? undefined : onOpen}
       className="flex cursor-pointer gap-4 rounded-lg border border-divider bg-surface p-5 transition-colors hover:border-muted"
     >
       <Molecule.VoteControl
@@ -83,31 +150,49 @@ export function ThreadCard({
       <div className="flex min-w-0 flex-1 flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
           <ThreadMeta thread={thread} showCommunity={showCommunity} />
-          <ReportButton type="thread" id={thread.id} ownerId={thread.author.id} className="-mt-1 -mr-1.5" />
+          <ContentActions
+            type="thread"
+            id={thread.id}
+            ownerId={thread.author.id}
+            canDelete={thread.canDelete}
+            onEdit={() => setEditing(true)}
+            onDelete={remove}
+            className="-mt-1 -mr-1.5"
+          />
         </div>
         {thread.hiddenAt && <HiddenNotice />}
-        <h3 className="text-xl font-bold">
-          <button
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpen();
-            }}
-            className="focus-ring rounded-sm text-left hover:underline"
-          >
-            {thread.title}
-          </button>
-        </h3>
-        {thread.content && (
-          <div
-            className="rich-text line-clamp-2 text-sm text-muted"
-            dangerouslySetInnerHTML={{ __html: thread.content }}
+        {editing ? (
+          <ThreadEditor
+            thread={thread}
+            onSaved={(updated) => onChange({ ...thread, ...updated })}
+            onCancel={() => setEditing(false)}
           />
-        )}
-        {thread.linkUrl && (
-          <div onClick={(event) => event.stopPropagation()}>
-            <Molecule.LinkPreview url={thread.linkUrl} />
-          </div>
+        ) : (
+          <>
+            <h3 className="text-xl font-bold">
+              <button
+                type="button"
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onOpen();
+                }}
+                className="focus-ring rounded-sm text-left hover:underline"
+              >
+                {thread.title}
+              </button>
+            </h3>
+            {thread.content && (
+              <div
+                className="rich-text line-clamp-2 text-sm text-muted"
+                dangerouslySetInnerHTML={{ __html: thread.content }}
+              />
+            )}
+            {thread.linkUrl && (
+              <div onClick={(event) => event.stopPropagation()}>
+                <Molecule.LinkPreview url={thread.linkUrl} />
+              </div>
+            )}
+          </>
         )}
         <div onClick={(event) => event.stopPropagation()}>
           <Molecule.CommentsButton count={thread.commentCount} onClick={onOpen} />

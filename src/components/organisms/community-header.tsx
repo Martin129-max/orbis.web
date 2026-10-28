@@ -34,34 +34,19 @@ function countdown(ms: number) {
   return `${minutes}m ${seconds % 60}s`;
 }
 
-const scheduleTime = new Intl.DateTimeFormat(undefined, {
-  weekday: "long",
-  month: "short",
-  day: "numeric",
-  hour: "numeric",
-  minute: "2-digit",
-});
-
 function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
   const now = useNow();
   const startsAt = Date.parse(next.startsAt);
   const endsAt = next.endsAt ? Date.parse(next.endsAt) : startsAt + STARTING_SOON_MS;
   if (now >= endsAt) return null;
 
-  const when = scheduleTime.format(startsAt);
-  const details = next.title ? `${next.title} · ${when}` : when;
   const remaining = now < startsAt ? countdown(startsAt - now) : null;
 
   return (
     <Tooltip
       placement="bottom"
       classNames={{ root: "touch-visible" }}
-      title={
-        <>
-          {remaining && <div>Next stream in {remaining}</div>}
-          <div>{details}</div>
-        </>
-      }
+      title={`Follow ${next.channel ?? login} on Twitch`}
     >
       <a
         href={`https://www.twitch.tv/${login}`}
@@ -85,7 +70,8 @@ function StreamCountdown({ login, next }: { login: string; next: NextStream }) {
 
 function StreamCorner({ community, live }: { community: Community; live: boolean }) {
   const login = community.twitchLogin;
-  if (!login || (!live && !community.nextStream)) return null;
+  if (!login || community.showTwitchLive === false) return null;
+  if (!live && !community.nextStream) return null;
 
   return live ? (
     <a
@@ -105,7 +91,9 @@ function StreamCorner({ community, live }: { community: Community; live: boolean
 function DiscordCorner({ community }: { community: Community }) {
   const name = community.discordGuildName;
   const discord = community.discord;
-  if (!name || !discord || discord.online === null) return null;
+  const online = community.showDiscordOnline === false ? null : (discord?.online ?? null);
+  const inviteUrl = community.showDiscordInvite === false ? null : (discord?.inviteUrl ?? null);
+  if (!name || (online === null && !inviteUrl)) return null;
 
   const className =
     "focus-ring flex h-9 shrink-0 items-center gap-2 rounded-lg whitespace-nowrap bg-surface/85 px-3 text-xs font-semibold text-foreground tabular-nums backdrop-blur";
@@ -113,18 +101,18 @@ function DiscordCorner({ community }: { community: Community }) {
     <>
       <DiscordFilled aria-hidden className="text-[#5865F2]" />
       <span className="sr-only">{name} on Discord: </span>
-      {discord.online.toLocaleString()} online
+      {online === null ? "Join Discord" : `${online.toLocaleString()} online`}
     </>
   );
 
   return (
     <Tooltip
       placement="bottom"
-      title={discord.inviteUrl ? `Join ${name} on Discord` : `${name} on Discord`}
+      title={inviteUrl ? `Join ${name} on Discord` : `${name} on Discord`}
     >
-      {discord.inviteUrl ? (
+      {inviteUrl ? (
         <a
-          href={discord.inviteUrl}
+          href={inviteUrl}
           target="_blank"
           rel="noopener noreferrer"
           className={`${className} transition-colors hover:bg-surface`}

@@ -26,6 +26,7 @@ export type Paged<T extends FeedEntry> = {
   loadMore: () => void;
   prepend: (item: T) => void;
   update: (item: T) => void;
+  remove: (item: T) => void;
   newCount: number;
   showNew: () => void;
 };
@@ -205,6 +206,10 @@ export function usePaged<T extends FeedEntry>(
         (current ?? []).map((existing) =>
           itemKey(existing) === itemKey(item) ? item : existing,
         ),
+      ),
+    remove: (item) =>
+      setItems((current) =>
+        (current ?? []).filter((existing) => itemKey(existing) !== itemKey(item)),
       ),
   };
 }

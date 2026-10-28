@@ -50,6 +50,11 @@ export const tips: Tip[] = [
     body: "Type @ and a username in a post, thread, or comment to tag someone. They get a notification if they can see where you posted it.",
   },
   {
+    id: "edit-delete",
+    title: "Fix a typo or take something down",
+    body: "Open the ⋯ menu on your post or thread, or use Edit under your comment, to change or delete it. If you run a community, you can delete anything posted in it.",
+  },
+  {
     id: "twitch-clips",
     title: "Watch Twitch clips on Orbis",
     body: "Communities and people with Twitch connected have a Clips tab with their most-watched clips. To hide yours, go to Connections in your settings.",

@@ -60,9 +60,13 @@ export type Community = {
   role?: CommunityRole | null;
   memberCount?: number;
   twitchLogin?: string | null;
+  showTwitchLive?: boolean;
+  showTwitchClips?: boolean;
   live?: boolean;
   nextStream?: NextStream | null;
   discordGuildName?: string | null;
+  showDiscordOnline?: boolean;
+  showDiscordInvite?: boolean;
   discord?: DiscordStatus | null;
   links?: CommunityLinks;
   showLibraryUpdates?: boolean;
@@ -215,6 +219,8 @@ export type Post = {
   liked: boolean;
   previewComments: PreviewComment[];
   hiddenAt?: string | null;
+  editedAt?: string | null;
+  canDelete?: boolean;
   createdAt: string;
   author: Author;
   community: CommunitySummary | null;
@@ -233,6 +239,8 @@ export type Thread = {
   myVote: number;
   previewComments?: PreviewComment[];
   hiddenAt?: string | null;
+  editedAt?: string | null;
+  canDelete?: boolean;
   createdAt: string;
   author: Author;
   community: CommunitySummary;
@@ -256,7 +264,18 @@ export type SteamLink = {
   achievements: { achieved: number; total: number } | null;
 };
 
-export type NextStream = { startsAt: string; endsAt: string | null; title: string | null };
+export type NextStream = {
+  startsAt: string;
+  endsAt: string | null;
+  title: string | null;
+  channel: string | null;
+};
+
+export type CommunityConnectionSetting =
+  | "showTwitchLive"
+  | "showTwitchClips"
+  | "showDiscordOnline"
+  | "showDiscordInvite";
 
 export type Activity = {
   type: "activity";
@@ -348,6 +367,9 @@ export type Comment = {
   score: number;
   myVote: number;
   hidden?: "review" | "reported" | null;
+  editedAt?: string | null;
+  deleted?: boolean;
+  canDelete?: boolean;
   createdAt: string;
   author: Author;
 };
@@ -520,7 +542,9 @@ export async function createCommunity(
 export async function updateCommunity(
   token: string,
   communityId: number,
-  changes: Partial<Pick<Community, "name" | "isPublic" | "description" | "links">>,
+  changes: Partial<
+    Pick<Community, "name" | "isPublic" | "description" | "links" | CommunityConnectionSetting>
+  >,
 ): Promise<Community> {
   const res = await api(`/communities/${communityId}`, {
     method: "PATCH",
@@ -1258,6 +1282,61 @@ export async function getCommunityActivity(
   return res.json();
 }
 
+export async function updatePost(
+  token: string,
+  postId: number,
+  content: string,
+  linkUrl?: string,
+): Promise<Post> {
+  const res = await api(`/posts/${postId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content, linkUrl }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save the post."));
+  return res.json();
+}
+
+export async function deletePost(token: string, postId: number): Promise<void> {
+  const res = await api(`/posts/${postId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not delete the post."));
+}
+
+export async function updateThread(
+  token: string,
+  threadId: number,
+  thread: { title: string; content: string; linkUrl?: string },
+): Promise<Thread> {
+  const res = await api(`/threads/${threadId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(thread),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save the thread."));
+  return res.json();
+}
+
+export async function deleteThread(token: string, threadId: number): Promise<void> {
+  const res = await api(`/threads/${threadId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not delete the thread."));
+}
+
 export async function getThread(token: string | null, threadId: number): Promise<Thread> {
   const res = await api(`/threads/${threadId}`, { headers: authHeaders(token) });
 
@@ -1330,6 +1409,34 @@ export async function createComment(
   if (res.status === 400) throw new Error("Write something before commenting.");
   if (!res.ok) throw new Error("Could not post the comment. Please try again.");
   return res.json();
+}
+
+export async function updateComment(
+  token: string,
+  commentId: number,
+  content: string,
+  linkUrl?: string,
+): Promise<Comment> {
+  const res = await api(`/comments/${commentId}`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ content, linkUrl }),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save the comment."));
+  return res.json();
+}
+
+export async function deleteComment(token: string, commentId: number): Promise<void> {
+  const res = await api(`/comments/${commentId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not delete the comment."));
 }
 
 export async function setLike(

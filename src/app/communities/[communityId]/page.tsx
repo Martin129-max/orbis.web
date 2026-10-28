@@ -189,7 +189,11 @@ export default function CommunityPage() {
             className="flex shrink-0 items-end gap-6 overflow-x-auto border-b border-divider px-4 sm:px-8"
           >
             {tabs
-              .filter(({ value }) => value !== "clips" || current.community!.twitchLogin)
+              .filter(
+                ({ value }) =>
+                  value !== "clips" ||
+                  (current.community!.twitchLogin && current.community!.showTwitchClips !== false),
+              )
               .map(({ value, label, icon }) => (
                 <Link
                   key={value}
@@ -237,7 +241,9 @@ export default function CommunityPage() {
               }
             />
             <Template.PageColumn onScroll={handleScroll}>
-              {tab === "clips" && current.community.twitchLogin ? (
+              {tab === "clips" &&
+              current.community.twitchLogin &&
+              current.community.showTwitchClips !== false ? (
                 <Organism.TwitchClips
                   key={current.community.id}
                   communityId={current.community.id}

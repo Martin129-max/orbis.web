@@ -1,6 +1,7 @@
 "use client";
 
 import { Modal } from "antd";
+import { useState } from "react";
 import * as Atom from "@atom";
 import * as Molecule from "@molecule";
 import type { FeedEntry, Thread } from "@/lib/api";
@@ -11,16 +12,33 @@ import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { ActivityCard } from "./activity-card";
 import { CommentSection } from "./comment-section";
+import { ContentActions } from "./content-actions";
 import { PostCard } from "./post-card";
+import { ThreadEditor, useThreadActions } from "./thread-card";
 
 
 function ThreadDetail({
   thread,
   onChange,
+  onDelete,
 }: {
   thread: Thread;
   onChange: (thread: Thread) => void;
+  onDelete?: (thread: Thread) => void;
 }) {
+  const [editing, setEditing] = useState(false);
+  const { remove } = useThreadActions(thread, onDelete);
+
+  if (editing) {
+    return (
+      <ThreadEditor
+        thread={thread}
+        onSaved={(updated) => onChange({ ...thread, ...updated })}
+        onCancel={() => setEditing(false)}
+      />
+    );
+  }
+
   return (
     <article className="flex gap-4">
       <Molecule.VoteControl
@@ -44,7 +62,16 @@ function ThreadDetail({
           <Molecule.UserLink username={thread.author.username}>
             {displayName(thread.author)}
           </Molecule.UserLink>
-          · {timeAgo(thread.createdAt)}
+          · {timeAgo(thread.createdAt)} <Molecule.EditedMark editedAt={thread.editedAt} />
+          <ContentActions
+            type="thread"
+            id={thread.id}
+            ownerId={thread.author.id}
+            canDelete={thread.canDelete}
+            onEdit={() => setEditing(true)}
+            onDelete={remove}
+            className="-my-1 ml-auto"
+          />
         </p>
         <h3 className="font-display text-3xl leading-[1.04] font-bold sm:text-4xl">
           {thread.title}
@@ -65,11 +92,18 @@ export function DiscussionModal({
   item,
   onClose,
   onChange,
+  onDelete,
 }: {
   item: FeedEntry | null;
   onClose: () => void;
   onChange: (item: FeedEntry) => void;
+  onDelete?: (item: FeedEntry) => void;
 }) {
+  function deleted(entry: FeedEntry) {
+    onDelete?.(entry);
+    onClose();
+  }
+
   const communityId = item && item.type !== "activity" ? item.communityId : null;
   const signedIn = useAuthStore((state) => Boolean(state.token));
   const member = useCommunityStore(
@@ -102,11 +136,17 @@ export function DiscussionModal({
             title="The discussion"
           />
           {item.type === "thread" ? (
-            <ThreadDetail thread={item} onChange={onChange} />
+            <ThreadDetail thread={item} onChange={onChange} onDelete={deleted} />
           ) : item.type === "activity" ? (
             <ActivityCard activity={item} onChange={onChange} preview={false} />
           ) : (
-            <PostCard post={item} showCommunity onChange={onChange} preview={false} />
+            <PostCard
+              post={item}
+              showCommunity
+              onChange={onChange}
+              onDelete={deleted}
+              preview={false}
+            />
           )}
           <CommentSection
             key={`${item.type}-${item.id}`}

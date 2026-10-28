@@ -64,6 +64,8 @@ type PostComposerProps = {
   onCancel?: () => void;
   onPosted?: () => void;
   linkPreview?: boolean;
+  initialContent?: string;
+  initialLink?: string | null;
 };
 
 export function PostComposer({
@@ -76,14 +78,16 @@ export function PostComposer({
   onCancel,
   onPosted,
   linkPreview = false,
+  initialContent,
+  initialLink = null,
 }: PostComposerProps) {
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
-  const [attachment, setAttachment] = useState<string | null>(null);
+  const [attachment, setAttachment] = useState<string | null>(initialLink);
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkDraft, setLinkDraft] = useState("");
   const [linkError, setLinkError] = useState<string | null>(null);
-  const attached = useRef<string | null>(null);
+  const attached = useRef<string | null>(initialLink);
   const dismissed = useRef(false);
   const checking = useRef<string | null>(null);
   const rejected = useRef(new Set<string>());
@@ -92,6 +96,7 @@ export function PostComposer({
   const editor = useEditor({
     immediatelyRender: false,
     autofocus: autoFocus,
+    content: initialContent,
     extensions: [
       StarterKit.configure({
         heading: false,

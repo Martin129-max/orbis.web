@@ -1,13 +1,18 @@
+"use client";
+
 import { ChevronRight } from "lucide-react";
+import { useState } from "react";
 import * as Molecule from "@molecule";
-import type { Post } from "@/lib/api";
+import { deletePost, updatePost, type Post } from "@/lib/api";
 import { toggleLike } from "@/lib/votes";
 import { displayName } from "@/lib/display-name";
 import { timeAgo } from "@/lib/time";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { useFriendsStore } from "@/stores/friends-store";
-import { HiddenNotice, ReportButton } from "./report-content";
+import { ContentActions } from "./content-actions";
+import { PostComposer } from "./post-composer";
+import { HiddenNotice } from "./report-content";
 
 export function useLikeBlockedReason(post: Post | null) {
   const myId = useAuthStore((state) => state.profile?.userId);
@@ -41,6 +46,7 @@ type PostCardProps = {
   showCommunity?: boolean;
   onOpenComments?: () => void;
   onChange?: (post: Post) => void;
+  onDelete?: (post: Post) => void;
   preview?: boolean;
 };
 
@@ -49,11 +55,27 @@ export function PostCard({
   showCommunity = false,
   onOpenComments,
   onChange,
+  onDelete,
   preview = true,
 }: PostCardProps) {
   const wallUser =
     post.wallUser && post.wallUser.id !== post.author.id ? post.wallUser : null;
   const likeBlockedReason = useLikeBlockedReason(post);
+  const [editing, setEditing] = useState(false);
+
+  async function save(content: string, linkUrl?: string) {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    const updated = await updatePost(token, post.id, content, linkUrl);
+    onChange?.({ ...post, ...updated });
+  }
+
+  async function remove() {
+    const { token } = useAuthStore.getState();
+    if (!token) throw new Error("Please log in again.");
+    await deletePost(token, post.id);
+    onDelete?.(post);
+  }
 
   return (
     <article className="flex flex-col gap-4 rounded-lg border border-divider bg-surface p-5">
@@ -84,19 +106,43 @@ export function PostCard({
               title={new Date(post.createdAt).toLocaleString()}
             >
               {timeAgo(post.createdAt)}
-            </time>
+            </time>{" "}
+            <Molecule.EditedMark editedAt={post.editedAt} />
           </span>
         </div>
-        <ReportButton type="post" id={post.id} ownerId={post.author.id} className="-mr-1.5 self-start" />
+        <ContentActions
+          type="post"
+          id={post.id}
+          ownerId={post.author.id}
+          canDelete={post.canDelete}
+          onEdit={() => setEditing(true)}
+          onDelete={remove}
+          className="-mr-1.5 self-start"
+        />
       </header>
       {post.hiddenAt && <HiddenNotice />}
-      {post.content && (
-        <div
-          className="rich-text"
-          dangerouslySetInnerHTML={{ __html: post.content }}
+      {editing ? (
+        <PostComposer
+          autoFocus
+          linkPreview
+          initialContent={post.content}
+          initialLink={post.linkUrl}
+          submitLabel="Save"
+          onPost={save}
+          onPosted={() => setEditing(false)}
+          onCancel={() => setEditing(false)}
         />
+      ) : (
+        <>
+          {post.content && (
+            <div
+              className="rich-text"
+              dangerouslySetInnerHTML={{ __html: post.content }}
+            />
+          )}
+          {post.linkUrl && <Molecule.LinkPreview url={post.linkUrl} />}
+        </>
       )}
-      {post.linkUrl && <Molecule.LinkPreview url={post.linkUrl} />}
       <div className="flex items-center gap-4">
         <Molecule.LikeButton
           liked={post.liked}

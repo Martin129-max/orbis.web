@@ -17,6 +17,7 @@ import {
   revokeInvite,
   setCommunityAdmin,
   type Community,
+  type CommunityConnectionSetting,
   type CommunityLinks,
   type DiscordStatus,
   type Invite,
@@ -456,6 +457,47 @@ function DangerZone({ community }: { community: Community }) {
   );
 }
 
+function ConnectionSwitch({
+  community,
+  setting,
+  label,
+  description,
+}: {
+  community: Community;
+  setting: CommunityConnectionSetting;
+  label: string;
+  description: string;
+}) {
+  const updateCommunity = useCommunityStore((state) => state.updateCommunity);
+  const [on, setOn] = useState(community[setting] !== false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function toggle(value: boolean) {
+    setSaving(true);
+    setError(null);
+    try {
+      const updated = await updateCommunity(community.id, { [setting]: value });
+      setOn(updated[setting] !== false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Molecule.SettingsRow label={label} description={description}>
+        <Molecule.ReadOnlyGate action="change this">
+          <Switch checked={on} loading={saving} onChange={toggle} />
+        </Molecule.ReadOnlyGate>
+      </Molecule.SettingsRow>
+      {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+    </div>
+  );
+}
+
 function TwitchSettings({ community }: { community: Community }) {
   const [login, setLogin] = useState(community.twitchLogin ?? null);
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -526,6 +568,22 @@ function TwitchSettings({ community }: { community: Community }) {
           </Atom.Button>
         )}
       </div>
+      {login && (
+        <div className="flex flex-col gap-4">
+          <ConnectionSwitch
+            community={community}
+            setting="showTwitchLive"
+            label="Live status"
+            description="Show a LIVE badge while the channel is streaming, and a countdown to the next scheduled stream."
+          />
+          <ConnectionSwitch
+            community={community}
+            setting="showTwitchClips"
+            label="Clips tab"
+            description="Show the channel’s most-watched Twitch clips in a Clips tab."
+          />
+        </div>
+      )}
       {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
     </Molecule.SettingsSection>
   );
@@ -704,6 +762,22 @@ function DiscordSettings({ community }: { community: Community }) {
           {stillOff && !setup && (
             <p className="text-xs text-muted">The widget is still off.</p>
           )}
+        </div>
+      )}
+      {server && (
+        <div className="flex flex-col gap-4">
+          <ConnectionSwitch
+            community={community}
+            setting="showDiscordOnline"
+            label="Online count"
+            description="Show how many people are online in the server."
+          />
+          <ConnectionSwitch
+            community={community}
+            setting="showDiscordInvite"
+            label="Join button"
+            description="Link the Discord pill on the cover photo to the server’s invite, so people can join."
+          />
         </div>
       )}
       {server && server.online !== null && !server.inviteUrl && (
