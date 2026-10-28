@@ -39,10 +39,15 @@ export function isOAuthProvider(value: string): value is OAuthProvider {
   return (OAUTH_PROVIDERS as string[]).includes(value);
 }
 
-export async function startOAuth(provider: OAuthProvider, token?: string, communityId?: number) {
+export async function startOAuth(
+  provider: OAuthProvider,
+  token?: string,
+  communityId?: number,
+  target?: "channel",
+) {
   const nonce = crypto.randomUUID().replaceAll("-", "");
   sessionStorage.setItem(NONCE_KEY, nonce);
-  window.location.assign(await getOAuthUrl(provider, nonce, token, communityId));
+  window.location.assign(await getOAuthUrl(provider, nonce, token, communityId, target));
 }
 
 export function savePendingSignup(signup: PendingSignup) {

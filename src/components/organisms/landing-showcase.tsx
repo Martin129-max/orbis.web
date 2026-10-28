@@ -10,6 +10,7 @@ import {
   MessageCircle,
   Moon,
   Send,
+  Share2,
   ShieldCheck,
   SlidersHorizontal,
   Ticket,
@@ -39,6 +40,7 @@ const extras: { icon: ReactNode; label: string }[] = [
   { icon: <Ticket size={18} />, label: "Feedback with ticket numbers" },
   { icon: <ShieldCheck size={18} />, label: "Owner and admin tools" },
   { icon: <Clapperboard size={18} />, label: "Twitch clips and live badges" },
+  { icon: <Share2 size={18} />, label: "New posts sent to your Discord" },
 ];
 
 export function LandingCommunities() {

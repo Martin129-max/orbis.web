@@ -61,6 +61,11 @@ export const tips: Tip[] = [
     body: "If you run a community, connect its Discord server in the community’s settings to show how many people are online there, with a button to join.",
   },
   {
+    id: "community-discord-channel",
+    title: "Send your community’s posts to Discord",
+    body: "If you run a public community, connect a Discord channel in the community’s settings, under Connections. New posts, threads, and library updates show up there with a link back to Orbis.",
+  },
+  {
     id: "community-links",
     title: "Link your community’s other places",
     body: "If you run a community, add its X, YouTube, Kick, and other links under Connections in the community’s settings. They show as icons on the cover photo.",

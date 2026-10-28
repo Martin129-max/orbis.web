@@ -34,6 +34,7 @@ import {
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
 import { linkPlatforms, normalizeLink } from "./community-links";
+import { DiscordChannelSettings } from "./discord-channel-settings";
 import { DISCORD_CHECK_MS, DiscordWidgetSteps } from "./discord-setup";
 import { OAuthIcon } from "./oauth-buttons";
 import { SettingsTabs } from "./settings-tabs";
@@ -832,6 +833,7 @@ export function CommunitySettings({
             <>
               <TwitchSettings community={community} />
               <DiscordSettings community={community} />
+              <DiscordChannelSettings community={community} />
               <LinksSettings community={community} />
             </>
           ),

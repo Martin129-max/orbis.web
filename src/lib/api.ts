@@ -1232,6 +1232,39 @@ export async function removeGroupMember(
   if (!res.ok) throw new Error(await errorMessage(res, "Could not update the group."));
 }
 
+export async function getCommunityPost(
+  token: string | null,
+  communityId: number,
+  postId: number,
+): Promise<Post> {
+  const res = await api(`/communities/${communityId}/posts/${postId}`, {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("That post isn’t available.");
+  return res.json();
+}
+
+export async function getCommunityActivity(
+  token: string | null,
+  communityId: number,
+  activityId: number,
+): Promise<Activity> {
+  const res = await api(`/communities/${communityId}/posts/activities/${activityId}`, {
+    headers: authHeaders(token),
+  });
+
+  if (!res.ok) throw new Error("That library update isn’t available.");
+  return res.json();
+}
+
+export async function getThread(token: string | null, threadId: number): Promise<Thread> {
+  const res = await api(`/threads/${threadId}`, { headers: authHeaders(token) });
+
+  if (!res.ok) throw new Error("That thread isn’t available.");
+  return res.json();
+}
+
 export async function getThreads(
   token: string | null,
   communityId: number,
@@ -2126,9 +2159,11 @@ export async function getOAuthUrl(
   nonce: string,
   token?: string,
   communityId?: number,
+  target?: "channel",
 ): Promise<string> {
   const params = new URLSearchParams({ nonce });
   if (communityId !== undefined) params.set("communityId", String(communityId));
+  if (target) params.set("target", target);
   const path = communityId !== undefined ? "community-url" : token ? "link-url" : "url";
   const res = await api(
     `/auth/oauth/${provider}/${path}?${params}`,
@@ -2292,6 +2327,61 @@ export async function disconnectCommunityDiscord(token: string, communityId: num
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect Discord."));
+}
+
+export type DiscordChannel = {
+  guildId: string;
+  guildName: string | null;
+  channelId: string;
+  isForum: boolean;
+  sendPosts: boolean;
+  sendThreads: boolean;
+  sendLibrary: boolean;
+  lostAt: string | null;
+  createdAt: string;
+};
+
+export type DiscordChannelSettings = Partial<
+  Pick<DiscordChannel, "sendPosts" | "sendThreads" | "sendLibrary">
+>;
+
+export async function getDiscordChannel(
+  token: string,
+  communityId: number,
+): Promise<DiscordChannel | null> {
+  const res = await api(`/communities/${communityId}/discord-channel`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not load the Discord channel."));
+  return (await res.json()).channel;
+}
+
+export async function updateDiscordChannel(
+  token: string,
+  communityId: number,
+  settings: DiscordChannelSettings,
+): Promise<DiscordChannel | null> {
+  const res = await api(`/communities/${communityId}/discord-channel`, {
+    method: "PATCH",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(settings),
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not save that."));
+  return (await res.json()).channel;
+}
+
+export async function disconnectDiscordChannel(token: string, communityId: number): Promise<void> {
+  const res = await api(`/communities/${communityId}/discord-channel`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error(await errorMessage(res, "Could not disconnect the channel."));
 }
 
 export async function disconnectCommunityTwitch(token: string, communityId: number): Promise<void> {

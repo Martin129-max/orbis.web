@@ -64,3 +64,4 @@ export * from "./steam-connection";
 export * from "./verify-toggle";
 export * from "./admin-toggle";
 export * from "./twitch-clips";
+export * from "./linked-discussion";

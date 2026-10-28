@@ -29,6 +29,8 @@ function clipDetails(clip: Clip) {
   return `${views} · ${timeAgo(clip.createdAt)} · Clipped by ${clip.creatorName}`;
 }
 
+const source = <span className="text-xs text-muted">Most viewed on Twitch</span>;
+
 export function TwitchClips({ communityId, username, name }: ClipSource & { name: string }) {
   const [clips, setClips] = useState<Clip[] | null>(null);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -85,9 +87,11 @@ export function TwitchClips({ communityId, username, name }: ClipSource & { name
         />
       </div>
     ) : (
-      <div className="flex justify-center py-12">
-        <Atom.Loader />
-      </div>
+      <Molecule.TabSection title="Clips" actions={source}>
+        <div className="flex justify-center py-12">
+          <Atom.Loader />
+        </div>
+      </Molecule.TabSection>
     );
   }
 
@@ -104,10 +108,7 @@ export function TwitchClips({ communityId, username, name }: ClipSource & { name
   }
 
   return (
-    <Molecule.TabSection
-      title="Clips"
-      actions={<span className="text-xs text-muted">Most viewed on Twitch</span>}
-    >
+    <Molecule.TabSection title="Clips" actions={source}>
       <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {clips.map((clip) => (
           <li key={clip.id}>

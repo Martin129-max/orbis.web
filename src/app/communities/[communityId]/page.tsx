@@ -179,6 +179,10 @@ export default function CommunityPage() {
             }
           />
           {!joinPrompt && <Organism.PageTour name="community" />}
+          <Organism.LinkedDiscussion
+            key={`linked-${current.community.id}`}
+            communityId={current.community.id}
+          />
           <nav
             aria-label="Community sections"
             data-tour="community-tabs"
