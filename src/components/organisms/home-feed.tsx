@@ -12,6 +12,7 @@ import { useOnboardingStore } from "@/stores/onboarding-store";
 import type { ChangelogDay } from "@/lib/changelog";
 import { useCommunityStore } from "@/stores/community-store";
 import { ChangelogBanner, useChangelogShown } from "./changelog-banner";
+import { DiscordSetupReminder, useUnfinishedDiscord } from "./discord-setup";
 import { PostComposer } from "./post-composer";
 import { PostList } from "./post-list";
 import { OnboardingChecklist, OnboardingTour } from "./onboarding";
@@ -30,6 +31,7 @@ export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | 
   const checklistHidden = useOnboardingStore(
     (state) => state.onboarding?.checklistDismissed === true,
   );
+  const [unfinishedDiscord] = useUnfinishedDiscord();
 
   async function handlePost(content: string, linkUrl?: string) {
     const { token } = useAuthStore.getState();
@@ -44,9 +46,14 @@ export function HomeFeed({ latestChangelog }: { latestChangelog: ChangelogDay | 
 
   return (
     <div className="flex flex-col gap-3">
-      <OnboardingChecklist />
+      {unfinishedDiscord ? (
+        <DiscordSetupReminder community={unfinishedDiscord} />
+      ) : (
+        <OnboardingChecklist />
+      )}
       <OnboardingTour />
-      {checklistHidden &&
+      {!unfinishedDiscord &&
+        checklistHidden &&
         (latestChangelog && changelogShown ? (
           <ChangelogBanner day={latestChangelog} />
         ) : (

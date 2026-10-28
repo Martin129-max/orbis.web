@@ -1,7 +1,7 @@
 "use client";
 
 import { Input, Modal, Switch } from "antd";
-import { MessagesSquare, ShieldCheck, SlidersHorizontal, Ticket, Tv } from "lucide-react";
+import { Link2, ShieldCheck, SlidersHorizontal, Ticket } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import * as Atom from "@atom";
@@ -10,6 +10,7 @@ import {
   connectDiscordServer,
   disconnectCommunityDiscord,
   disconnectCommunityTwitch,
+  getCommunity,
   getInvites,
   getMembers,
   getOAuthProviders,
@@ -31,6 +32,7 @@ import {
 } from "@/lib/oauth";
 import { useAuthStore } from "@/stores/auth-store";
 import { useCommunityStore } from "@/stores/community-store";
+import { DISCORD_CHECK_MS, DiscordWidgetSteps } from "./discord-setup";
 import { OAuthIcon } from "./oauth-buttons";
 import { SettingsTabs } from "./settings-tabs";
 
@@ -452,6 +454,12 @@ function TwitchSettings({ community }: { community: Community }) {
   );
 }
 
+async function discordStatus(communityId: number) {
+  const { token } = useAuthStore.getState();
+  if (!token) return null;
+  return (await getCommunity(token, String(communityId)))?.discord ?? null;
+}
+
 function DiscordSettings({ community }: { community: Community }) {
   const [server, setServer] = useState<({ name: string } & DiscordStatus) | null>(
     community.discordGuildName
@@ -469,6 +477,11 @@ function DiscordSettings({ community }: { community: Community }) {
   const [pending, setPending] = useState(false);
   const [picking, setPicking] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [setup, setSetup] = useState(false);
+  const [step, setStep] = useState<"pick" | "setup">("pick");
+  const [checking, setChecking] = useState(false);
+  const [stillOff, setStillOff] = useState(false);
+  const waiting = server !== null && server.online === null;
 
   useEffect(() => {
     getOAuthProviders()
@@ -476,7 +489,34 @@ function DiscordSettings({ community }: { community: Community }) {
       .catch(() => setEnabled(false));
   }, []);
 
+  useEffect(() => {
+    if (!waiting) return;
+    const timer = setInterval(async () => {
+      const discord = await discordStatus(community.id).catch(() => null);
+      if (!discord) return;
+      setServer((current) => current && { ...current, ...discord });
+      if (discord.online !== null) setSetup(false);
+    }, DISCORD_CHECK_MS);
+    return () => clearInterval(timer);
+  }, [waiting, community.id]);
+
   if (!server && !choice && enabled === false) return null;
+
+  async function checkNow() {
+    setChecking(true);
+    setError(null);
+    try {
+      const discord = await discordStatus(community.id);
+      if (!discord) return;
+      setServer((current) => current && { ...current, ...discord });
+      if (discord.online !== null) setSetup(false);
+      setStillOff(discord.online === null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Something went wrong.");
+    } finally {
+      setChecking(false);
+    }
+  }
 
   async function connect() {
     const { token } = useAuthStore.getState();
@@ -496,6 +536,13 @@ function DiscordSettings({ community }: { community: Community }) {
     setChoice(null);
   }
 
+  function closeModal() {
+    closeChoice();
+    setSetup(false);
+    setStillOff(false);
+    setError(null);
+  }
+
   async function pick(serverId: string) {
     const { token } = useAuthStore.getState();
     if (!token || !choice) return;
@@ -505,6 +552,10 @@ function DiscordSettings({ community }: { community: Community }) {
       const { name, online, inviteUrl } = await connectDiscordServer(token, choice.token, serverId);
       setServer({ name, online, inviteUrl });
       closeChoice();
+      if (online === null) {
+        setStep("setup");
+        setSetup(true);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -520,6 +571,7 @@ function DiscordSettings({ community }: { community: Community }) {
     try {
       await disconnectCommunityDiscord(token, community.id);
       setServer(null);
+      setStillOff(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
@@ -560,23 +612,35 @@ function DiscordSettings({ community }: { community: Community }) {
         )}
       </div>
       {server && server.online === null && (
-        <p className="text-xs text-muted">
-          To show the online count, open your Discord server’s settings, go to Widget, and turn on
-          Enable Server Widget. It can take a couple of minutes to show up here.
-        </p>
+        <div className="flex flex-col items-start gap-2">
+          <p className="text-xs text-muted">
+            The connection isn’t finished. To show the online count, turn on the server widget:
+          </p>
+          <DiscordWidgetSteps server={server.name} />
+          <p className="text-xs text-muted">
+            Orbis checks every 5 minutes. After you turn it on, it can take a couple of minutes to
+            show up here.
+          </p>
+          <Atom.Button size="small" variant="secondary" loading={checking} onClick={checkNow}>
+            Check now
+          </Atom.Button>
+          {stillOff && !setup && (
+            <p className="text-xs text-muted">The widget is still off.</p>
+          )}
+        </div>
       )}
       {server && server.online !== null && !server.inviteUrl && (
         <p className="text-xs text-muted">
-          To add a Join Discord button, pick an Invite Channel in your Discord server’s Widget
-          settings.
+          To add a Join Discord button, pick an Invite Channel in your Discord server’s settings,
+          under Engagement, then Server Widget.
         </p>
       )}
       {error && !choice && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
       <Modal
-        open={choice !== null}
+        open={choice !== null || setup}
         title={null}
         footer={null}
-        onCancel={picking ? undefined : closeChoice}
+        onCancel={picking ? undefined : closeModal}
         mask={{ closable: !picking }}
         closable={!picking}
         width={440}
@@ -584,30 +648,66 @@ function DiscordSettings({ community }: { community: Community }) {
         destroyOnHidden
         styles={{ container: { padding: 24 } }}
       >
-        <div className="flex flex-col gap-6">
-          <Molecule.ModalHeader
-            eyebrow="Connect Discord"
-            title="Pick your server."
-            description="These are the servers you own or can manage."
-          />
-          <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
-            {choice?.options.map((option) => (
-              <li key={option.id} className="flex items-center gap-3 rounded-md py-1.5">
-                <Atom.Avatar size="sm" label={option.name} src={option.iconUrl} seed={option.id} />
-                <span className="min-w-0 flex-1 truncate text-sm font-semibold">{option.name}</span>
-                <Atom.Button
-                  size="small"
-                  loading={picking === option.id}
-                  disabled={picking !== null && picking !== option.id}
-                  onClick={() => pick(option.id)}
-                >
-                  Connect
-                </Atom.Button>
-              </li>
-            ))}
-          </ul>
-          {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
-        </div>
+        {step === "setup" && server ? (
+          <div className="flex flex-col gap-6">
+            <Molecule.ModalHeader
+              eyebrow="Connect Discord"
+              title="One more step."
+              description={`${server.name} is connected. To show how many people are online there, turn on its server widget in Discord.`}
+            />
+            <DiscordWidgetSteps server={server.name} />
+            <p className="text-[13px] text-muted">
+              Orbis checks every 5 minutes. Until the widget is on, you’ll see a reminder on your
+              home page.
+            </p>
+            {stillOff && (
+              <p className="text-[13px] text-muted">
+                The widget is still off. If you just turned it on, give it a couple of minutes.
+              </p>
+            )}
+            {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+            <div className="flex justify-end gap-2">
+              <Atom.Button variant="secondary" onClick={closeModal}>
+                Do it later
+              </Atom.Button>
+              <Atom.Button loading={checking} onClick={checkNow}>
+                Check now
+              </Atom.Button>
+            </div>
+          </div>
+        ) : (
+          <div className="flex flex-col gap-6">
+            <Molecule.ModalHeader
+              eyebrow="Connect Discord"
+              title="Pick your server."
+              description="These are the servers you own or can manage."
+            />
+            <ul className="flex max-h-80 flex-col gap-1 overflow-y-auto">
+              {choice?.options.map((option) => (
+                <li key={option.id} className="flex items-center gap-3 rounded-md py-1.5">
+                  <Atom.Avatar
+                    size="sm"
+                    label={option.name}
+                    src={option.iconUrl}
+                    seed={option.id}
+                  />
+                  <span className="min-w-0 flex-1 truncate text-sm font-semibold">
+                    {option.name}
+                  </span>
+                  <Atom.Button
+                    size="small"
+                    loading={picking === option.id}
+                    disabled={picking !== null && picking !== option.id}
+                    onClick={() => pick(option.id)}
+                  >
+                    Connect
+                  </Atom.Button>
+                </li>
+              ))}
+            </ul>
+            {error && <Atom.ErrorMessage>{error}</Atom.ErrorMessage>}
+          </div>
+        )}
       </Modal>
     </Molecule.SettingsSection>
   );
@@ -649,16 +749,15 @@ export function CommunitySettings({
           content: <InviteSettings community={community} />,
         },
         {
-          key: "twitch",
-          label: "Twitch",
-          icon: <Tv size={16} aria-hidden />,
-          content: <TwitchSettings community={community} />,
-        },
-        {
-          key: "discord",
-          label: "Discord",
-          icon: <MessagesSquare size={16} aria-hidden />,
-          content: <DiscordSettings community={community} />,
+          key: "connections",
+          label: "Connections",
+          icon: <Link2 size={16} aria-hidden />,
+          content: (
+            <>
+              <TwitchSettings community={community} />
+              <DiscordSettings community={community} />
+            </>
+          ),
         },
       ]}
     />

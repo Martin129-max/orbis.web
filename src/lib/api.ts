@@ -2054,6 +2054,8 @@ export type DiscordStatus = { online: number | null; inviteUrl: string | null };
 
 export type DiscordServer = { id: string; name: string; iconUrl: string | null };
 
+export type UnfinishedDiscord = { id: number; name: string; discordGuildName: string | null };
+
 export type OAuthResult = {
   access_token?: string;
   linked?: OAuthProvider;
@@ -2176,6 +2178,15 @@ export async function connectDiscordServer(
   });
 
   if (!res.ok) throw new Error(await errorMessage(res, "Could not connect that server."));
+  return res.json();
+}
+
+export async function getUnfinishedDiscord(token: string): Promise<UnfinishedDiscord[]> {
+  const res = await api("/communities/discord-setup", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!res.ok) throw new Error("Could not check your Discord connections.");
   return res.json();
 }
 

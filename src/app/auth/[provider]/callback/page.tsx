@@ -52,7 +52,7 @@ function Callback() {
         if (result.servers) {
           saveDiscordServers({ communityId: result.communityId, ...result.servers });
         }
-        router.replace(`/communities/${result.communityId}/settings?tab=${provider}`);
+        router.replace(`/communities/${result.communityId}/settings?tab=connections`);
       } else {
         if (result.avatar) savePendingAvatar({ provider, ...result.avatar });
         router.replace("/settings?tab=connections");
